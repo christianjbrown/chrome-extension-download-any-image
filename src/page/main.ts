@@ -36,7 +36,7 @@ type Listener = (
   reply: (reply: Reply<unknown>) => void,
 ) => boolean;
 
-const KEY = "__downloadThatImage";
+const KEY = "__downloadAnyImage";
 const globals = globalThis as unknown as Record<
   string,
   PickSession | undefined

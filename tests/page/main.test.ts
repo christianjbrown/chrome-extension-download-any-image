@@ -66,7 +66,7 @@ async function load() {
 describe("page script", () => {
   beforeEach(() => {
     vi.resetModules();
-    delete (globalThis as Record<string, unknown>).__downloadThatImage;
+    delete (globalThis as Record<string, unknown>).__downloadAnyImage;
   });
 
   it("saves a CSS background under the click, outlining it first", async () => {
