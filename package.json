@@ -2,6 +2,7 @@
   "name": "chrome-extension-download-that-image",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT",
   "description": "Chrome extension to download the images you can't right-click and save: click the button, then click any image on the page.",
   "type": "module",
   "scripts": {

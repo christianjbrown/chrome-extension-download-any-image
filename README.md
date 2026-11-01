@@ -81,7 +81,7 @@ npm test          # the unit tests
 npm run ci        # everything CI checks: format, lint, types, unused code, 100% coverage, build
 ```
 
-`npm run ci` has to pass before a push leaves your machine (the pre-push hook runs it), and coverage has to stay at 100% for lines, branches, functions and statements, or it fails.
+`npm run ci` is exactly what CI runs, and coverage has to stay at 100% for lines, branches, functions and statements, or it fails. To run it before every push, point git at the committed hook: `git config core.hooksPath .githooks`.
 
 How it fits together, in `src`:
 
@@ -90,3 +90,7 @@ How it fits together, in `src`:
 - **`shared/`** is the messages the two send each other, with a shape check for every one.
 
 Each way of finding a picture is its own small class (`element-finders.ts`, `css-finder.ts`), handed to the locator as a list, so teaching it a new trick means adding a class. Each context's `main.ts` is the only file that touches `chrome`, `window` or `document`; everything else gets its collaborators through its constructor, behind an interface, and is tested on its own with fakes.
+
+## Licence 📄
+
+MIT. See [LICENSE](LICENSE).
