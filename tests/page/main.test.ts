@@ -12,6 +12,7 @@ function click(x: number, y: number) {
     clientX: x,
     clientY: y,
     button: 0,
+    isTrusted: true,
     preventDefault: vi.fn(),
     stopPropagation: vi.fn(),
     stopImmediatePropagation: vi.fn(),

@@ -10,6 +10,8 @@ interface PointerLike {
   clientX: number;
   clientY: number;
   button: number;
+  // False for a click the page's own script dispatched.
+  isTrusted: boolean;
   preventDefault(): void;
   stopPropagation(): void;
   stopImmediatePropagation(): void;
@@ -45,7 +47,9 @@ function swallow(event: Omit<KeyLike, "key">): void {
 }
 
 // One frame's wait for the click. The click is the extension's, whatever it
-// lands on: an image is saved, anything else simply stops the wait.
+// lands on: an image is saved, anything else simply stops the wait. Only a
+// click the person made counts: one the page dispatched itself could choose
+// what gets saved, so it passes through untouched and the wait goes on.
 export class PickSession {
   constructor(private readonly deps: PickSessionDependencies) {}
 
@@ -59,6 +63,9 @@ export class PickSession {
       });
     }
     bindings.listen(window, "click", (event: PointerLike) => {
+      if (!event.isTrusted) {
+        return;
+      }
       swallow(event);
       void this.pick(event.clientX, event.clientY);
     });
