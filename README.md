@@ -4,6 +4,8 @@ One button in your Chrome toolbar. Click it, then click any picture on the page,
 
 Other "image under cursor" extensions make you hover over the picture and then go hunting in a menu, by which time the mouse has wandered off. Here the click on the page _is_ the pick. 🎯
 
+![Download That Image armed in a Chrome window: the button shows ON and a blue frame marks the photo it will save](docs/screenshot.png)
+
 ## What you get 🪄
 
 - **Pictures that refuse to be right-clicked.** It looks through transparent overlays, so the photo under that annoying invisible layer is still yours.
@@ -72,7 +74,7 @@ Changed your mind? Click the button again, press **Escape**, or click on somethi
 
 No analytics, no tracking, no ads, no accounts, and nothing phoning home. The only thing it ever fetches is the image you clicked, from wherever the page got it, and that goes straight into your downloads folder.
 
-## Hacking on it 🛠️
+## Development 🛠️
 
 It's TypeScript, bundled with esbuild, tested with Vitest.
 
