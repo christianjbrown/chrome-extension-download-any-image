@@ -1,4 +1,4 @@
-# Download That Image 🖼️
+# Download That Image Chrome Extension 🖼️
 
 One button in your Chrome toolbar. Click it, then click any picture on the page, and that picture lands in your downloads folder. No right-click menu roulette, no "Save image as..." greyed out because the site hid the photo behind an invisible div. Click, click, done.
 
