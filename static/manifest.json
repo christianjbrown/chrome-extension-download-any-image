@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Christian's Download That Image",
   "version": "1.0.0",
-  "description": "Click the button, then click any image on the page, and it lands in your downloads folder.",
+  "description": "Download the images you can't right-click and save: click the button, then click any image on the page.",
   "minimum_chrome_version": "126",
   "permissions": ["activeTab", "scripting", "downloads"],
   "background": {

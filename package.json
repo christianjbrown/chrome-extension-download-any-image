@@ -2,7 +2,7 @@
   "name": "chrome-extension-download-that-image",
   "version": "1.0.0",
   "private": true,
-  "description": "Chrome extension: click the button, then click any image on the page, and it lands in your downloads folder.",
+  "description": "Chrome extension to download the images you can't right-click and save: click the button, then click any image on the page.",
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
