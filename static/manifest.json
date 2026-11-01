@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Christian's Download That Image",
+  "name": "Christian's Download Any Image",
   "version": "1.0.0",
   "description": "Download the images you can't right-click and save: click the button, then click any image on the page.",
   "minimum_chrome_version": "126",

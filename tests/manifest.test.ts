@@ -2,7 +2,7 @@ import manifest from "../static/manifest.json";
 
 describe("manifest", () => {
   it("is named so it stands out in chrome://extensions", () => {
-    expect(manifest.name).toBe("Christian's Download That Image");
+    expect(manifest.name).toBe("Christian's Download Any Image");
     expect(manifest.action.default_title).toBe(
       "Download next image I click on",
     );

@@ -1,10 +1,10 @@
-# Download That Image Chrome Extension 🖼️
+# Download Any Image Chrome Extension 🖼️
 
 One button in your Chrome toolbar. Click it, then click any picture on the page, and that picture lands in your downloads folder. No right-click menu roulette, no "Save image as..." greyed out because the site hid the photo behind an invisible div. Click, click, done.
 
 Other "image under cursor" extensions make you hover over the picture and then go hunting in a menu, by which time the mouse has wandered off. Here the click on the page _is_ the pick. 🎯
 
-![Download That Image armed in a Chrome window: the button shows ON and a blue frame marks the photo it will save](docs/screenshot.png)
+![Download Any Image armed in a Chrome window: the button shows ON and a blue frame marks the photo it will save](docs/screenshot.png)
 
 ## What you get 🪄
 
@@ -29,8 +29,8 @@ You need [Node.js](https://nodejs.org) 22 or newer, and Chrome 126 or newer.
 1. Grab the code and build it:
 
    ```bash
-   git clone https://github.com/christianjbrown/chrome-extension-download-that-image.git
-   cd chrome-extension-download-that-image
+   git clone https://github.com/christianjbrown/chrome-extension-download-any-image.git
+   cd chrome-extension-download-any-image
    npm ci
    npm run build
    ```
@@ -40,7 +40,7 @@ You need [Node.js](https://nodejs.org) 22 or newer, and Chrome 126 or newer.
 2. Open `chrome://extensions` in Chrome.
 3. Flip on **Developer mode** (top right).
 4. Click **Load unpacked** and pick the `dist` folder.
-5. Click the puzzle piece 🧩 in the toolbar and hit the pin next to **Christian's Download That Image**.
+5. Click the puzzle piece 🧩 in the toolbar and hit the pin next to **Christian's Download Any Image**.
 
 ### Updating 🔄
 
@@ -50,7 +50,7 @@ npm ci
 npm run build
 ```
 
-Then hit the reload arrow on the Christian's Download That Image card in `chrome://extensions`.
+Then hit the reload arrow on the Christian's Download Any Image card in `chrome://extensions`.
 
 ## Using it 🖱️
 
