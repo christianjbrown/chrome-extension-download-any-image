@@ -70,6 +70,9 @@ describe("MimeExtensions", () => {
     ["image/jpg", undefined, "jpg"],
     ["application/octet-stream", "gif", "gif"],
     [undefined, "png", "png"],
+    [undefined, "jpeg", "jpeg"],
+    ["application/octet-stream", "exe", "bin"],
+    ["text/html", "html", "bin"],
     ["text/html", undefined, "bin"],
     ["constructor", undefined, "bin"],
   ])(

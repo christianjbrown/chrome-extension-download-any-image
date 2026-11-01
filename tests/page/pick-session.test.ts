@@ -7,6 +7,7 @@ function pointer(extra: Record<string, unknown> = {}) {
     clientX: 5,
     clientY: 6,
     button: 0,
+    isTrusted: true,
     key: "",
     preventDefault: vi.fn(),
     stopPropagation: vi.fn(),
@@ -93,6 +94,19 @@ describe("PickSession", () => {
     expect(reporter.disarmed).toHaveBeenCalled();
     expect(readers.read).not.toHaveBeenCalled();
     expect(window.count()).toBe(0);
+  });
+
+  it("lets a click the page dispatched itself through, and stays armed", () => {
+    const { window, locator, reporter } = setup();
+    const click = pointer({ isTrusted: false });
+    const armed = window.count();
+
+    window.fire("click", click);
+
+    expect(click.preventDefault).not.toHaveBeenCalled();
+    expect(locator.locate).not.toHaveBeenCalled();
+    expect(reporter.disarmed).not.toHaveBeenCalled();
+    expect(window.count()).toBe(armed);
   });
 
   it("reports a picture it could not read", async () => {
