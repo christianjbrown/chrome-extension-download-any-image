@@ -74,7 +74,7 @@ Changed your mind? Click the button again, press **Escape**, or click on somethi
 
 No analytics, no tracking, no ads, no accounts, and nothing phoning home. The only thing it ever fetches is the image you clicked, from wherever the page got it, and that goes straight into your downloads folder.
 
-## Hacking on it 🛠️
+## Development 🛠️
 
 It's TypeScript, bundled with esbuild, tested with Vitest.
 
