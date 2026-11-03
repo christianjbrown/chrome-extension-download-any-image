@@ -24,6 +24,10 @@ Other "image under cursor" extensions make you hover over the picture and then g
 
 ## Install it 🔧
 
+It's on the [Chrome Web Store](https://chromewebstore.google.com/detail/jgfdiolaicdckcanemgipkcoljlimffe). Hit **Add to Chrome**, then click the puzzle piece 🧩 in the toolbar and pin **Christian's Download Any Image**. Chrome keeps it up to date for you.
+
+### Or build it yourself 🛠️
+
 You need [Node.js](https://nodejs.org) 22 or newer, and Chrome 126 or newer.
 
 1. Grab the code and build it:
@@ -42,7 +46,7 @@ You need [Node.js](https://nodejs.org) 22 or newer, and Chrome 126 or newer.
 4. Click **Load unpacked** and pick the `dist` folder.
 5. Click the puzzle piece 🧩 in the toolbar and hit the pin next to **Christian's Download Any Image**.
 
-### Updating 🔄
+#### Updating a build 🔄
 
 ```bash
 git pull
