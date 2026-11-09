@@ -40,4 +40,22 @@ describe("ToolbarIndicator", () => {
     });
     expect(toolbar.setTitle).toHaveBeenCalledWith({ tabId: 3, title });
   });
+
+  it("ignores a tab that closed before its button could change", async () => {
+    const toolbar = action();
+    toolbar.setBadgeText.mockRejectedValue(new Error("No tab with id: 3."));
+
+    await expect(
+      new ToolbarIndicator(toolbar).showIdle(3),
+    ).resolves.toBeUndefined();
+  });
+
+  it("still reports any other failure", async () => {
+    const toolbar = action();
+    toolbar.setTitle.mockRejectedValue(new Error("Something else"));
+
+    await expect(new ToolbarIndicator(toolbar).showIdle(3)).rejects.toThrow(
+      "Something else",
+    );
+  });
 });
