@@ -23,6 +23,12 @@ function fakeChrome() {
       getContexts: vi.fn().mockResolvedValue([]),
     },
     offscreen: { createDocument: vi.fn().mockResolvedValue(undefined) },
+    storage: {
+      local: {
+        get: vi.fn().mockResolvedValue({}),
+        set: vi.fn().mockResolvedValue(undefined),
+      },
+    },
     action: {
       onClicked: chromeEvent(),
       setBadgeText: vi.fn().mockResolvedValue(undefined),
@@ -96,7 +102,9 @@ describe("service worker", () => {
         text: "",
       });
     });
-    expect(chrome.scripting.executeScript).not.toHaveBeenCalled();
+    expect(chrome.scripting.executeScript).not.toHaveBeenCalledWith(
+      expect.objectContaining({ files: ["page.js"] }),
+    );
     expect(chrome.scripting.removeCSS).toHaveBeenCalled();
   });
 
@@ -208,6 +216,24 @@ describe("service worker", () => {
           "16": "icons/on-light/icon-16.png",
         }) as unknown,
       });
+    });
+  });
+
+  it("learns Chrome's own colour scheme from the tab that was clicked", async () => {
+    const chrome = await load();
+    chrome.scripting.executeScript.mockResolvedValue([{ result: false }]);
+
+    chrome.action.onClicked.fire({ id: 6 });
+
+    await vi.waitFor(() => {
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        toolbarScheme: { device: "dark", chrome: "light" },
+      });
+    });
+    expect(chrome.action.setIcon).toHaveBeenCalledWith({
+      path: expect.objectContaining({
+        "16": "icons/on-light/icon-16.png",
+      }) as unknown,
     });
   });
 

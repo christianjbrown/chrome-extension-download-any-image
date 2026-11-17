@@ -71,7 +71,13 @@ Saves the picked image to the user's downloads folder with a sensible file name.
 **offscreen**
 
 ```text
-Opens a hidden document that reads whether Chrome is in its light or dark colour scheme, so the toolbar icon can be drawn to match. A service worker cannot read that itself. The document reads nothing else.
+Opens a hidden document that reads whether the device is in its light or dark colour scheme, so the toolbar icon can be drawn to match. A service worker cannot read that itself. The document reads nothing else.
+```
+
+**storage**
+
+```text
+Remembers which colour scheme the toolbar is in, so the icon matches it after Chrome restarts. Chrome can be set to Light or Dark separately from the device, and the extension only learns that from the tab the user clicks its button in. Nothing else is stored.
 ```
 
 **Remote code:** No, I am not using remote code.
