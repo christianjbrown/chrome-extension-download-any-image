@@ -3,6 +3,7 @@ import { CommandRouter } from "../shared/command-router";
 import { backgroundGuards } from "../shared/message-guards";
 import type { BackgroundMessage } from "../shared/messages";
 import { ChromeErrorExplainer } from "./chrome-errors";
+import { ClickScheme } from "./click-scheme";
 import { CrosshairCursor } from "./cursor-style";
 import { DownloadWatcher } from "./download-completion";
 import { MimeExtensions } from "./file-extensions";
@@ -15,16 +16,26 @@ import { PageScript } from "./page-script";
 import { PendingNames } from "./pending-names";
 import { PickReports } from "./pick-reports";
 import { SchemeDocument } from "./scheme-document";
+import { SchemeStore } from "./scheme-store";
 import { senderTab } from "./sender-tab";
 import { SystemClock } from "./system-clock";
 import { TabPicker } from "./tab-picker";
+import { TabScheme } from "./tab-scheme";
 import { TimestampedName } from "./timestamped-name";
 import { ToggleController } from "./toggle-controller";
 import { ToolbarIcon } from "./toolbar-icon";
 import { ToolbarIndicator } from "./toolbar-indicator";
+import { ToolbarScheme } from "./toolbar-scheme";
 
 const indicator = new ToolbarIndicator(chrome.action);
-const icon = new ToolbarIcon(chrome.action);
+const toolbarScheme = new ToolbarScheme(
+  new SchemeStore(chrome.storage.local),
+  new ToolbarIcon(chrome.action),
+);
+const clickScheme = new ClickScheme(
+  new TabScheme(chrome.scripting),
+  toolbarScheme,
+);
 const schemeDocument = new SchemeDocument(
   chrome.offscreen,
   chrome.runtime,
@@ -64,7 +75,7 @@ const router = new CommandRouter<BackgroundMessage>(
     disarmed: (_message, sender) => reports.disarmed(senderTab(sender)),
     failed: (message, sender) =>
       reports.failed(senderTab(sender), message.error),
-    scheme: (message) => icon.show(message.scheme),
+    scheme: (message) => toolbarScheme.deviceIs(message.scheme),
   },
   backgroundGuards,
   chrome.runtime.id,
@@ -73,6 +84,7 @@ const navigation = new NavigationReset(indicator);
 
 chrome.action.onClicked.addListener((tab) => {
   void toggle.toggle(tab);
+  void clickScheme.clicked(tab);
 });
 chrome.runtime.onMessage.addListener((message, sender, reply) =>
   router.route(message, sender, reply),

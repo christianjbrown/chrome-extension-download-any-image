@@ -1,10 +1,16 @@
 {
   "manifest_version": 3,
   "name": "Christian's Download Any Image",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Download the images you can't right-click and save: click the button, then click any image on the page.",
   "minimum_chrome_version": "126",
-  "permissions": ["activeTab", "scripting", "downloads", "offscreen"],
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "downloads",
+    "offscreen",
+    "storage"
+  ],
   "background": {
     "service_worker": "background.js"
   },

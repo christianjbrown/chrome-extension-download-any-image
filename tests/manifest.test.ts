@@ -9,15 +9,16 @@ describe("manifest", () => {
   });
 
   // activeTab and scripting put the picker into the clicked tab, and only that
-  // tab, on a click. downloads saves the image. offscreen reads Chrome's colour
-  // scheme for the toolbar icon. Nothing reads any other page, so no host
-  // permissions.
-  it("asks for activeTab, scripting, downloads and offscreen, and nothing else", () => {
+  // tab, on a click. downloads saves the image. offscreen reads the device's
+  // colour scheme for the toolbar icon, and storage remembers the scheme
+  // Chrome itself is in. Nothing reads any other page, so no host permissions.
+  it("asks for five permissions and nothing else", () => {
     expect(manifest.permissions).toEqual([
       "activeTab",
       "scripting",
       "downloads",
       "offscreen",
+      "storage",
     ]);
     expect(manifest).not.toHaveProperty("host_permissions");
     expect(manifest).not.toHaveProperty("optional_permissions");
