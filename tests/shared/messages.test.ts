@@ -67,4 +67,12 @@ describe("backgroundGuards", () => {
   ])("checks a failure with %s", (_what, error, accepted) => {
     expect(backgroundGuards.failed({ error })).toBe(accepted);
   });
+
+  it.each(["light", "dark"])("accepts a %s colour scheme", (scheme) => {
+    expect(backgroundGuards.scheme({ scheme })).toBe(true);
+  });
+
+  it.each(["sepia", 7, undefined])("refuses a %s colour scheme", (scheme) => {
+    expect(backgroundGuards.scheme({ scheme })).toBe(false);
+  });
 });

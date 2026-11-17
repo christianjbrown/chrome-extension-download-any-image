@@ -72,7 +72,8 @@ Changed your mind? Click the button again, press **Escape**, or click on somethi
 - **Chrome's own pages** (`chrome://` anything, the Web Store) are off limits to every extension. Red `!` again.
 - **Getting a save dialog every time?** That's Chrome's **Ask where to save each file before downloading** setting. Turn it off in `chrome://settings/downloads`.
 - **A red `!` on the button** means something went wrong. Hover over it and the tooltip says what.
-- **It asks for three permissions:** `activeTab` and `scripting` to put the picker into the tab you clicked on (and only that tab, only when you click), and `downloads` to save the file. No access to any other site.
+- **It asks for four permissions:** `activeTab` and `scripting` to put the picker into the tab you clicked on (and only that tab, only when you click), `downloads` to save the file, and `offscreen` to check whether Chrome is light or dark. No access to any other site.
+- **The button dresses for the occasion.** Almost black on a light toolbar, almost white on a dark one, and it swaps the moment Chrome does. 🌗
 
 ## No tracking 🔒
 

@@ -1,3 +1,4 @@
+import { COLOUR_SCHEMES } from "./colour-scheme";
 import type { BackgroundMessage, PageMessage } from "./messages";
 
 type Fields = Record<string, unknown>;
@@ -35,4 +36,8 @@ export const backgroundGuards: MessageGuards<BackgroundMessage> = {
     message,
   ): message is Extract<BackgroundMessage, { type: "failed" }> =>
     isShortText((message as Fields).error),
+  scheme: (
+    message,
+  ): message is Extract<BackgroundMessage, { type: "scheme" }> =>
+    (COLOUR_SCHEMES as readonly unknown[]).includes((message as Fields).scheme),
 };

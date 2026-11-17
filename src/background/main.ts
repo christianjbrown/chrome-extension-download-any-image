@@ -14,14 +14,22 @@ import { UrlOriginalNames } from "./original-name";
 import { PageScript } from "./page-script";
 import { PendingNames } from "./pending-names";
 import { PickReports } from "./pick-reports";
+import { SchemeDocument } from "./scheme-document";
 import { senderTab } from "./sender-tab";
 import { SystemClock } from "./system-clock";
 import { TabPicker } from "./tab-picker";
 import { TimestampedName } from "./timestamped-name";
 import { ToggleController } from "./toggle-controller";
+import { ToolbarIcon } from "./toolbar-icon";
 import { ToolbarIndicator } from "./toolbar-indicator";
 
 const indicator = new ToolbarIndicator(chrome.action);
+const icon = new ToolbarIcon(chrome.action);
+const schemeDocument = new SchemeDocument(
+  chrome.offscreen,
+  chrome.runtime,
+  "offscreen.html",
+);
 const errors = new ChromeErrorExplainer();
 const picker = new TabPicker(
   new PageScript(chrome.scripting, chrome.tabs, "page.js"),
@@ -56,6 +64,7 @@ const router = new CommandRouter<BackgroundMessage>(
     disarmed: (_message, sender) => reports.disarmed(senderTab(sender)),
     failed: (message, sender) =>
       reports.failed(senderTab(sender), message.error),
+    scheme: (message) => icon.show(message.scheme),
   },
   backgroundGuards,
   chrome.runtime.id,
@@ -75,3 +84,9 @@ chrome.tabs.onUpdated.addListener((tabId, change) => {
 chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
   suggester.suggest(item, suggest);
 });
+// Chrome starts with no offscreen document, and nothing else wakes the service
+// worker then.
+chrome.runtime.onStartup.addListener(() => {
+  void schemeDocument.open();
+});
+void schemeDocument.open();

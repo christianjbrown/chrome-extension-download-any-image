@@ -9,16 +9,24 @@ describe("manifest", () => {
   });
 
   // activeTab and scripting put the picker into the clicked tab, and only that
-  // tab, on a click. downloads saves the image. Nothing reads any other page,
-  // so no host permissions.
-  it("asks for activeTab, scripting and downloads, and nothing else", () => {
+  // tab, on a click. downloads saves the image. offscreen reads Chrome's colour
+  // scheme for the toolbar icon. Nothing reads any other page, so no host
+  // permissions.
+  it("asks for activeTab, scripting, downloads and offscreen, and nothing else", () => {
     expect(manifest.permissions).toEqual([
       "activeTab",
       "scripting",
       "downloads",
+      "offscreen",
     ]);
     expect(manifest).not.toHaveProperty("host_permissions");
     expect(manifest).not.toHaveProperty("optional_permissions");
+  });
+
+  it("starts with the icon for a dark toolbar until the scheme is known", () => {
+    expect(manifest.action.default_icon["16"]).toBe(
+      "icons/on-dark/icon-16.png",
+    );
   });
 
   it("has no keyboard shortcut and no options page", () => {
