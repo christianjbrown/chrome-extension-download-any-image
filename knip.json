@@ -3,6 +3,7 @@
   "entry": [
     "src/background/main.ts",
     "src/page/main.ts",
+    "src/offscreen/main.ts",
     "scripts/*.mjs",
     "tests/**/*.test.ts"
   ],

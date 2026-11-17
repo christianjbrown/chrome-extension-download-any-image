@@ -68,6 +68,12 @@ Injects the script that lets the user pick an image on the page and reads that i
 Saves the picked image to the user's downloads folder with a sensible file name.
 ```
 
+**offscreen**
+
+```text
+Opens a hidden document that reads whether Chrome is in its light or dark colour scheme, so the toolbar icon can be drawn to match. A service worker cannot read that itself. The document reads nothing else.
+```
+
 **Remote code:** No, I am not using remote code.
 
 **Data usage:** tick none of the data types, then tick all three certifications.

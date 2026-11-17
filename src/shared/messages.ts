@@ -1,4 +1,6 @@
-// Everything the service worker and the page script say to each other.
+// Everything the service worker, the page script and the offscreen document
+// say to each other.
+import type { ColourScheme } from "./colour-scheme";
 
 export interface PageMessage {
   target: "page";
@@ -8,7 +10,8 @@ export interface PageMessage {
 export type BackgroundMessage =
   | { target: "background"; type: "save"; url: string; title: string }
   | { target: "background"; type: "disarmed" }
-  | { target: "background"; type: "failed"; error: string };
+  | { target: "background"; type: "failed"; error: string }
+  | { target: "background"; type: "scheme"; scheme: ColourScheme };
 
 export type Reply<T> = { ok: true; value: T } | { ok: false; error: string };
 
