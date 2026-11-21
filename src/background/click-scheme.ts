@@ -9,10 +9,13 @@ export class ClickScheme {
   ) {}
 
   async clicked(tab: { id?: number | undefined }): Promise<void> {
-    if (tab.id === undefined) {
-      return;
+    if (tab.id !== undefined) {
+      await this.readTab(tab.id);
     }
-    const scheme = await this.reader.read(tab.id);
+  }
+
+  private async readTab(tabId: number): Promise<void> {
+    const scheme = await this.reader.read(tabId);
     if (scheme !== undefined) {
       await this.sink.tabShows(scheme);
     }

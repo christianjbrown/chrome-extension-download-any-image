@@ -26,11 +26,15 @@ export class FilenameSuggester {
   ) {}
 
   suggest(item: DownloadItem, suggest: Suggest): void {
-    const named =
-      item.byExtensionId === this.extensionId && this.nameOwn(item, suggest);
-    if (!named) {
+    if (!this.named(item, suggest)) {
       suggest(NO_OPINION);
     }
+  }
+
+  private named(item: DownloadItem, suggest: Suggest): boolean {
+    return (
+      item.byExtensionId === this.extensionId && this.nameOwn(item, suggest)
+    );
   }
 
   private nameOwn(item: DownloadItem, suggest: Suggest): boolean {
@@ -41,8 +45,15 @@ export class FilenameSuggester {
       });
     };
     return (
-      this.names.take(item.url, answer) ||
-      (item.finalUrl !== undefined && this.names.take(item.finalUrl, answer))
+      this.names.take(item.url, answer) || this.takeFinal(item.finalUrl, answer)
     );
+  }
+
+  // Chrome's final address, after redirects, when it has one.
+  private takeFinal(
+    finalUrl: string | undefined,
+    answer: (request: NameRequest) => void,
+  ): boolean {
+    return finalUrl !== undefined && this.names.take(finalUrl, answer);
   }
 }

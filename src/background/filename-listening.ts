@@ -27,9 +27,12 @@ export class FilenameListening<Listener> implements ListenerHold {
   }
 
   release(): void {
-    if (this.holds === 0) {
-      return;
+    if (this.holds !== 0) {
+      this.drop();
     }
+  }
+
+  private drop(): void {
     this.holds -= 1;
     if (this.holds === 0) {
       this.event.removeListener(this.listener);

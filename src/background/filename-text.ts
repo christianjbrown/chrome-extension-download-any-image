@@ -39,17 +39,27 @@ function safeStem(text: string, maxLength: number): string {
 
 // No leading dot (a hidden file) and no trailing dot, dash or space.
 function trimEnds(text: string): string {
-  const edge = (char: string | undefined): boolean =>
-    char !== undefined && EDGE.test(char);
-  let start = 0;
-  let end = text.length;
-  while (start < end && edge(text[start])) {
-    start += 1;
+  const rest = text.slice(leadingEdges(text));
+  return rest.slice(0, rest.length - trailingEdges(rest));
+}
+
+const isEdge = (char: string | undefined): boolean =>
+  char !== undefined && EDGE.test(char);
+
+function leadingEdges(text: string): number {
+  let count = 0;
+  while (isEdge(text[count])) {
+    count += 1;
   }
-  while (end > start && edge(text[end - 1])) {
-    end -= 1;
+  return count;
+}
+
+function trailingEdges(text: string): number {
+  let count = 0;
+  while (isEdge(text[text.length - count - 1])) {
+    count += 1;
   }
-  return text.slice(start, end);
+  return count;
 }
 
 // "my-cool-page": lower case words joined by dashes, cut to a length.

@@ -12,6 +12,33 @@ interface DownloadDelta {
 
 type DeltaListener = (delta: DownloadDelta) => void;
 
+// How the promise for one download is settled.
+interface Settling {
+  resolve(): void;
+  reject(error: Error): void;
+}
+
+const currentState = (delta: DownloadDelta): string | undefined =>
+  delta.state?.current;
+
+// A state the download stays in is not an answer yet.
+const endState = (state: string | undefined): string | undefined =>
+  state === IN_PROGRESS ? undefined : state;
+
+const chromeReason = (delta: DownloadDelta): string | undefined =>
+  delta.error?.current;
+
+const reasonFor = (delta: DownloadDelta): string =>
+  chromeReason(delta) ?? INTERRUPTED_MESSAGE;
+
+function settle(state: string, delta: DownloadDelta, settling: Settling): void {
+  if (state === COMPLETE) {
+    settling.resolve();
+    return;
+  }
+  settling.reject(new Error(reasonFor(delta)));
+}
+
 export interface DownloadEvents {
   onChanged: {
     addListener(listener: DeltaListener): void;
@@ -25,18 +52,23 @@ export class DownloadWatcher implements DownloadCompletion {
   finished(id: number): Promise<void> {
     return new Promise((resolve, reject) => {
       const listener: DeltaListener = (delta) => {
-        const state = delta.state?.current;
-        if (delta.id !== id || state === undefined || state === IN_PROGRESS) {
-          return;
+        if (delta.id === id) {
+          this.changed(delta, listener, { resolve, reject });
         }
-        this.downloads.onChanged.removeListener(listener);
-        if (state === COMPLETE) {
-          resolve();
-          return;
-        }
-        reject(new Error(delta.error?.current ?? INTERRUPTED_MESSAGE));
       };
       this.downloads.onChanged.addListener(listener);
     });
+  }
+
+  private changed(
+    delta: DownloadDelta,
+    listener: DeltaListener,
+    settling: Settling,
+  ): void {
+    const state = endState(currentState(delta));
+    if (state !== undefined) {
+      this.downloads.onChanged.removeListener(listener);
+      settle(state, delta, settling);
+    }
   }
 }

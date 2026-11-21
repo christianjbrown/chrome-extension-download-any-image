@@ -9,9 +9,7 @@ export class ChromeErrorExplainer implements ErrorExplainer {
 
   explain(error: unknown): string {
     const message = errorMessage(error);
-    return (
-      this.refusals.find((refusal) => refusal.matches(message))?.explanation ??
-      message
-    );
+    const refusal = this.refusals.find((known) => known.matches(message));
+    return refusal === undefined ? message : refusal.explanation;
   }
 }

@@ -3,7 +3,7 @@
 const PARAMETERS = ";";
 
 export function mimeEssence(contentType: string | undefined): string {
-  const raw = contentType ?? "";
-  const end = raw.indexOf(PARAMETERS);
-  return (end === -1 ? raw : raw.slice(0, end)).trim().toLowerCase();
+  // Everything before the first parameter, which is all of it when it has none.
+  const [type] = (contentType ?? "").split(PARAMETERS, 1);
+  return String(type).trim().toLowerCase();
 }

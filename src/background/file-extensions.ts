@@ -1,3 +1,4 @@
+import { firstDefined } from "../shared/defined";
 import type { FileExtensions, ImageType } from "./filename-ports";
 import { mimeEssence } from "./mime-type";
 
@@ -7,6 +8,9 @@ const UNKNOWN_EXTENSION = "bin";
 // Some other image/ type: its own name, as image/x-portable-pixmap is "portable-pixmap".
 const IMAGE_SUBTYPE = /^image\/(?:x-)?([a-z0-9-]+)/;
 const SUBTYPE_GROUP = 1;
+
+const imageSubtype = (type: string): string | undefined =>
+  IMAGE_SUBTYPE.exec(type)?.at(SUBTYPE_GROUP);
 
 // What the file is, by the type the server or the page said, since an address
 // ending .jpg can quite happily serve a WebP.
@@ -37,17 +41,20 @@ export class MimeExtensions implements FileExtensions {
 
   for(mime: string | undefined, fromUrl: string | undefined): string {
     const type = mimeEssence(mime);
-    return (
-      this.byMime.get(type) ??
-      IMAGE_SUBTYPE.exec(type)?.at(SUBTYPE_GROUP) ??
-      this.fromAddress(fromUrl) ??
-      UNKNOWN_EXTENSION
-    );
+    // Best first: a type it knows, another image type, the address's own.
+    const guesses = [
+      () => this.byMime.get(type),
+      () => imageSubtype(type),
+      () => this.fromAddress(fromUrl),
+    ];
+    return firstDefined(guesses, (guess) => guess()) ?? UNKNOWN_EXTENSION;
   }
 
   private fromAddress(fromUrl: string | undefined): string | undefined {
-    return fromUrl !== undefined && this.imageExtensions.has(fromUrl)
-      ? fromUrl
-      : undefined;
+    return this.isImageExtension(fromUrl) ? fromUrl : undefined;
+  }
+
+  private isImageExtension(fromUrl: string | undefined): fromUrl is string {
+    return fromUrl !== undefined && this.imageExtensions.has(fromUrl);
   }
 }

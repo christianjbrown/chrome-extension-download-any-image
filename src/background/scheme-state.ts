@@ -17,9 +17,12 @@ export const afterDevice = (
 // it contradicts: one it matches may still be there, and would be lost the next
 // time the device changes.
 export function afterTab(state: SchemeState, tab: ColourScheme): SchemeState {
-  if (tab !== state.device) {
-    return { ...state, chrome: tab };
-  }
+  return tab === state.device
+    ? agreeingTab(state, tab)
+    : { ...state, chrome: tab };
+}
+
+function agreeingTab(state: SchemeState, tab: ColourScheme): SchemeState {
   return { ...state, chrome: state.chrome === tab ? tab : null };
 }
 
