@@ -8,7 +8,8 @@ export interface Look {
   title: string;
 }
 
-// The look for one kind of state, from the state itself.
+// The look for one kind of state, from the state itself. A look whose state
+// carries nothing is free to take nothing.
 export interface ButtonLook<K extends ButtonKind = ButtonKind> {
   readonly kind: K;
   look(state: ButtonState<K>): Look;

@@ -19,7 +19,7 @@ const ERROR_BADGE = "!";
 export class IdleLook implements ButtonLook<typeof IDLE> {
   readonly kind = IDLE;
 
-  look(_state: ButtonState<typeof IDLE>): Look {
+  look(): Look {
     return { badge: NO_BADGE, colour: GREY, title: IDLE_TITLE };
   }
 }
@@ -28,7 +28,7 @@ export class IdleLook implements ButtonLook<typeof IDLE> {
 export class ArmedLook implements ButtonLook<typeof ARMED> {
   readonly kind = ARMED;
 
-  look(_state: ButtonState<typeof ARMED>): Look {
+  look(): Look {
     return { badge: ARMED_BADGE, colour: PICKER_BLUE, title: ARMED_TITLE };
   }
 }
