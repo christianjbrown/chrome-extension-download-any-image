@@ -27,6 +27,7 @@ import {
   SvgReader,
 } from "./image-readers";
 import { OutlineBox } from "./outline-box";
+import { PageBlobs, type DataUrlReader } from "./page-blobs";
 import { PICK_GESTURES } from "./pick-gestures";
 import { PickSession } from "./pick-session";
 import { MediaHits, PointHits, StackHits } from "./point-hits";
@@ -40,7 +41,6 @@ type Listener = (
 // Where a frame keeps its armed session, so a second injection can find it.
 const KEY = "__downloadAnyImage";
 const OVERLAY_TAG = "div";
-const UNREADABLE = "The image could not be read";
 const globals = globalThis as unknown as Record<
   string,
   PickSession | undefined
@@ -105,20 +105,12 @@ const session = new PickSession({
   locator,
   readers: new ImageReaders([
     new PassThroughReader(),
-    new BlobUrlReader({
-      fetch: (url) => fetch(url).then((response) => response.blob()),
-      toDataUrl: (blob) =>
-        new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            resolve(reader.result as string);
-          };
-          reader.onerror = () => {
-            reject(new Error(UNREADABLE));
-          };
-          reader.readAsDataURL(blob as Blob);
-        }),
-    }),
+    new BlobUrlReader(
+      new PageBlobs(
+        (url) => fetch(url),
+        () => new FileReader() as unknown as DataUrlReader,
+      ),
+    ),
     new CanvasReader(),
     new SvgReader(
       (svg) => new XMLSerializer().serializeToString(svg as unknown as Node),

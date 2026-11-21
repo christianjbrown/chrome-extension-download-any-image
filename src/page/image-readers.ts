@@ -54,7 +54,7 @@ export class PassThroughReader implements ImageReader {
   }
 }
 
-interface BlobLike {
+export interface BlobLike {
   readonly size: number;
 }
 
