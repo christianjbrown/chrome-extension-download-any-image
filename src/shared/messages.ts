@@ -7,7 +7,7 @@ export const PAGE = "page";
 export const BACKGROUND = "background";
 
 // What the page script is asked to do.
-export const DISARM = "disarm";
+const DISARM = "disarm";
 
 // What the service worker is told.
 export const SAVE = "save";
@@ -19,6 +19,9 @@ export interface PageMessage {
   target: typeof PAGE;
   type: typeof DISARM;
 }
+
+// The one thing the page script is ever asked.
+export const DISARM_MESSAGE: PageMessage = { target: PAGE, type: DISARM };
 
 export type BackgroundMessage =
   | { target: typeof BACKGROUND; type: typeof SAVE; url: string; title: string }
