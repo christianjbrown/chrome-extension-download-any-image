@@ -4,6 +4,7 @@ import { backgroundGuards } from "../shared/message-guards";
 import { BACKGROUND, type BackgroundMessage } from "../shared/messages";
 import { ChromeErrorExplainer } from "./chrome-errors";
 import { ClickScheme } from "./click-scheme";
+import { BACKGROUND_CONFIG } from "./config";
 import { CrosshairCursor } from "./cursor-style";
 import { DownloadWatcher } from "./download-completion";
 import { OFFSCREEN_DOCUMENT_FILE, PAGE_SCRIPT_FILE } from "./entry-files";
@@ -65,8 +66,8 @@ const suggester = new FilenameSuggester(
   chrome.runtime.id,
   names,
   new ImageFilenameChooser(
-    new UrlOriginalNames(),
-    new TimestampedName(new SystemClock()),
+    new UrlOriginalNames(BACKGROUND_CONFIG.originalNames),
+    new TimestampedName(new SystemClock(), BACKGROUND_CONFIG.maxTitleLength),
     new MimeExtensions(),
   ),
 );
@@ -80,7 +81,7 @@ const router = new CommandRouter<BackgroundMessage>(
       reports.failed(senderTab(sender), message.error),
     scheme: (message) => toolbarScheme.deviceIs(message.scheme),
   },
-  backgroundGuards,
+  backgroundGuards(BACKGROUND_CONFIG.maxMessageText),
   chrome.runtime.id,
 );
 const navigation = new NavigationReset(indicator);

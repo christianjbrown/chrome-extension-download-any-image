@@ -5,6 +5,9 @@ import { cp, mkdir, rm } from "node:fs/promises";
 // What esbuild bundles, by the name each bundle is written under. The service
 // worker refers to some of these by file name, and a test keeps them in step.
 import entryPoints from "./entries.json" with { type: "json" };
+// The oldest Chrome the extension says it runs on is the one the bundles are
+// written for, so the two cannot drift apart.
+import manifest from "../static/manifest.json" with { type: "json" };
 
 const outdir = "dist";
 
@@ -15,7 +18,7 @@ await build({
   outdir,
   bundle: true,
   format: "iife",
-  target: "chrome126",
+  target: `chrome${manifest.minimum_chrome_version}`,
   minify: false,
   sourcemap: false,
   legalComments: "none",

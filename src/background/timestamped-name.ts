@@ -30,9 +30,13 @@ function stamp(date: Date): string {
 // "2026-10-30-14-05-my-cool-page", in the laptop's own time zone, so
 // downloads sort by when they were taken.
 export class TimestampedName implements FallbackNames {
-  constructor(private readonly clock: Clock) {}
+  constructor(
+    private readonly clock: Clock,
+    // The longest the title part gets.
+    private readonly maxTitleLength: number,
+  ) {}
 
   name(title: string): string {
-    return `${stamp(this.clock.now())}-${kebab(title) || UNTITLED}`;
+    return `${stamp(this.clock.now())}-${kebab(title, this.maxTitleLength) || UNTITLED}`;
   }
 }

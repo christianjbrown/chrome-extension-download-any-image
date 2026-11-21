@@ -23,27 +23,30 @@ export type MessageGuards<M extends { type: string }> = {
 // The service worker hands this to chrome.downloads, so only the schemes that
 // actually hold an image get through: the web, and bytes the page read itself.
 const DOWNLOADABLE = /^(?:https?:|data:image\/)/i;
-const MAX_TEXT = 2000;
-
-const isShortText = (value: unknown): boolean =>
-  typeof value === "string" && value.length <= MAX_TEXT;
 
 export const pageGuards: MessageGuards<PageMessage> = {
   disarm: (_message): _message is PageMessage => true,
 };
 
-export const backgroundGuards: MessageGuards<BackgroundMessage> = {
-  save: (message): message is Background<typeof SAVE> => {
-    const fields = message as Fields;
-    return (
-      typeof fields.url === "string" &&
-      DOWNLOADABLE.test(fields.url) &&
-      isShortText(fields.title)
-    );
-  },
-  disarmed: (_message): _message is Background<typeof DISARMED> => true,
-  failed: (message): message is Background<typeof FAILED> =>
-    isShortText((message as Fields).error),
-  scheme: (message): message is Background<typeof SCHEME> =>
-    isColourScheme((message as Fields).scheme),
-};
+// A page's title or error is somebody else's text, and no longer than maxText.
+export function backgroundGuards(
+  maxText: number,
+): MessageGuards<BackgroundMessage> {
+  const isShortText = (value: unknown): boolean =>
+    typeof value === "string" && value.length <= maxText;
+  return {
+    save: (message): message is Background<typeof SAVE> => {
+      const fields = message as Fields;
+      return (
+        typeof fields.url === "string" &&
+        DOWNLOADABLE.test(fields.url) &&
+        isShortText(fields.title)
+      );
+    },
+    disarmed: (_message): _message is Background<typeof DISARMED> => true,
+    failed: (message): message is Background<typeof FAILED> =>
+      isShortText((message as Fields).error),
+    scheme: (message): message is Background<typeof SCHEME> =>
+      isColourScheme((message as Fields).scheme),
+  };
+}

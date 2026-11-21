@@ -1,32 +1,44 @@
 // Page titles and server paths are somebody else's text, so nothing reaches a
 // filename until it has been through one of these.
 
-export function kebab(text: string): string {
+// Unicode's forms with accents split off a letter, and joined back on.
+const DECOMPOSED = "NFKD";
+const COMPOSED = "NFC";
+
+// Accents Unicode splits off a Latin letter, and what joins the words.
+const LATIN_MARKS = /[\u0300-\u036f]/g;
+const NOT_A_WORD = /[^\p{L}\p{N}]+/u;
+const DASH = "-";
+const UNSAFE = /[^\p{L}\p{N} ._-]+/gu;
+const DASHES = /-{2,}/g;
+const EDGE = /[\s.-]/;
+
+export function kebab(text: string, maxLength: number): string {
   const words = text
-    .normalize("NFKD")
+    .normalize(DECOMPOSED)
     // Latin accents only (é to e); other scripts' marks, like Japanese ペ, recombine.
-    .replace(/[̀-ͯ]/g, "")
-    .normalize("NFC")
+    .replace(LATIN_MARKS, "")
+    .normalize(COMPOSED)
     .toLowerCase()
-    .split(/[^\p{L}\p{N}]+/u)
+    .split(NOT_A_WORD)
     .filter((word) => word !== "");
-  return trimEnds(words.join("-").slice(0, 80));
+  return trimEnds(words.join(DASH).slice(0, maxLength));
 }
 
 // Keeps letters, digits, spaces, dots, dashes and underscores. Everything else,
 // path separators and control characters included, becomes a dash.
-export function safeStem(text: string): string {
+export function safeStem(text: string, maxLength: number): string {
   const cleaned = text
-    .normalize("NFC")
-    .replace(/[^\p{L}\p{N} ._-]+/gu, "-")
-    .replace(/-{2,}/g, "-");
-  return trimEnds(trimEnds(cleaned).slice(0, 100));
+    .normalize(COMPOSED)
+    .replace(UNSAFE, DASH)
+    .replace(DASHES, DASH);
+  return trimEnds(trimEnds(cleaned).slice(0, maxLength));
 }
 
 // No leading dot (a hidden file) and no trailing dot, dash or space.
 function trimEnds(text: string): string {
   const edge = (char: string | undefined): boolean =>
-    char !== undefined && /[\s.-]/.test(char);
+    char !== undefined && EDGE.test(char);
   let start = 0;
   let end = text.length;
   while (start < end && edge(text[start])) {
