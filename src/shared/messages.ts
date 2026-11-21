@@ -1,6 +1,7 @@
 // Everything the service worker, the page script and the offscreen document
 // say to each other.
 import type { ColourScheme } from "./colour-scheme";
+import { isObject } from "./objects";
 
 // Who a message is for. Every context hears every message.
 export const PAGE = "page";
@@ -41,9 +42,5 @@ export function isMessageFor(
   message: unknown,
   target: string,
 ): message is { target: string; type: string } {
-  return (
-    typeof message === "object" &&
-    message !== null &&
-    (message as { target?: unknown }).target === target
-  );
+  return isObject(message) && message.target === target;
 }

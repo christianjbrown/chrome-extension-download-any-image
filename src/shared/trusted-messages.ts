@@ -15,16 +15,26 @@ export class TrustedMessages<M extends Message> implements MessageGate<M> {
   }
 
   admits(message: unknown, sender: Sender | undefined): message is M {
-    if (
-      sender?.id !== this.extensionId ||
-      !isMessageFor(message, this.target)
-    ) {
-      return false;
-    }
-    const type = message.type;
+    return this.fromExtension(sender) && this.forThisContext(message);
+  }
+
+  private fromExtension(sender: Sender | undefined): boolean {
+    return sender?.id === this.extensionId;
+  }
+
+  private forThisContext(message: unknown): message is M {
+    return isMessageFor(message, this.target) && this.fieldsRight(message);
+  }
+
+  private fieldsRight(message: { type: unknown }): message is M {
     return (
-      typeof type === "string" &&
-      this.byType.get(type)?.admits(message) === true
+      typeof message.type === "string" &&
+      this.guardAdmits(message.type, message)
     );
+  }
+
+  // A type with no guard is not one this context knows.
+  private guardAdmits(type: string, message: unknown): message is M {
+    return this.byType.get(type)?.admits(message) === true;
   }
 }

@@ -4,7 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "lib": ["ES2023", "ES2025.Iterator", "DOM", "DOM.Iterable"],
     "types": ["chrome", "vitest/globals"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
