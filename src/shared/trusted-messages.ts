@@ -26,11 +26,8 @@ export class TrustedMessages<M extends Message> implements MessageGate<M> {
     return isMessageFor(message, this.target) && this.fieldsRight(message);
   }
 
-  private fieldsRight(message: { type: unknown }): message is M {
-    return (
-      typeof message.type === "string" &&
-      this.guardAdmits(message.type, message)
-    );
+  private fieldsRight(message: { type: string }): message is M {
+    return this.guardAdmits(message.type, message);
   }
 
   // A type with no guard is not one this context knows.

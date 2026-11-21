@@ -130,7 +130,7 @@ const suggester = new FilenameSuggester(
       new MeaningfulNames(BACKGROUND_CONFIG.originalNames),
     ),
     new TimestampedName(
-      new SystemClock(),
+      new SystemClock(Date),
       new KebabText(BACKGROUND_CONFIG.maxTitleLength),
     ),
     new MimeExtensions([

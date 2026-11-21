@@ -9,13 +9,8 @@ import type { PageMessage } from "../shared/messages";
 import type { Reply } from "../shared/replies";
 import type { CommandSet, GuardSet } from "../shared/routing";
 import { BackgroundClient } from "./background-client";
-import {
-  AFTER,
-  BEFORE,
-  CssImageFinder,
-  OwnStyle,
-  PseudoStyle,
-} from "./css-finder";
+import { CssImageFinder } from "./css-finder";
+import { AFTER, BEFORE, OwnStyle, PseudoStyle } from "./css-styles";
 import type { ElementStyle } from "./css-reading";
 import {
   IMAGE_SET,
@@ -26,13 +21,11 @@ import {
 import { CssImageUrls } from "./css-image-urls";
 import { DpcmUnit, DpiUnit, DppxUnit, XUnit } from "./css-resolutions";
 import { instanceOf } from "./checks";
-import {
-  DocumentBackdrop,
-  DocumentOverlay,
-  ElementCheck,
-  ElementStyles,
-  XmlSvgSerializer,
-} from "./document-adapters";
+import { DocumentBackdrop } from "./document-backdrop";
+import { DisarmCommand } from "./disarm-command";
+import { DocumentOverlay } from "./document-overlay";
+import { ElementCheck } from "./element-check";
+import { ElementStyles } from "./element-styles";
 import type { Listenable, StyleLook } from "./dom";
 import {
   CanvasFinder,
@@ -43,22 +36,18 @@ import {
   VideoPosterFinder,
 } from "./element-finders";
 import { EventBindings } from "./event-bindings";
+import { FrameSlot } from "./frame-slot";
 import { HoverOutline } from "./hover-outline";
 import { ImageLocator } from "./image-locator";
 import { CANVAS_SOURCE } from "./canvas-source";
 import { ImagePick } from "./image-pick";
-import {
-  BlobUrlReader,
-  CanvasReader,
-  ImageReaders,
-  PassThroughReader,
-  SvgReader,
-  UrlReaders,
-} from "./image-readers";
+import { CanvasReader } from "./canvas-reader";
+import { ImageReaders } from "./image-readers";
+import { SvgReader } from "./svg-reader";
+import { BlobUrlReader, PassThroughReader, UrlReaders } from "./url-readers";
 import type { ImageFinder } from "./locating";
 import { OutlineBox } from "./outline-box";
 import { PageBlobs } from "./page-blobs";
-import { DisarmCommand, FrameSlot } from "./page-commands";
 import { PICK_GESTURES } from "./pick-gestures";
 import { PickSession } from "./pick-session";
 import { MediaHits, PointHits, StackHits } from "./point-hits";
@@ -72,6 +61,7 @@ import {
   StopOnNavigate,
   StopOnPageHide,
 } from "./session-parts";
+import { XmlSvgSerializer } from "./xml-svg-serializer";
 
 // Where a frame keeps its armed session, so a second injection can find it.
 const KEY = "__downloadAnyImage";

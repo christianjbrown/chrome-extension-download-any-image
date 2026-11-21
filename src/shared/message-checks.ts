@@ -6,7 +6,15 @@ export function isMessageFor(
   message: unknown,
   target: string,
 ): message is { target: string; type: string } {
-  return isObject(message) && message.target === target;
+  return isObject(message) && isAddressedTo(message, target);
+}
+
+// A message names the context it is for and the type it is, as text.
+function isAddressedTo(
+  message: Record<string, unknown>,
+  target: string,
+): boolean {
+  return message.target === target && typeof message.type === "string";
 }
 
 // Whether a value from another context is a message for the target, of the
