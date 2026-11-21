@@ -15,6 +15,7 @@ import {
   WEBKIT_IMAGE_SET,
 } from "./css-image-functions";
 import { CssImageUrls } from "./css-image-urls";
+import { DpcmUnit, DpiUnit, DppxUnit, XUnit } from "./css-resolutions";
 import {
   DocumentBackdrop,
   DocumentOverlay,
@@ -83,10 +84,12 @@ slot.clear();
 // Browser functions are wrapped so they are never called with the wrong `this`.
 const look: StyleLook = (element, pseudo) =>
   getComputedStyle(element as unknown as Element, pseudo);
+// The units an image-set() option's density can be written in.
+const units = [new XUnit(), new DppxUnit(), new DpiUnit(), new DpcmUnit()];
 const images = new CssImageUrls([
   new UrlFunction(),
-  new ImageSetFunction(IMAGE_SET),
-  new ImageSetFunction(WEBKIT_IMAGE_SET),
+  new ImageSetFunction(IMAGE_SET, units),
+  new ImageSetFunction(WEBKIT_IMAGE_SET, units),
 ]);
 const css = (property: string, pseudo?: Pseudo): ImageFinder =>
   new CssImageFinder(look, images, property, pseudo);

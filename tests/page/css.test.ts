@@ -7,6 +7,12 @@ import {
 } from "../../src/page/css-image-functions";
 import { CssImageUrls } from "../../src/page/css-image-urls";
 import {
+  DpcmUnit,
+  DpiUnit,
+  DppxUnit,
+  XUnit,
+} from "../../src/page/css-resolutions";
+import {
   functionsIn,
   leadingString,
   splitTopLevel,
@@ -61,10 +67,11 @@ describe("css text", () => {
 
 // The functions the page script is wired with.
 function cssImageUrls(): CssImageUrls {
+  const units = [new XUnit(), new DppxUnit(), new DpiUnit(), new DpcmUnit()];
   return new CssImageUrls([
     new UrlFunction(),
-    new ImageSetFunction(IMAGE_SET),
-    new ImageSetFunction(WEBKIT_IMAGE_SET),
+    new ImageSetFunction(IMAGE_SET, units),
+    new ImageSetFunction(WEBKIT_IMAGE_SET, units),
   ]);
 }
 
@@ -122,6 +129,16 @@ describe("CssImageUrls", () => {
     "image-set(junk 1x)",
   ])("finds nothing in %s", (value) => {
     expect(urls.first(value)).toBeUndefined();
+  });
+});
+
+describe("ImageSetFunction", () => {
+  it("reads densities only in the units it is given", () => {
+    const set = new ImageSetFunction(IMAGE_SET, [{ unit: "q", perX: 10 }]);
+
+    expect(set.picture('"https://x/a.png" 2x, "https://x/b.png" 1Q')).toBe(
+      "https://x/b.png",
+    );
   });
 });
 

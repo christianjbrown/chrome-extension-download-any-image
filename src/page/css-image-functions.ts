@@ -1,20 +1,10 @@
 import { functionsIn, leadingString, splitTopLevel, unquote } from "./css-text";
-import type { CssImageFunction } from "./css-reading";
+import type { CssImageFunction, ResolutionUnit } from "./css-reading";
 
 // The functions that name a picture, as CSS spells them.
 const URL_FUNCTION = "url";
 export const IMAGE_SET = "image-set";
 export const WEBKIT_IMAGE_SET = "-webkit-image-set";
-
-// CSS fixes a pixel at a 96th of an inch, and an inch is 2.54cm.
-const CSS_DPI = 96;
-const CM_PER_INCH = 2.54;
-const PER_X: Readonly<Record<string, number>> = {
-  x: 1,
-  dppx: 1,
-  dpi: 1 / CSS_DPI,
-  dpcm: CM_PER_INCH / CSS_DPI,
-};
 
 // How an image-set() option's density is written: a number, then its unit,
 // with options' parts set apart by spaces.
@@ -39,9 +29,17 @@ export class UrlFunction implements CssImageFunction {
 }
 
 // image-set() and its prefixed twin, of whose pictures the sharpest is the one
-// worth keeping.
+// worth keeping. Densities are read in the units it is given, so a new unit is
+// a new one of those.
 export class ImageSetFunction implements CssImageFunction {
-  constructor(readonly name: string) {}
+  private readonly perX: ReadonlyMap<string, number>;
+
+  constructor(
+    readonly name: string,
+    units: readonly ResolutionUnit[],
+  ) {
+    this.perX = new Map(units.map(({ unit, perX }) => [unit, perX]));
+  }
 
   picture(args: string): string | undefined {
     const options = splitTopLevel(args)
@@ -69,7 +67,7 @@ export class ImageSetFunction implements CssImageFunction {
   private density(text: string): number {
     for (const token of text.trim().split(SPACES)) {
       const unit = token.replace(LEADING_NUMBER, "").toLowerCase();
-      const perX = Object.hasOwn(PER_X, unit) ? PER_X[unit] : undefined;
+      const perX = this.perX.get(unit);
       const amount = Number(token.slice(0, token.length - unit.length));
       if (perX !== undefined && unit !== token && Number.isFinite(amount)) {
         return amount * perX;
