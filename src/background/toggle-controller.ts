@@ -1,3 +1,4 @@
+import { ARMED_STATE, ERROR, IDLE_STATE } from "./button-states";
 import type { PickIndicator } from "./pick-indicator";
 import type { ErrorExplainer, Picker } from "./picking";
 
@@ -34,7 +35,10 @@ export class ToggleController {
       await this.flip(tabId);
     } catch (error) {
       await this.picker.disarm(tabId);
-      await this.indicator.showError(tabId, this.errors.explain(error));
+      await this.indicator.show(tabId, {
+        kind: ERROR,
+        reason: this.errors.explain(error),
+      });
     } finally {
       this.busy.delete(tabId);
     }
@@ -44,10 +48,10 @@ export class ToggleController {
   // shut down in between, and a page that disarmed itself.
   private async flip(tabId: number): Promise<void> {
     if (await this.picker.disarm(tabId)) {
-      await this.indicator.showIdle(tabId);
+      await this.indicator.show(tabId, IDLE_STATE);
       return;
     }
     await this.picker.arm(tabId);
-    await this.indicator.showArmed(tabId);
+    await this.indicator.show(tabId, ARMED_STATE);
   }
 }

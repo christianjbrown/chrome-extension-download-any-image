@@ -1,4 +1,4 @@
-import type { Reply } from "./messages";
+import type { Reply } from "./replies";
 import { replyWhenDone } from "./replies";
 import type { Message, MessageGate, Sender } from "./routing";
 

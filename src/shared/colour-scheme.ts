@@ -12,4 +12,4 @@ export const schemeFor = (prefersDark: boolean): ColourScheme =>
   prefersDark ? DARK : LIGHT;
 
 export const isColourScheme = (value: unknown): value is ColourScheme =>
-  (COLOUR_SCHEMES as readonly unknown[]).includes(value);
+  COLOUR_SCHEMES.some((scheme) => scheme === value);

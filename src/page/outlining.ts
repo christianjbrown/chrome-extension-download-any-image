@@ -7,10 +7,10 @@ export interface OverlayElement {
   remove(): void;
 }
 
-// Where the frame is made and put.
+// Where the frame is made and put: a new element, readied by the caller
+// before it goes on the page.
 export interface OverlayHost {
-  create(): OverlayElement;
-  attach(element: OverlayElement): void;
+  add(ready: (element: OverlayElement) => void): OverlayElement;
 }
 
 // The frame round a box on screen.

@@ -37,6 +37,7 @@ describe("PageScript", () => {
     ["nobody is listening", () => Promise.reject(new Error("No receiver"))],
     ["the answer is empty", () => Promise.resolve(undefined)],
     ["the answer is a failure", () => Promise.resolve({ ok: false })],
+    ["the answer is not a reply", () => Promise.resolve("ok")],
   ])("says nothing was armed when %s", async (_why, answer) => {
     const { tabs, script } = setup();
     tabs.sendMessage.mockImplementation(answer);

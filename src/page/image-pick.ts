@@ -1,5 +1,5 @@
 import { errorMessage } from "../shared/error-message";
-import type { ImageSource } from "./dom";
+import type { ImageSource } from "./image-source";
 import type { ImageReading } from "./image-reading";
 import type { Locator } from "./locating";
 import type { PickFlow, PickReporter } from "./pick-control";

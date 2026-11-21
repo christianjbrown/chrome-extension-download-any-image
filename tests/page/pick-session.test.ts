@@ -182,6 +182,21 @@ describe("a pick session with every part", () => {
     expect(hover.follow).toHaveBeenCalledWith(40, 50);
   });
 
+  it("passes over events that are not the shape it listens for", () => {
+    const { window, reporter, hover } = setup();
+    const notPointer = { key: "Escape", preventDefault: vi.fn() };
+
+    window.fire("pointerdown", notPointer);
+    window.fire("click", notPointer);
+    window.fire("pointermove", notPointer);
+    window.fire("keydown", { clientX: 1, clientY: 1, button: 0 });
+
+    expect(notPointer.preventDefault).not.toHaveBeenCalled();
+    expect(hover.follow).not.toHaveBeenCalled();
+    expect(reporter.disarmed).not.toHaveBeenCalled();
+    expect(window.count()).toBeGreaterThan(0);
+  });
+
   it("stops on Escape and ignores other keys", () => {
     const { window, reporter } = setup();
     const other = pointer({ key: "a" });

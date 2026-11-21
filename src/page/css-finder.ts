@@ -1,11 +1,7 @@
-import {
-  URL_SOURCE,
-  type ImageSource,
-  type PageElement,
-  type StyleDeclaration,
-  type StyleLook,
-} from "./dom";
+import type { PageElement, StyleDeclaration, StyleLook } from "./dom";
 import type { ElementStyle } from "./css-reading";
+import type { ImageSource } from "./image-source";
+import { URL_SOURCE } from "./url-source";
 import type { CssImages, ImageFinder } from "./locating";
 
 // The pseudo-elements that can paint a picture over their element.

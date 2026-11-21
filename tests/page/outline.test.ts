@@ -16,15 +16,20 @@ function overlay() {
 describe("OutlineBox", () => {
   it("adds one frame over the box, moves it, and removes it", () => {
     const made = overlay();
-    const create = vi.fn(() => made);
-    const attach = vi.fn();
-    const box = new OutlineBox({ create, attach });
+    const lookWhenAdded = new Map<string, string>();
+    const add = vi.fn((ready: (element: typeof made) => void) => {
+      ready(made);
+      made.values.forEach((value, name) => lookWhenAdded.set(name, value));
+      return made;
+    });
+    const box = new OutlineBox({ add });
 
     box.show({ left: 1, top: 2, width: 3, height: 4 });
     box.show({ left: 5, top: 6, width: 7, height: 8 });
 
-    expect(create).toHaveBeenCalledOnce();
-    expect(attach).toHaveBeenCalledWith(made);
+    expect(add).toHaveBeenCalledOnce();
+    expect(lookWhenAdded.get("position")).toBe("fixed");
+    expect(lookWhenAdded.has("left")).toBe(false);
     expect(made.values.get("pointer-events")).toBe("none");
     expect(made.values.get("position")).toBe("fixed");
     expect(made.values.get("left")).toBe("5px");

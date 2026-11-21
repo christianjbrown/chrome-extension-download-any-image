@@ -10,13 +10,17 @@ interface BlobResponse {
 
 export type Fetcher = (url: string) => Promise<BlobResponse>;
 
-// The part of a FileReader this needs.
+// The part of a FileReader this needs. Its handlers are handed an event this
+// never reads, and its result is checked before it is believed.
 export interface DataUrlReader {
   readonly result: unknown;
-  onload: (() => void) | null;
-  onerror: (() => void) | null;
+  onload: ((event: never) => unknown) | null;
+  onerror: ((event: never) => unknown) | null;
   readAsDataURL(blob: BlobLike): void;
 }
+
+type Settle = (url: string) => void;
+type Refuse = (error: Error) => void;
 
 // Reads a blob: URL's bytes in the page that made it, and turns them into a
 // data: URL the service worker can download.
@@ -35,12 +39,21 @@ export class PageBlobs implements BlobAccess {
     return new Promise((resolve, reject) => {
       const reader = this.newReader();
       reader.onload = () => {
-        resolve(reader.result as string);
+        this.loaded(reader.result, resolve, reject);
       };
       reader.onerror = () => {
         reject(new Error(UNREADABLE));
       };
       reader.readAsDataURL(blob);
     });
+  }
+
+  // A data: URL is text, and anything else is a read that did not work.
+  private loaded(result: unknown, resolve: Settle, reject: Refuse): void {
+    if (typeof result === "string") {
+      resolve(result);
+      return;
+    }
+    reject(new Error(UNREADABLE));
   }
 }

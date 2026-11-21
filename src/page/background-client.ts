@@ -1,11 +1,11 @@
-import {
-  BACKGROUND,
-  DISARMED,
-  FAILED,
-  SAVE,
-  type BackgroundMessage,
-  type BackgroundMessenger,
+import { DISARMED } from "../shared/disarmed-message";
+import { FAILED } from "../shared/failed-message";
+import { BACKGROUND } from "../shared/message-targets";
+import type {
+  BackgroundMessage,
+  BackgroundMessenger,
 } from "../shared/messages";
+import { SAVE } from "../shared/save-message";
 import type { PickReporter } from "./pick-control";
 
 // Nobody waits for an answer: the service worker shows the outcome on the

@@ -11,7 +11,7 @@ describe("ToggleController", () => {
     });
 
     expect(picker.arm).toHaveBeenCalledWith(5);
-    expect(indicator.showArmed).toHaveBeenCalledWith(5);
+    expect(indicator.show).toHaveBeenCalledWith(5, { kind: "armed" });
   });
 
   it("disarms a tab that was armed, and does not arm it again", async () => {
@@ -23,7 +23,7 @@ describe("ToggleController", () => {
     });
 
     expect(picker.arm).not.toHaveBeenCalled();
-    expect(indicator.showIdle).toHaveBeenCalledWith(5);
+    expect(indicator.show).toHaveBeenCalledWith(5, { kind: "idle" });
   });
 
   it("explains a refusal on the button and tidies up", async () => {
@@ -35,10 +35,10 @@ describe("ToggleController", () => {
       id: 5,
     });
 
-    expect(indicator.showError).toHaveBeenCalledWith(
-      5,
-      "explained: Cannot access",
-    );
+    expect(indicator.show).toHaveBeenCalledWith(5, {
+      kind: "error",
+      reason: "explained: Cannot access",
+    });
     expect(picker.disarm).toHaveBeenCalledTimes(2);
   });
 

@@ -1,4 +1,10 @@
 // What arming the picker in a tab, and dealing with the click, is made of.
+import type { Sender } from "../shared/routing";
+
+// The tab a page script's message came from, which every report is about.
+export interface SenderTabs {
+  tabOf(sender: Sender): number;
+}
 
 // Stopping the wait for the click in one tab.
 export interface PickerStop {

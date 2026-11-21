@@ -1,15 +1,9 @@
 import { firstDefined } from "../shared/defined";
-import type {
-  Box,
-  CANVAS_SOURCE,
-  ImageSource,
-  ImageSourceOf,
-  SourceKind,
-  StyleLook,
-  SvgLike,
-  SVG_SOURCE,
-  URL_SOURCE,
-} from "./dom";
+import type { Box, StyleLook, SvgLike } from "./dom";
+import type { CANVAS_SOURCE } from "./canvas-source";
+import type { ImageSource, ImageSourceOf, SourceKind } from "./image-source";
+import type { SVG_SOURCE } from "./svg-source";
+import type { URL_SOURCE } from "./url-source";
 import type {
   BlobAccess,
   BlobLike,

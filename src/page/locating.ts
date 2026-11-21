@@ -1,5 +1,6 @@
 // What finding the picture under a point is made of.
-import type { ImageSource, PageElement } from "./dom";
+import type { PageElement } from "./dom";
+import type { ImageSource } from "./image-source";
 
 // One way an element can show a picture.
 export interface ImageFinder {

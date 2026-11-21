@@ -1,9 +1,7 @@
 import { schemeFor, type ColourScheme } from "../shared/colour-scheme";
-import {
-  BACKGROUND,
-  SCHEME,
-  type BackgroundMessenger,
-} from "../shared/messages";
+import { BACKGROUND } from "../shared/message-targets";
+import type { BackgroundMessenger } from "../shared/messages";
+import { SCHEME } from "../shared/scheme-message";
 
 // The part of a MediaQueryList this needs.
 export interface SchemeQuery {

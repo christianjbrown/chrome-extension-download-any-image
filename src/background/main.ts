@@ -2,28 +2,19 @@
 import { CommandRouter } from "../shared/command-router";
 import { TrustedMessages } from "../shared/trusted-messages";
 import { SerialQueue } from "../shared/serial-queue";
-import {
-  DisarmedGuard,
-  FailedGuard,
-  SaveGuard,
-  SchemeGuard,
-} from "../shared/message-guards";
-import {
-  BACKGROUND,
-  DISARMED,
-  FAILED,
-  SAVE,
-  SCHEME,
-  type BackgroundMessage,
-} from "../shared/messages";
+import { DISARMED, DisarmedGuard } from "../shared/disarmed-message";
+import { FAILED, FailedGuard } from "../shared/failed-message";
+import { BACKGROUND } from "../shared/message-targets";
+import type { BackgroundMessage } from "../shared/messages";
 import type { CommandSet, GuardSet } from "../shared/routing";
-import {
-  DisarmedCommand,
-  FailedCommand,
-  SaveCommand,
-  SchemeCommand,
-} from "./background-commands";
-import { ARMED, ERROR, IDLE, type LookSet } from "./button-looks";
+import { SAVE, SaveGuard } from "../shared/save-message";
+import { SCHEME, SchemeGuard } from "../shared/scheme-message";
+import { DisarmedCommand } from "./disarmed-command";
+import { FailedCommand } from "./failed-command";
+import { SaveCommand } from "./save-command";
+import { SchemeCommand } from "./scheme-command";
+import type { LookSet } from "./button-looks";
+import { ARMED, ERROR, IDLE } from "./button-states";
 import { ChromeErrorExplainer } from "./chrome-errors";
 import {
   ActiveTabRefusal,
@@ -66,6 +57,7 @@ import { PickReports } from "./pick-reports";
 import { SchemeDocument } from "./scheme-document";
 import { SCHEME_POLICY, UNKNOWN_SCHEME } from "./scheme-state";
 import { SchemeStore } from "./scheme-store";
+import { TabOfSender } from "./sender-tab";
 import { SystemClock } from "./system-clock";
 import { TabPicker } from "./tab-picker";
 import { TabScheme } from "./tab-scheme";
@@ -157,6 +149,7 @@ const suggester = new FilenameSuggester(
     ]),
   ),
 );
+const senderTabs = new TabOfSender();
 const router = new CommandRouter<BackgroundMessage>(
   new TrustedMessages<BackgroundMessage>(
     BACKGROUND,
@@ -169,9 +162,9 @@ const router = new CommandRouter<BackgroundMessage>(
     chrome.runtime.id,
   ),
   Object.values({
-    [SAVE]: new SaveCommand(reports),
-    [DISARMED]: new DisarmedCommand(reports),
-    [FAILED]: new FailedCommand(reports),
+    [SAVE]: new SaveCommand(reports, senderTabs),
+    [DISARMED]: new DisarmedCommand(reports, senderTabs),
+    [FAILED]: new FailedCommand(reports, senderTabs),
     [SCHEME]: new SchemeCommand(toolbarScheme),
   } satisfies CommandSet<BackgroundMessage>),
 );

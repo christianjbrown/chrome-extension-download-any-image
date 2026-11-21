@@ -1,3 +1,4 @@
+import { IDLE_STATE } from "./button-states";
 import type { IdleIndicator } from "./pick-indicator";
 
 // The status Chrome gives a tab that has started on a new page.
@@ -13,7 +14,7 @@ export class NavigationReset {
 
   async changed(tabId: number, change: TabChange): Promise<void> {
     if (change.status === LOADING) {
-      await this.indicator.showIdle(tabId);
+      await this.indicator.show(tabId, IDLE_STATE);
     }
   }
 }
