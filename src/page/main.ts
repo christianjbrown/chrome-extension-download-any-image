@@ -46,14 +46,10 @@ import { HoverOutline } from "./hover-outline";
 import { ImageLocator } from "./image-locator";
 import { CANVAS_SOURCE } from "./canvas-source";
 import { ImagePick } from "./image-pick";
-import {
-  BlobUrlReader,
-  CanvasReader,
-  ImageReaders,
-  PassThroughReader,
-  SvgReader,
-  UrlReaders,
-} from "./image-readers";
+import { CanvasReader } from "./canvas-reader";
+import { ImageReaders } from "./image-readers";
+import { SvgReader } from "./svg-reader";
+import { BlobUrlReader, PassThroughReader, UrlReaders } from "./url-readers";
 import type { ImageFinder } from "./locating";
 import { OutlineBox } from "./outline-box";
 import { PageBlobs } from "./page-blobs";

@@ -1,11 +1,11 @@
+import { CanvasReader } from "../../src/page/canvas-reader";
+import { ImageReaders } from "../../src/page/image-readers";
+import { SvgReader } from "../../src/page/svg-reader";
 import {
   BlobUrlReader,
-  CanvasReader,
-  ImageReaders,
   PassThroughReader,
-  SvgReader,
   UrlReaders,
-} from "../../src/page/image-readers";
+} from "../../src/page/url-readers";
 import { styles, svgElement } from "./fakes";
 import type { SvgLike } from "../../src/page/dom";
 
