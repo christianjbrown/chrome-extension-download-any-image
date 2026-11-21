@@ -18,13 +18,14 @@ const reports = {
   failed: vi.fn(),
 };
 const sink = { deviceIs: vi.fn() };
+const tabs = { tabOf: () => 1 };
 
 describe("CommandSet", () => {
   it("takes one command for every type", () => {
     const set = {
-      save: new SaveCommand(reports),
-      disarmed: new DisarmedCommand(reports),
-      failed: new FailedCommand(reports),
+      save: new SaveCommand(reports, tabs),
+      disarmed: new DisarmedCommand(reports, tabs),
+      failed: new FailedCommand(reports, tabs),
       scheme: new SchemeCommand(sink),
     } satisfies CommandSet<BackgroundMessage>;
 
@@ -33,9 +34,9 @@ describe("CommandSet", () => {
 
   it("refuses a set with a type left out", () => {
     const set = {
-      save: new SaveCommand(reports),
-      disarmed: new DisarmedCommand(reports),
-      failed: new FailedCommand(reports),
+      save: new SaveCommand(reports, tabs),
+      disarmed: new DisarmedCommand(reports, tabs),
+      failed: new FailedCommand(reports, tabs),
       // @ts-expect-error scheme has no command
     } satisfies CommandSet<BackgroundMessage>;
 
@@ -44,11 +45,11 @@ describe("CommandSet", () => {
 
   it("refuses a command under another type's name", () => {
     const set = {
-      save: new SaveCommand(reports),
-      disarmed: new DisarmedCommand(reports),
+      save: new SaveCommand(reports, tabs),
+      disarmed: new DisarmedCommand(reports, tabs),
       // @ts-expect-error a failed command cannot answer scheme
-      scheme: new FailedCommand(reports),
-      failed: new FailedCommand(reports),
+      scheme: new FailedCommand(reports, tabs),
+      failed: new FailedCommand(reports, tabs),
     } satisfies CommandSet<BackgroundMessage>;
 
     expect(set).toBeDefined();
@@ -56,9 +57,9 @@ describe("CommandSet", () => {
 
   it("refuses a type no message has", () => {
     const set = {
-      save: new SaveCommand(reports),
-      disarmed: new DisarmedCommand(reports),
-      failed: new FailedCommand(reports),
+      save: new SaveCommand(reports, tabs),
+      disarmed: new DisarmedCommand(reports, tabs),
+      failed: new FailedCommand(reports, tabs),
       scheme: new SchemeCommand(sink),
       // @ts-expect-error there is no such message
       extra: new SchemeCommand(sink),

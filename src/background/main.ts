@@ -57,6 +57,7 @@ import { PickReports } from "./pick-reports";
 import { SchemeDocument } from "./scheme-document";
 import { SCHEME_POLICY, UNKNOWN_SCHEME } from "./scheme-state";
 import { SchemeStore } from "./scheme-store";
+import { TabOfSender } from "./sender-tab";
 import { SystemClock } from "./system-clock";
 import { TabPicker } from "./tab-picker";
 import { TabScheme } from "./tab-scheme";
@@ -148,6 +149,7 @@ const suggester = new FilenameSuggester(
     ]),
   ),
 );
+const senderTabs = new TabOfSender();
 const router = new CommandRouter<BackgroundMessage>(
   new TrustedMessages<BackgroundMessage>(
     BACKGROUND,
@@ -160,9 +162,9 @@ const router = new CommandRouter<BackgroundMessage>(
     chrome.runtime.id,
   ),
   Object.values({
-    [SAVE]: new SaveCommand(reports),
-    [DISARMED]: new DisarmedCommand(reports),
-    [FAILED]: new FailedCommand(reports),
+    [SAVE]: new SaveCommand(reports, senderTabs),
+    [DISARMED]: new DisarmedCommand(reports, senderTabs),
+    [FAILED]: new FailedCommand(reports, senderTabs),
     [SCHEME]: new SchemeCommand(toolbarScheme),
   } satisfies CommandSet<BackgroundMessage>),
 );
