@@ -178,9 +178,15 @@ describe("TimestampedName", () => {
 });
 
 describe("SystemClock", () => {
-  it("tells the time", () => {
-    const before = Date.now();
-    expect(new SystemClock().now().getTime()).toBeGreaterThanOrEqual(before);
+  it("tells the time with the Date constructor it was given", () => {
+    const fixed = new Date("2026-10-30T14:05:00Z");
+    class FixedDate extends Date {
+      constructor() {
+        super(fixed.getTime());
+      }
+    }
+
+    expect(new SystemClock(FixedDate).now().getTime()).toBe(fixed.getTime());
   });
 });
 
