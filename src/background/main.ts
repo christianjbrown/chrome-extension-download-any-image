@@ -2,8 +2,10 @@
 import { CommandRouter } from "../shared/command-router";
 import { backgroundGuards } from "../shared/message-guards";
 import { BACKGROUND, type BackgroundMessage } from "../shared/messages";
+import { BackgroundCommands } from "./background-commands";
 import { CHROME_TRANSLATIONS, ChromeErrorExplainer } from "./chrome-errors";
 import { ClickScheme } from "./click-scheme";
+import { ClosedTabAction } from "./closed-tab-action";
 import { BACKGROUND_CONFIG } from "./config";
 import { CrosshairCursor } from "./cursor-style";
 import { DownloadWatcher } from "./download-completion";
@@ -12,7 +14,9 @@ import { IMAGE_TYPES, MimeExtensions } from "./file-extensions";
 import { ImageFilenameChooser } from "./filename-chooser";
 import { FilenameListening } from "./filename-listening";
 import { FilenameSuggester, type Suggest } from "./filename-suggester";
+import { KebabText, SafeStemText } from "./filename-text";
 import { ImageSaver } from "./image-saver";
+import { MeaningfulNames } from "./meaningful-names";
 import { NavigationReset } from "./navigation-reset";
 import { UrlOriginalNames } from "./original-name";
 import { PageScript } from "./page-script";
@@ -21,7 +25,6 @@ import { PickReports } from "./pick-reports";
 import { SchemeDocument } from "./scheme-document";
 import { SCHEME_POLICY, UNKNOWN_SCHEME } from "./scheme-state";
 import { SchemeStore } from "./scheme-store";
-import { senderTab } from "./sender-tab";
 import { SystemClock } from "./system-clock";
 import { TabPicker } from "./tab-picker";
 import { TabScheme } from "./tab-scheme";
@@ -31,7 +34,7 @@ import { ToolbarIcon } from "./toolbar-icon";
 import { ToolbarIndicator } from "./toolbar-indicator";
 import { ToolbarScheme } from "./toolbar-scheme";
 
-const indicator = new ToolbarIndicator(chrome.action);
+const indicator = new ToolbarIndicator(new ClosedTabAction(chrome.action));
 const toolbarScheme = new ToolbarScheme(
   new SchemeStore(chrome.storage.local, UNKNOWN_SCHEME),
   new ToolbarIcon(chrome.action),
@@ -77,21 +80,21 @@ const suggester = new FilenameSuggester(
   chrome.runtime.id,
   names,
   new ImageFilenameChooser(
-    new UrlOriginalNames(BACKGROUND_CONFIG.originalNames),
-    new TimestampedName(new SystemClock(), BACKGROUND_CONFIG.maxTitleLength),
+    new UrlOriginalNames(
+      BACKGROUND_CONFIG.maxExtensionLength,
+      new SafeStemText(BACKGROUND_CONFIG.maxStemLength),
+      new MeaningfulNames(BACKGROUND_CONFIG.originalNames),
+    ),
+    new TimestampedName(
+      new SystemClock(),
+      new KebabText(BACKGROUND_CONFIG.maxTitleLength),
+    ),
     new MimeExtensions(IMAGE_TYPES),
   ),
 );
 const router = new CommandRouter<BackgroundMessage>(
   BACKGROUND,
-  {
-    save: (message, sender) =>
-      reports.picked(senderTab(sender), message.url, message.title),
-    disarmed: (_message, sender) => reports.disarmed(senderTab(sender)),
-    failed: (message, sender) =>
-      reports.failed(senderTab(sender), message.error),
-    scheme: (message) => toolbarScheme.deviceIs(message.scheme),
-  },
+  new BackgroundCommands(reports, toolbarScheme),
   backgroundGuards(BACKGROUND_CONFIG.maxMessageText),
   chrome.runtime.id,
 );
@@ -99,6 +102,8 @@ const navigation = new NavigationReset(indicator);
 
 chrome.action.onClicked.addListener((tab) => {
   void toggle.toggle(tab);
+});
+chrome.action.onClicked.addListener((tab) => {
   void clickScheme.clicked(tab);
 });
 chrome.runtime.onMessage.addListener((message, sender, reply) =>

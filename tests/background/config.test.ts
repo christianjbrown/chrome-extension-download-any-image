@@ -9,10 +9,16 @@ describe("background config", () => {
     expect(BACKGROUND_CONFIG.maxTitleLength).toBe(80);
   });
 
+  it("keeps up to 100 characters of a name from an address", () => {
+    expect(BACKGROUND_CONFIG.maxStemLength).toBe(100);
+  });
+
+  it("counts up to 5 characters after the last dot as an extension", () => {
+    expect(BACKGROUND_CONFIG.maxExtensionLength).toBe(5);
+  });
+
   it("keeps an address's name by these rules", () => {
     expect(BACKGROUND_CONFIG.originalNames).toEqual({
-      maxStemLength: 100,
-      maxExtensionLength: 5,
       minLetters: 2,
       minHashLength: 16,
       minTokenLength: 24,

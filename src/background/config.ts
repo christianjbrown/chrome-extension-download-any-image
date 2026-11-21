@@ -1,4 +1,4 @@
-import type { NameRules } from "./original-name";
+import type { NameRules } from "./meaningful-names";
 
 // Settings for the service worker. Only its entry point reads them, and hands
 // each one to the part that needs it.
@@ -7,6 +7,10 @@ export interface BackgroundConfig {
   maxMessageText: number;
   // The longest a page's title gets in a fallback filename.
   maxTitleLength: number;
+  // The longest a name kept from the image's address gets.
+  maxStemLength: number;
+  // The longest ending of an address's name that counts as its extension.
+  maxExtensionLength: number;
   // When a name from the image's address is worth keeping.
   originalNames: NameRules;
 }
@@ -14,9 +18,9 @@ export interface BackgroundConfig {
 export const BACKGROUND_CONFIG: BackgroundConfig = {
   maxMessageText: 2000,
   maxTitleLength: 80,
+  maxStemLength: 100,
+  maxExtensionLength: 5,
   originalNames: {
-    maxStemLength: 100,
-    maxExtensionLength: 5,
     minLetters: 2,
     minHashLength: 16,
     minTokenLength: 24,

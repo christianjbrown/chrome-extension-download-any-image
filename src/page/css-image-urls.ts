@@ -5,14 +5,11 @@ import {
   unquote,
   type CssFunction,
 } from "./css-text";
-
-export interface CssImages {
-  // The topmost real picture in a computed image value, if there is one.
-  first(value: string): string | undefined;
-}
+import type { CssImages } from "./locating";
 
 const URL_FUNCTION = "url";
-const IMAGE_SETS = new Set(["image-set", "-webkit-image-set"]);
+const IMAGE_SET = "image-set";
+const WEBKIT_IMAGE_SET = "-webkit-image-set";
 
 // CSS fixes a pixel at a 96th of an inch, and an inch is 2.54cm.
 const CSS_DPI = 96;
@@ -23,6 +20,11 @@ const PER_X: Readonly<Record<string, number>> = {
   dpi: 1 / CSS_DPI,
   dpcm: CM_PER_INCH / CSS_DPI,
 };
+
+// How an image-set() option's density is written: a number, then its unit,
+// with options' parts set apart by spaces.
+const LEADING_NUMBER = /^[\d.]+/;
+const SPACES = /\s+/;
 
 // What a picture in an image-set() is when it does not say.
 const ONE_X = 1;
@@ -36,6 +38,16 @@ interface Option {
 // are drawn rather than downloaded, are passed over. Of an image-set(), the
 // sharpest picture is the one worth keeping.
 export class CssImageUrls implements CssImages {
+  // How each image function names its picture. A new function is a new entry.
+  private readonly readers: ReadonlyMap<
+    string,
+    (args: string) => string | undefined
+  > = new Map([
+    [URL_FUNCTION, unquote],
+    [IMAGE_SET, (args: string) => this.sharpest(args)],
+    [WEBKIT_IMAGE_SET, (args: string) => this.sharpest(args)],
+  ]);
+
   first(value: string): string | undefined {
     for (const layer of splitTopLevel(value)) {
       const url = this.layerUrl(functionsIn(layer));
@@ -47,15 +59,13 @@ export class CssImageUrls implements CssImages {
   }
 
   private layerUrl(functions: CssFunction[]): string | undefined {
-    const image = functions.find(
-      ({ name }) => name === URL_FUNCTION || IMAGE_SETS.has(name),
-    );
-    if (image === undefined) {
-      return undefined;
+    for (const { name, args } of functions) {
+      const read = this.readers.get(name);
+      if (read !== undefined) {
+        return read(args);
+      }
     }
-    return image.name === URL_FUNCTION
-      ? unquote(image.args)
-      : this.sharpest(image.args);
+    return undefined;
   }
 
   private sharpest(args: string): string | undefined {
@@ -82,8 +92,8 @@ export class CssImageUrls implements CssImages {
 
   // "2x", "192dpi" and so on. A picture that does not say is 1x.
   private density(text: string): number {
-    for (const token of text.trim().split(/\s+/)) {
-      const unit = token.replace(/^[\d.]+/, "").toLowerCase();
+    for (const token of text.trim().split(SPACES)) {
+      const unit = token.replace(LEADING_NUMBER, "").toLowerCase();
       const perX = Object.hasOwn(PER_X, unit) ? PER_X[unit] : undefined;
       const amount = Number(token.slice(0, token.length - unit.length));
       if (perX !== undefined && unit !== token && Number.isFinite(amount)) {

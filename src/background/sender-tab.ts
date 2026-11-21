@@ -1,4 +1,4 @@
-import type { Sender } from "../shared/command-router";
+import type { Sender } from "../shared/routing";
 
 const NOT_IN_A_TAB = "Only a page in a tab can pick an image";
 

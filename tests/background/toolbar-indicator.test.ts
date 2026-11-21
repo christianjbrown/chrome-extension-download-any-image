@@ -1,3 +1,4 @@
+import { ClosedTabAction } from "../../src/background/closed-tab-action";
 import { ToolbarIndicator } from "../../src/background/toolbar-indicator";
 
 function action() {
@@ -40,13 +41,35 @@ describe("ToolbarIndicator", () => {
     });
     expect(toolbar.setTitle).toHaveBeenCalledWith({ tabId: 3, title });
   });
+});
+
+describe("ClosedTabAction", () => {
+  it("passes each call through to the button", async () => {
+    const toolbar = action();
+    const closedTab = new ClosedTabAction(toolbar);
+
+    await closedTab.setBadgeText({ tabId: 3, text: "ON" });
+    await closedTab.setBadgeBackgroundColor({ tabId: 3, color: "#000000" });
+    await closedTab.setTitle({ tabId: 3, title: "Hi" });
+
+    expect(toolbar.setBadgeText).toHaveBeenCalledWith({ tabId: 3, text: "ON" });
+    expect(toolbar.setBadgeBackgroundColor).toHaveBeenCalledWith({
+      tabId: 3,
+      color: "#000000",
+    });
+    expect(toolbar.setTitle).toHaveBeenCalledWith({ tabId: 3, title: "Hi" });
+  });
 
   it("ignores a tab that closed before its button could change", async () => {
     const toolbar = action();
     toolbar.setBadgeText.mockRejectedValue(new Error("No tab with id: 3."));
+    toolbar.setBadgeBackgroundColor.mockRejectedValue(
+      new Error("No tab with id: 3."),
+    );
+    toolbar.setTitle.mockRejectedValue(new Error("No tab with id: 3."));
 
     await expect(
-      new ToolbarIndicator(toolbar).showIdle(3),
+      new ToolbarIndicator(new ClosedTabAction(toolbar)).showIdle(3),
     ).resolves.toBeUndefined();
   });
 
@@ -54,8 +77,8 @@ describe("ToolbarIndicator", () => {
     const toolbar = action();
     toolbar.setTitle.mockRejectedValue(new Error("Something else"));
 
-    await expect(new ToolbarIndicator(toolbar).showIdle(3)).rejects.toThrow(
-      "Something else",
-    );
+    await expect(
+      new ToolbarIndicator(new ClosedTabAction(toolbar)).showIdle(3),
+    ).rejects.toThrow("Something else");
   });
 });

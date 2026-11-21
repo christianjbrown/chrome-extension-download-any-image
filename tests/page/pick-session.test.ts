@@ -1,6 +1,15 @@
 import { EventBindings } from "../../src/page/event-bindings";
+import { ImagePick } from "../../src/page/image-pick";
 import { PICK_GESTURES } from "../../src/page/pick-gestures";
 import { PickSession } from "../../src/page/pick-session";
+import {
+  CancelOnKey,
+  ClickPick,
+  PointerOutline,
+  PressShield,
+  StopOnNavigate,
+  StopOnPageHide,
+} from "../../src/page/session-parts";
 import { element, target } from "./fakes";
 
 function pointer(extra: Record<string, unknown> = {}) {
@@ -34,22 +43,65 @@ function setup(options: { found?: boolean; navigation?: boolean } = {}) {
   const readers = { read: vi.fn().mockResolvedValue("https://x/a.png") };
   const reporter = { picked: vi.fn(), disarmed: vi.fn(), failed: vi.fn() };
   const hover = { follow: vi.fn(), stop: vi.fn() };
-  const session = new PickSession({
-    bindings: new EventBindings(),
-    window,
-    navigation: options.navigation === false ? undefined : navigation,
+  const bindings = new EventBindings();
+  const session = new PickSession(
+    [
+      new PressShield(bindings, window, PICK_GESTURES),
+      new ClickPick(bindings, window),
+      new PointerOutline(bindings, window, hover),
+      new CancelOnKey(bindings, window, PICK_GESTURES),
+      new StopOnPageHide(bindings, window),
+      new StopOnNavigate(
+        bindings,
+        options.navigation === false ? undefined : navigation,
+      ),
+    ],
+    bindings,
     hover,
-    gestures: PICK_GESTURES,
-    locator,
-    readers,
-    reporter,
-    title: () => "The Page",
-  });
+    new ImagePick(locator, readers, reporter, () => "The Page"),
+  );
   session.arm();
   return { window, navigation, locator, readers, reporter, hover, session };
 }
 
 describe("PickSession", () => {
+  it("arms every part with itself", () => {
+    const part = { arm: vi.fn() };
+    const session = new PickSession(
+      [part, part],
+      { clear: vi.fn() },
+      { stop: vi.fn() },
+      { pick: vi.fn(), cancel: vi.fn() },
+    );
+
+    session.arm();
+
+    expect(part.arm).toHaveBeenCalledTimes(2);
+    expect(part.arm).toHaveBeenCalledWith(session);
+  });
+
+  it("stops listening before the click is dealt with", () => {
+    const order: string[] = [];
+    const session = new PickSession(
+      [],
+      { clear: () => order.push("clear") },
+      { stop: () => order.push("hover") },
+      {
+        pick: (x, y) => {
+          order.push(`pick ${String(x)},${String(y)}`);
+          return Promise.resolve();
+        },
+        cancel: vi.fn(),
+      },
+    );
+
+    session.pick(1, 2);
+
+    expect(order).toEqual(["clear", "hover", "pick 1,2"]);
+  });
+});
+
+describe("a pick session with every part", () => {
   it("swallows the press and saves the picture under the click", async () => {
     const { window, locator, readers, reporter, hover } = setup();
     const down = pointer();

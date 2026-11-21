@@ -4,8 +4,7 @@ import {
   type PageElement,
   type StyleLook,
 } from "./dom";
-import type { CssImages } from "./css-image-urls";
-import type { ImageFinder } from "./image-locator";
+import type { CssImages, ImageFinder } from "./locating";
 
 // The pseudo-elements that can paint a picture over their element.
 export const BEFORE = "::before";

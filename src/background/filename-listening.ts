@@ -1,14 +1,9 @@
+import type { ListenerHold } from "./name-requests";
 // An event a listener can be added to and taken off again, such as
 // chrome.downloads.onDeterminingFilename.
 export interface ListenerRegistry<Listener> {
   addListener(listener: Listener): void;
   removeListener(listener: Listener): void;
-}
-
-// Keeps a listener registered for as long as anything is holding it.
-export interface ListenerHold {
-  hold(): void;
-  release(): void;
 }
 
 // Chrome asks every extension listening to onDeterminingFilename to name

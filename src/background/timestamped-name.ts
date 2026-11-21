@@ -1,12 +1,5 @@
-import { kebab } from "./filename-text";
-
-export interface Clock {
-  now(): Date;
-}
-
-export interface FallbackNames {
-  name(title: string): string;
-}
+import type { Clock, FallbackNames } from "./filename-ports";
+import type { TextCleaner } from "./text-cleaner";
 
 // What a page with no usable title is called instead.
 const UNTITLED = "image";
@@ -32,11 +25,11 @@ function stamp(date: Date): string {
 export class TimestampedName implements FallbackNames {
   constructor(
     private readonly clock: Clock,
-    // The longest the title part gets.
-    private readonly maxTitleLength: number,
+    // Makes the page's title into the name's last part.
+    private readonly titles: TextCleaner,
   ) {}
 
   name(title: string): string {
-    return `${stamp(this.clock.now())}-${kebab(title, this.maxTitleLength) || UNTITLED}`;
+    return `${stamp(this.clock.now())}-${this.titles.clean(title) || UNTITLED}`;
   }
 }

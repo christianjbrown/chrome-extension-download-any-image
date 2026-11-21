@@ -1,12 +1,21 @@
-import {
+import type {
   CANVAS_SOURCE,
+  ImageSource,
+  ImageSourceOf,
+  SourceKind,
+  StyleLook,
   SVG_SOURCE,
   URL_SOURCE,
-  type CanvasLike,
-  type ImageSource,
-  type StyleLook,
-  type SvgLike,
 } from "./dom";
+import type {
+  BlobAccess,
+  BlobLike,
+  ImageReading,
+  ReadersByKind,
+  SourceReader,
+  SvgSerializer,
+  UrlReader,
+} from "./image-reading";
 
 // What the person is told when a picture cannot be read.
 const BLOB_GONE = "The page has already thrown that image away";
@@ -29,52 +38,26 @@ const SVG_DATA_URL_PREFIX = "data:image/svg+xml;charset=utf-8,";
 const SIZES = ["width", "height"] as const;
 const COLOUR = "color";
 
-// Turns a picture into an address chrome.downloads can fetch from the service
-// worker. Web addresses pass straight through; anything bound to the page has
-// to be read here, in the page, and goes across as a data: URL.
-export interface ImageReader {
-  reads(source: ImageSource): boolean;
-  read(source: ImageSource): Promise<string>;
-}
-
-type UrlSource = Extract<ImageSource, { kind: typeof URL_SOURCE }>;
-
-const isUrl = (source: ImageSource): source is UrlSource =>
-  source.kind === URL_SOURCE;
-
 // http(s) brings the browser's cookies when Chrome fetches it, and data: holds
 // its own bytes.
-export class PassThroughReader implements ImageReader {
-  reads(source: ImageSource): boolean {
-    return isUrl(source) && FETCHABLE.test(source.url);
+export class PassThroughReader implements UrlReader {
+  read(url: string): Promise<string> | undefined {
+    return FETCHABLE.test(url) ? Promise.resolve(url) : undefined;
   }
-
-  read(source: ImageSource): Promise<string> {
-    return Promise.resolve((source as UrlSource).url);
-  }
-}
-
-export interface BlobLike {
-  readonly size: number;
-}
-
-export interface BlobAccess {
-  fetch(url: string): Promise<BlobLike>;
-  toDataUrl(blob: BlobLike): Promise<string>;
 }
 
 // A blob: URL only means something to the page that made it.
-export class BlobUrlReader implements ImageReader {
+export class BlobUrlReader implements UrlReader {
   constructor(private readonly blobs: BlobAccess) {}
 
-  reads(source: ImageSource): boolean {
-    return isUrl(source) && BLOB_URL.test(source.url);
+  read(url: string): Promise<string> | undefined {
+    return BLOB_URL.test(url) ? this.readBlob(url) : undefined;
   }
 
-  async read(source: ImageSource): Promise<string> {
+  private async readBlob(url: string): Promise<string> {
     let blob: BlobLike;
     try {
-      blob = await this.blobs.fetch((source as UrlSource).url);
+      blob = await this.blobs.fetch(url);
     } catch {
       throw new Error(BLOB_GONE);
     }
@@ -82,17 +65,31 @@ export class BlobUrlReader implements ImageReader {
   }
 }
 
+// A picture at an address: the first reader that knows the address's kind.
+export class UrlReaders implements SourceReader<
+  ImageSourceOf<typeof URL_SOURCE>
+> {
+  constructor(private readonly readers: readonly UrlReader[]) {}
+
+  read(source: ImageSourceOf<typeof URL_SOURCE>): Promise<string> {
+    for (const reader of this.readers) {
+      const read = reader.read(source.url);
+      if (read !== undefined) {
+        return read;
+      }
+    }
+    return Promise.reject(new Error(NOT_DOWNLOADABLE));
+  }
+}
+
 // A canvas with another site's picture drawn on it is "tainted", and the
 // browser will not let anyone read it back.
-export class CanvasReader implements ImageReader {
-  reads(source: ImageSource): boolean {
-    return source.kind === CANVAS_SOURCE;
-  }
-
-  read(source: ImageSource): Promise<string> {
-    const canvas = (source as { canvas: CanvasLike }).canvas;
+export class CanvasReader implements SourceReader<
+  ImageSourceOf<typeof CANVAS_SOURCE>
+> {
+  read(source: ImageSourceOf<typeof CANVAS_SOURCE>): Promise<string> {
     try {
-      return Promise.resolve(canvas.toDataURL(PNG));
+      return Promise.resolve(source.canvas.toDataURL(PNG));
     } catch {
       return Promise.reject(new Error(CANVAS_TAINTED));
     }
@@ -101,18 +98,16 @@ export class CanvasReader implements ImageReader {
 
 // An inline SVG as a file of its own: sized as it is on screen when it does not
 // say, and in its current colour, which its shapes often borrow.
-export class SvgReader implements ImageReader {
+export class SvgReader implements SourceReader<
+  ImageSourceOf<typeof SVG_SOURCE>
+> {
   constructor(
-    private readonly serialize: (svg: SvgLike) => string,
+    private readonly serializer: SvgSerializer,
     private readonly look: StyleLook,
   ) {}
 
-  reads(source: ImageSource): boolean {
-    return source.kind === SVG_SOURCE;
-  }
-
-  read(source: ImageSource): Promise<string> {
-    const svg = (source as { svg: SvgLike }).svg;
+  read(source: ImageSourceOf<typeof SVG_SOURCE>): Promise<string> {
+    const svg = source.svg;
     const copy = svg.cloneNode(true);
     const box = svg.getBoundingClientRect();
     for (const name of SIZES) {
@@ -121,24 +116,24 @@ export class SvgReader implements ImageReader {
       }
     }
     copy.style.setProperty(COLOUR, this.look(svg).getPropertyValue(COLOUR));
-    const xml = this.serialize(copy);
+    const xml = this.serializer.serialize(copy);
     return Promise.resolve(`${SVG_DATA_URL_PREFIX}${encodeURIComponent(xml)}`);
   }
 }
 
-export interface ImageReading {
-  read(source: ImageSource): Promise<string>;
-}
-
-// The first reader that knows the picture's kind.
+// Hands each picture to the reader for its kind. A new kind is a new reader in
+// the map, which the type insists on.
 export class ImageReaders implements ImageReading {
-  constructor(private readonly readers: readonly ImageReader[]) {}
+  constructor(private readonly byKind: ReadersByKind) {}
 
   read(source: ImageSource): Promise<string> {
-    const reader = this.readers.find((candidate) => candidate.reads(source));
-    if (reader === undefined) {
-      return Promise.reject(new Error(NOT_DOWNLOADABLE));
-    }
+    return this.readOfKind(source);
+  }
+
+  private readOfKind<K extends SourceKind>(
+    source: ImageSourceOf<K>,
+  ): Promise<string> {
+    const reader: SourceReader<ImageSourceOf<K>> = this.byKind[source.kind];
     return reader.read(source);
   }
 }

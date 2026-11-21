@@ -1,6 +1,6 @@
 import { NO_OPINION, UNIQUIFY } from "./download-terms";
-import type { FilenameChooser } from "./filename-chooser";
-import type { NameLookup, NameRequest } from "./pending-names";
+import type { FilenameChooser } from "./filename-ports";
+import type { NameLookup, NameRequest } from "./name-requests";
 
 export interface DownloadItem {
   byExtensionId?: string | undefined;

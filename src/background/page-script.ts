@@ -1,4 +1,9 @@
-import { DISARM, PAGE, type PageMessage } from "../shared/messages";
+import {
+  DISARM_MESSAGE,
+  type PageMessage,
+  type Reply,
+} from "../shared/messages";
+import type { PickerScript } from "./picking";
 
 export interface ScriptingApi {
   executeScript(injection: {
@@ -8,14 +13,12 @@ export interface ScriptingApi {
 }
 
 export interface TabMessagingApi {
-  sendMessage(tabId: number, message: PageMessage): Promise<unknown>;
-}
-
-// The script that waits in the page for the click.
-export interface PickerScript {
-  inject(tabId: number): Promise<void>;
-  // Whether any frame in the tab was still waiting.
-  disarm(tabId: number): Promise<boolean>;
+  // The page's answer to a disarm is whether it was armed, and is undefined
+  // when the frame that heard it gave none.
+  sendMessage(
+    tabId: number,
+    message: PageMessage,
+  ): Promise<Reply<boolean> | undefined>;
 }
 
 export class PageScript implements PickerScript {
@@ -37,8 +40,8 @@ export class PageScript implements PickerScript {
   // A disarmed frame stops listening, so when no frame is armed nobody is there
   // to answer and Chrome rejects the message.
   disarm(tabId: number): Promise<boolean> {
-    return this.tabs.sendMessage(tabId, { target: PAGE, type: DISARM }).then(
-      (reply) => (reply as { ok?: unknown } | undefined)?.ok === true,
+    return this.tabs.sendMessage(tabId, DISARM_MESSAGE).then(
+      (reply) => reply?.ok === true,
       () => false,
     );
   }

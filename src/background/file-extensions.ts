@@ -1,8 +1,5 @@
+import type { FileExtensions } from "./filename-ports";
 import { mimeEssence } from "./mime-type";
-
-export interface FileExtensions {
-  for(mime: string | undefined, fromUrl: string | undefined): string;
-}
 
 // The image types there are names for, and the extensions an address is
 // believed about.

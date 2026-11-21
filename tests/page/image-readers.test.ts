@@ -1,33 +1,30 @@
-import type { ImageSource, SvgLike } from "../../src/page/dom";
 import {
   BlobUrlReader,
   CanvasReader,
   ImageReaders,
   PassThroughReader,
   SvgReader,
+  UrlReaders,
 } from "../../src/page/image-readers";
 import { styles, svgElement } from "./fakes";
-
-const url = (address: string): ImageSource => ({ kind: "url", url: address });
+import type { SvgLike } from "../../src/page/dom";
 
 describe("PassThroughReader", () => {
   it.each(["https://x/a.png", "HTTPS://x/a.png", "data:image/png;base64,AA"])(
     "passes %s straight through",
     async (address) => {
-      const reader = new PassThroughReader();
-
-      expect(reader.reads(url(address))).toBe(true);
-      await expect(reader.read(url(address))).resolves.toBe(address);
+      await expect(new PassThroughReader().read(address)).resolves.toBe(
+        address,
+      );
     },
   );
 
-  it.each([
-    url("blob:https://x/1"),
-    url("file:///a.png"),
-    { kind: "canvas" as const, canvas: { toDataURL: () => "" } },
-  ])("does not read %o", (source) => {
-    expect(new PassThroughReader().reads(source)).toBe(false);
-  });
+  it.each(["blob:https://x/1", "file:///a.png"])(
+    "says nothing about %s",
+    (address) => {
+      expect(new PassThroughReader().read(address)).toBeUndefined();
+    },
+  );
 });
 
 describe("BlobUrlReader", () => {
@@ -39,9 +36,8 @@ describe("BlobUrlReader", () => {
     };
     const reader = new BlobUrlReader(blobs);
 
-    expect(reader.reads(url("blob:https://x/1"))).toBe(true);
-    expect(reader.reads(url("https://x/1"))).toBe(false);
-    await expect(reader.read(url("blob:https://x/1"))).resolves.toBe(
+    expect(reader.read("https://x/1")).toBeUndefined();
+    await expect(reader.read("blob:https://x/1")).resolves.toBe(
       "data:image/png;base64,AAA",
     );
     expect(blobs.fetch).toHaveBeenCalledWith("blob:https://x/1");
@@ -54,37 +50,54 @@ describe("BlobUrlReader", () => {
       toDataUrl: vi.fn(),
     });
 
-    await expect(reader.read(url("blob:https://x/1"))).rejects.toThrow(
+    await expect(reader.read("blob:https://x/1")).rejects.toThrow(
       "The page has already thrown that image away",
     );
+  });
+});
+
+describe("UrlReaders", () => {
+  it("uses the first reader that knows the address", async () => {
+    const skipped = { read: vi.fn(() => undefined) };
+    const readers = new UrlReaders([
+      skipped,
+      { read: () => Promise.resolve("data:x") },
+      { read: () => Promise.resolve("never") },
+    ]);
+
+    await expect(readers.read({ kind: "url", url: "https://x" })).resolves.toBe(
+      "data:x",
+    );
+    expect(skipped.read).toHaveBeenCalledWith("https://x");
+  });
+
+  it("refuses an address nothing can read", async () => {
+    await expect(
+      new UrlReaders([]).read({ kind: "url", url: "gopher.invalid" }),
+    ).rejects.toThrow("That image's address is not one Chrome can download");
   });
 });
 
 describe("CanvasReader", () => {
   it("reads the canvas as a PNG", async () => {
     const toDataURL = vi.fn(() => "data:image/png;base64,CC");
-    const source: ImageSource = { kind: "canvas", canvas: { toDataURL } };
-    const reader = new CanvasReader();
 
-    expect(reader.reads(source)).toBe(true);
-    expect(reader.reads(url("https://x"))).toBe(false);
-    await expect(reader.read(source)).resolves.toBe("data:image/png;base64,CC");
+    await expect(
+      new CanvasReader().read({ kind: "canvas", canvas: { toDataURL } }),
+    ).resolves.toBe("data:image/png;base64,CC");
     expect(toDataURL).toHaveBeenCalledWith("image/png");
   });
 
   it("explains a tainted canvas", async () => {
-    const source: ImageSource = {
-      kind: "canvas",
-      canvas: {
-        toDataURL: () => {
-          throw new Error("SecurityError");
-        },
+    const canvas = {
+      toDataURL: () => {
+        throw new Error("SecurityError");
       },
     };
 
-    await expect(new CanvasReader().read(source)).rejects.toThrow(
-      "That canvas has another site's picture on it",
-    );
+    await expect(
+      new CanvasReader().read({ kind: "canvas", canvas }),
+    ).rejects.toThrow("That canvas has another site's picture on it");
   });
 });
 
@@ -117,15 +130,13 @@ describe("SvgReader", () => {
   it("serialises a copy, sized as on screen and in its current colour", async () => {
     const { svg, copy } = fakeSvg({});
     const reader = new SvgReader(
-      (node) =>
-        `<svg ${JSON.stringify((node as unknown as typeof copy).attributes)}/>`,
+      {
+        serialize: (node) =>
+          `<svg ${JSON.stringify((node as unknown as typeof copy).attributes)}/>`,
+      },
       look,
     );
-    const source: ImageSource = { kind: "svg", svg };
-
-    expect(reader.reads(source)).toBe(true);
-    expect(reader.reads(url("https://x"))).toBe(false);
-    const read = await reader.read(source);
+    const read = await reader.read({ kind: "svg", svg });
 
     expect(decodeURIComponent(read)).toBe(
       'data:image/svg+xml;charset=utf-8,<svg {"width":"24","height":"16"}/>',
@@ -136,25 +147,31 @@ describe("SvgReader", () => {
   it("keeps a size the svg already gives", async () => {
     const { svg, copy } = fakeSvg({ width: "100", height: "50" });
 
-    await new SvgReader(() => "<svg/>", look).read({ kind: "svg", svg });
+    await new SvgReader({ serialize: () => "<svg/>" }, look).read({
+      kind: "svg",
+      svg,
+    });
 
     expect(copy.attributes).toEqual({ width: "100", height: "50" });
   });
 });
 
 describe("ImageReaders", () => {
-  it("uses the first reader that knows the kind", async () => {
-    const readers = new ImageReaders([
-      { reads: () => false, read: vi.fn() },
-      { reads: () => true, read: () => Promise.resolve("data:x") },
-    ]);
-
-    await expect(readers.read(url("https://x"))).resolves.toBe("data:x");
+  const byKind = () => ({
+    url: { read: vi.fn().mockResolvedValue("from url") },
+    canvas: { read: vi.fn().mockResolvedValue("from canvas") },
+    svg: { read: vi.fn().mockResolvedValue("from svg") },
   });
 
-  it("refuses an address nothing can read", async () => {
-    await expect(
-      new ImageReaders([]).read(url("gopher.invalid")),
-    ).rejects.toThrow("That image's address is not one Chrome can download");
+  it("hands each picture to the reader for its kind", async () => {
+    const readers = byKind();
+    const source = { kind: "canvas" as const, canvas: { toDataURL: () => "" } };
+
+    await expect(new ImageReaders(readers).read(source)).resolves.toBe(
+      "from canvas",
+    );
+    expect(readers.canvas.read).toHaveBeenCalledWith(source);
+    expect(readers.url.read).not.toHaveBeenCalled();
+    expect(readers.svg.read).not.toHaveBeenCalled();
   });
 });

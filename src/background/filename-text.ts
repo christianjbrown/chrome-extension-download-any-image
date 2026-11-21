@@ -1,3 +1,5 @@
+import type { TextCleaner } from "./text-cleaner";
+
 // Page titles and server paths are somebody else's text, so nothing reaches a
 // filename until it has been through one of these.
 
@@ -13,7 +15,7 @@ const UNSAFE = /[^\p{L}\p{N} ._-]+/gu;
 const DASHES = /-{2,}/g;
 const EDGE = /[\s.-]/;
 
-export function kebab(text: string, maxLength: number): string {
+function kebab(text: string, maxLength: number): string {
   const words = text
     .normalize(DECOMPOSED)
     // Latin accents only (é to e); other scripts' marks, like Japanese ペ, recombine.
@@ -27,7 +29,7 @@ export function kebab(text: string, maxLength: number): string {
 
 // Keeps letters, digits, spaces, dots, dashes and underscores. Everything else,
 // path separators and control characters included, becomes a dash.
-export function safeStem(text: string, maxLength: number): string {
+function safeStem(text: string, maxLength: number): string {
   const cleaned = text
     .normalize(COMPOSED)
     .replace(UNSAFE, DASH)
@@ -48,4 +50,22 @@ function trimEnds(text: string): string {
     end -= 1;
   }
   return text.slice(start, end);
+}
+
+// "my-cool-page": lower case words joined by dashes, cut to a length.
+export class KebabText implements TextCleaner {
+  constructor(private readonly maxLength: number) {}
+
+  clean(text: string): string {
+    return kebab(text, this.maxLength);
+  }
+}
+
+// The text as it was, less anything a filename cannot hold, cut to a length.
+export class SafeStemText implements TextCleaner {
+  constructor(private readonly maxLength: number) {}
+
+  clean(text: string): string {
+    return safeStem(text, this.maxLength);
+  }
 }

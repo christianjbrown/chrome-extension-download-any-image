@@ -7,6 +7,7 @@ import type {
   SAVE,
   SCHEME,
 } from "./messages";
+import type { MessageGuards } from "./routing";
 
 type Fields = Record<string, unknown>;
 
@@ -14,11 +15,6 @@ type Background<T extends BackgroundMessage["type"]> = Extract<
   BackgroundMessage,
   { type: T }
 >;
-
-// Whether a message that names a type also carries the fields that type needs.
-export type MessageGuards<M extends { type: string }> = {
-  [T in M["type"]]: (message: unknown) => message is Extract<M, { type: T }>;
-};
 
 // The service worker hands this to chrome.downloads, so only the schemes that
 // actually hold an image get through: the web, and bytes the page read itself.
