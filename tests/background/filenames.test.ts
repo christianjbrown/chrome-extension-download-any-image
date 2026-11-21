@@ -5,6 +5,7 @@ import {
 } from "../../src/background/file-extensions";
 import { ImageFilenameChooser } from "../../src/background/filename-chooser";
 import { KebabText, SafeStemText } from "../../src/background/filename-text";
+import { MeaningfulNames } from "../../src/background/meaningful-names";
 import { UrlOriginalNames } from "../../src/background/original-name";
 import { SystemClock } from "../../src/background/system-clock";
 import { TimestampedName } from "../../src/background/timestamped-name";
@@ -12,6 +13,9 @@ import { TimestampedName } from "../../src/background/timestamped-name";
 const clock = { now: () => new Date(2026, 9, 30, 14, 5) };
 const rules = BACKGROUND_CONFIG.originalNames;
 const stems = new SafeStemText(BACKGROUND_CONFIG.maxStemLength);
+const extensionLength = BACKGROUND_CONFIG.maxExtensionLength;
+const originals = (filter = new MeaningfulNames(rules)) =>
+  new UrlOriginalNames(extensionLength, stems, filter);
 
 describe("KebabText", () => {
   it.each([
@@ -39,7 +43,7 @@ describe("SafeStemText", () => {
 });
 
 describe("UrlOriginalNames", () => {
-  const names = new UrlOriginalNames(rules, stems);
+  const names = originals();
 
   it.each([
     ["https://x.com/a/sunset-over-sea.JPG?w=200", "sunset-over-sea", "jpg"],
@@ -66,12 +70,13 @@ describe("UrlOriginalNames", () => {
 
   it("follows the rules it is given", () => {
     const strict = new UrlOriginalNames(
-      { ...rules, maxExtensionLength: 3 },
+      3,
       new SafeStemText(4),
+      new MeaningfulNames(rules),
     );
 
     expect(
-      new UrlOriginalNames({ ...rules, generic: ["kitten"] }, stems).from(
+      originals(new MeaningfulNames({ ...rules, generic: ["kitten"] })).from(
         "https://x.com/kitten.png",
       ),
     ).toBeUndefined();
@@ -83,6 +88,21 @@ describe("UrlOriginalNames", () => {
       stem: "suns",
       extension: undefined,
     });
+  });
+});
+
+describe("MeaningfulNames", () => {
+  const filter = new MeaningfulNames(rules);
+
+  it.each([
+    ["sunset-over-sea", true],
+    ["12345678_98765432_n", false],
+    ["IMG", false],
+    ["0f9a8b7c6d5e4f3a2b1c", false],
+    ["AbCdEfGhIjKlMnOpQrStUvWx12", false],
+    ["An Ordinary Long Name With Spaces", true],
+  ])("keeps %s: %s", (stem, kept) => {
+    expect(filter.keeps(stem)).toBe(kept);
   });
 });
 
@@ -139,7 +159,7 @@ describe("SystemClock", () => {
 
 describe("ImageFilenameChooser", () => {
   const chooser = new ImageFilenameChooser(
-    new UrlOriginalNames(rules, stems),
+    originals(),
     new TimestampedName(clock, new KebabText(80)),
     new MimeExtensions(IMAGE_TYPES),
   );

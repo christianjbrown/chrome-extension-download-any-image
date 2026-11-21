@@ -1,3 +1,4 @@
+import type { NameFilter } from "./name-filter";
 import type { TextCleaner } from "./text-cleaner";
 
 export interface OriginalName {
@@ -10,24 +11,6 @@ export interface OriginalNames {
   from(url: string): OriginalName | undefined;
 }
 
-// What makes a name from an address worth keeping.
-export interface NameRules {
-  // The longest ending that counts as an extension rather than part of the name.
-  maxExtensionLength: number;
-  // Fewer letters than this is a number, not a name.
-  minLetters: number;
-  // A run of hex digits at least this long is a hash.
-  minHashLength: number;
-  // Unbroken text at least this long, with no space, dot, dash or underscore,
-  // is a token.
-  minTokenLength: number;
-  // Names that say nothing about the picture, in lower case.
-  generic: readonly string[];
-}
-
-// Separators a name made of words has, and a token does not.
-const SEPARATOR = /[ ._-]/;
-const LETTER = /\p{L}/gu;
 const WEB = /^https?:$/;
 const PATH_SEPARATOR = "/";
 const CASE_INSENSITIVE = "i";
@@ -47,23 +30,21 @@ function decoded(segment: string): string {
   }
 }
 
+// The last part of a web address's path, split into the name and an
+// extension, kept when it means something.
 export class UrlOriginalNames implements OriginalNames {
-  private readonly generic: ReadonlySet<string>;
-  private readonly hash: RegExp;
   private readonly split: RegExp;
 
   constructor(
-    private readonly rules: NameRules,
+    // The longest ending that counts as an extension rather than part of the name.
+    maxExtensionLength: number,
     // Makes a name from the address safe to keep.
     private readonly stems: TextCleaner,
+    // Whether the name is worth keeping.
+    private readonly filter: NameFilter,
   ) {
-    this.generic = new Set(rules.generic);
-    this.hash = new RegExp(
-      `^[0-9a-f-]{${String(rules.minHashLength)},}$`,
-      CASE_INSENSITIVE,
-    );
     this.split = new RegExp(
-      `^(.+)\\.([a-z0-9]{1,${String(rules.maxExtensionLength)}})$`,
+      `^(.+)\\.([a-z0-9]{1,${String(maxExtensionLength)}})$`,
       CASE_INSENSITIVE,
     );
   }
@@ -72,23 +53,10 @@ export class UrlOriginalNames implements OriginalNames {
     const segment = this.lastSegment(url);
     const parts = this.split.exec(segment);
     const stem = this.stems.clean(parts?.at(STEM_GROUP) ?? segment);
-    if (!this.meaningful(stem)) {
+    if (!this.filter.keeps(stem)) {
       return undefined;
     }
     return { stem, extension: parts?.at(EXTENSION_GROUP)?.toLowerCase() };
-  }
-
-  // A name with words in it, rather than a number, a hash or "image".
-  private meaningful(stem: string): boolean {
-    const letters = stem.match(LETTER)?.length ?? 0;
-    const looksLikeToken =
-      stem.length >= this.rules.minTokenLength && !SEPARATOR.test(stem);
-    return (
-      letters >= this.rules.minLetters &&
-      !this.generic.has(stem.toLowerCase()) &&
-      !this.hash.test(stem) &&
-      !looksLikeToken
-    );
   }
 
   // Only a web address has a path worth reading. Bytes the page handed over

@@ -16,6 +16,7 @@ import { FilenameListening } from "./filename-listening";
 import { FilenameSuggester, type Suggest } from "./filename-suggester";
 import { KebabText, SafeStemText } from "./filename-text";
 import { ImageSaver } from "./image-saver";
+import { MeaningfulNames } from "./meaningful-names";
 import { NavigationReset } from "./navigation-reset";
 import { UrlOriginalNames } from "./original-name";
 import { PageScript } from "./page-script";
@@ -80,8 +81,9 @@ const suggester = new FilenameSuggester(
   names,
   new ImageFilenameChooser(
     new UrlOriginalNames(
-      BACKGROUND_CONFIG.originalNames,
+      BACKGROUND_CONFIG.maxExtensionLength,
       new SafeStemText(BACKGROUND_CONFIG.maxStemLength),
+      new MeaningfulNames(BACKGROUND_CONFIG.originalNames),
     ),
     new TimestampedName(
       new SystemClock(),
