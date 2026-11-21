@@ -1,5 +1,6 @@
 import { firstDefined } from "../shared/defined";
-import type { ImageSource, PageElement } from "./dom";
+import type { PageElement } from "./dom";
+import type { ImageSource } from "./image-source";
 import type { FoundImage, HitSource, ImageFinder, Locator } from "./locating";
 
 // The topmost picture under the point: each element from the top down, asking

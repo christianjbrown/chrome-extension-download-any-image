@@ -1,15 +1,17 @@
 import {
-  CANVAS_SOURCE,
   IMAGE_INPUT_TYPE,
   SVG_NAMESPACE,
-  SVG_SOURCE,
   TAG,
-  URL_SOURCE,
   type CanvasLike,
-  type ImageSource,
   type PageElement,
   type SvgLike,
 } from "./dom";
+import {
+  CANVAS_SOURCE,
+  SVG_SOURCE,
+  URL_SOURCE,
+  type ImageSource,
+} from "./image-source";
 import type { ImageFinder, PlacedKind } from "./locating";
 
 function urlSource(url: string): ImageSource | undefined {

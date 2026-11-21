@@ -44,28 +44,6 @@ export interface SvgLike extends PageElement {
   readonly style: { setProperty(name: string, value: string): void };
 }
 
-// The kinds of picture there are to save.
-export const URL_SOURCE = "url";
-export const CANVAS_SOURCE = "canvas";
-export const SVG_SOURCE = "svg";
-
-// What each kind of picture carries.
-interface SourceFields {
-  [URL_SOURCE]: { url: string };
-  [CANVAS_SOURCE]: { canvas: CanvasLike };
-  [SVG_SOURCE]: { svg: SvgLike };
-}
-
-export type SourceKind = keyof SourceFields;
-
-// A picture of one kind, or of any of several. Written as a map over the
-// kinds so a reader picked by kind takes that kind's picture without a cast.
-export type ImageSourceOf<K extends SourceKind> = {
-  [P in K]: { kind: P } & SourceFields[P];
-}[K];
-
-export type ImageSource = ImageSourceOf<SourceKind>;
-
 // The elements that can show a picture of their own, by local name.
 export const TAG = {
   img: "img",

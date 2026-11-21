@@ -30,13 +30,7 @@ import {
   type MarkupWriter,
   type OverlayDocument,
 } from "./document-adapters";
-import {
-  CANVAS_SOURCE,
-  SVG_SOURCE,
-  URL_SOURCE,
-  type Listenable,
-  type StyleLook,
-} from "./dom";
+import type { Listenable, StyleLook } from "./dom";
 import {
   CanvasFinder,
   ImgFinder,
@@ -49,6 +43,7 @@ import { EventBindings } from "./event-bindings";
 import { HoverOutline } from "./hover-outline";
 import { ImageLocator } from "./image-locator";
 import { ImagePick } from "./image-pick";
+import { CANVAS_SOURCE, SVG_SOURCE, URL_SOURCE } from "./image-source";
 import {
   BlobUrlReader,
   CanvasReader,
