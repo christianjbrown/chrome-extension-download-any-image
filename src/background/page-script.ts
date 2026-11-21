@@ -1,7 +1,7 @@
 import {
   DISARM_MESSAGE,
+  isOkReply,
   type PageMessage,
-  type Reply,
 } from "../shared/messages";
 import type { PickerScript } from "./picking";
 
@@ -13,12 +13,9 @@ export interface ScriptingApi {
 }
 
 export interface TabMessagingApi {
-  // The page's answer to a disarm is whether it was armed, and is undefined
-  // when the frame that heard it gave none.
-  sendMessage(
-    tabId: number,
-    message: PageMessage,
-  ): Promise<Reply<boolean> | undefined>;
+  // The page's answer to a disarm, which is checked before it is believed:
+  // a frame that heard it may give none, or anything at all.
+  sendMessage(tabId: number, message: PageMessage): Promise<unknown>;
 }
 
 export class PageScript implements PickerScript {
@@ -41,7 +38,7 @@ export class PageScript implements PickerScript {
   // to answer and Chrome rejects the message.
   disarm(tabId: number): Promise<boolean> {
     return this.tabs.sendMessage(tabId, DISARM_MESSAGE).then(
-      (reply) => reply?.ok === true,
+      (reply) => isOkReply(reply),
       () => false,
     );
   }

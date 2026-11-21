@@ -37,6 +37,12 @@ export interface BackgroundMessenger {
 
 export type Reply<T> = { ok: true; value: T } | { ok: false; error: string };
 
+// Whether an answer from another context is a reply saying its work went
+// through. Anything else, a failure or no answer at all, is not.
+export function isOkReply(reply: unknown): boolean {
+  return isObject(reply) && reply.ok === true;
+}
+
 // Every runtime message reaches every context, so each one picks out its own.
 export function isMessageFor(
   message: unknown,

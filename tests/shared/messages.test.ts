@@ -6,7 +6,11 @@ import {
   SaveGuard,
   SchemeGuard,
 } from "../../src/shared/message-guards";
-import { isMessageFor, isMessageOf } from "../../src/shared/messages";
+import {
+  isMessageFor,
+  isMessageOf,
+  isOkReply,
+} from "../../src/shared/messages";
 
 describe("isMessageFor", () => {
   it("accepts a message addressed to the target", () => {
@@ -39,6 +43,19 @@ describe("isMessageOf", () => {
   ])("refuses %o", (message) => {
     expect(isMessageOf(message, "page", "disarm")).toBe(false);
   });
+});
+
+describe("isOkReply", () => {
+  it("believes a reply that went through", () => {
+    expect(isOkReply({ ok: true, value: true })).toBe(true);
+  });
+
+  it.each([{ ok: false, error: "no" }, { ok: "yes" }, "ok", undefined])(
+    "does not believe %o",
+    (reply) => {
+      expect(isOkReply(reply)).toBe(false);
+    },
+  );
 });
 
 describe("errorMessage", () => {
