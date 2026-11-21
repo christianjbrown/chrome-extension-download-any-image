@@ -22,6 +22,13 @@ describe("isMessageFor", () => {
     );
   });
 
+  it.each([{ target: "page" }, { target: "page", type: 42 }])(
+    "rejects a message for the target whose type is not text: %o",
+    (message) => {
+      expect(isMessageFor(message, "page")).toBe(false);
+    },
+  );
+
   it.each([null, undefined, "page", 42])("rejects %s", (message) => {
     expect(isMessageFor(message, "page")).toBe(false);
   });
