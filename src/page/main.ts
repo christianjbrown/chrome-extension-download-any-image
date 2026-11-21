@@ -4,7 +4,8 @@
 import { CommandRouter } from "../shared/command-router";
 import { TrustedMessages } from "../shared/trusted-messages";
 import { pageGuards } from "../shared/message-guards";
-import { PAGE, type PageMessage, type Reply } from "../shared/messages";
+import { DISARM, PAGE, type PageMessage, type Reply } from "../shared/messages";
+import type { CommandSet } from "../shared/routing";
 import { BackgroundClient } from "./background-client";
 import { AFTER, BEFORE, CssImageFinder, type Pseudo } from "./css-finder";
 import { CssImageUrls } from "./css-image-urls";
@@ -155,7 +156,9 @@ const session = new PickSession(
 );
 const router = new CommandRouter<PageMessage>(
   new TrustedMessages(PAGE, pageGuards, chrome.runtime.id),
-  [new DisarmCommand(session)],
+  Object.values({
+    [DISARM]: new DisarmCommand(session),
+  } satisfies CommandSet<PageMessage>),
 );
 const listener: Listener = (message, sender, reply) =>
   router.route(message, sender as { id?: string }, reply);
