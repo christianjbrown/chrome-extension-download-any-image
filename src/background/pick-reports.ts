@@ -1,3 +1,4 @@
+import type { PickOutcomes } from "./background-commands";
 import type { ErrorExplainer } from "./chrome-errors";
 import type { ImageDownloader } from "./image-saver";
 import type { OutcomeIndicator } from "./pick-indicator";
@@ -5,7 +6,7 @@ import type { PickerStop } from "./tab-picker";
 
 // What the page says once the click is in. Every outcome stops the picker in
 // the tab's other frames too, since the click was the one it was waiting for.
-export class PickReports {
+export class PickReports implements PickOutcomes {
   constructor(
     private readonly picker: PickerStop,
     private readonly saver: ImageDownloader,

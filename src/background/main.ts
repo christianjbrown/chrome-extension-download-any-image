@@ -2,6 +2,7 @@
 import { CommandRouter } from "../shared/command-router";
 import { backgroundGuards } from "../shared/message-guards";
 import { BACKGROUND, type BackgroundMessage } from "../shared/messages";
+import { BackgroundCommands } from "./background-commands";
 import { CHROME_TRANSLATIONS, ChromeErrorExplainer } from "./chrome-errors";
 import { ClickScheme } from "./click-scheme";
 import { ClosedTabAction } from "./closed-tab-action";
@@ -23,7 +24,6 @@ import { PickReports } from "./pick-reports";
 import { SchemeDocument } from "./scheme-document";
 import { SCHEME_POLICY, UNKNOWN_SCHEME } from "./scheme-state";
 import { SchemeStore } from "./scheme-store";
-import { senderTab } from "./sender-tab";
 import { SystemClock } from "./system-clock";
 import { TabPicker } from "./tab-picker";
 import { TabScheme } from "./tab-scheme";
@@ -92,14 +92,7 @@ const suggester = new FilenameSuggester(
 );
 const router = new CommandRouter<BackgroundMessage>(
   BACKGROUND,
-  {
-    save: (message, sender) =>
-      reports.picked(senderTab(sender), message.url, message.title),
-    disarmed: (_message, sender) => reports.disarmed(senderTab(sender)),
-    failed: (message, sender) =>
-      reports.failed(senderTab(sender), message.error),
-    scheme: (message) => toolbarScheme.deviceIs(message.scheme),
-  },
+  new BackgroundCommands(reports, toolbarScheme),
   backgroundGuards(BACKGROUND_CONFIG.maxMessageText),
   chrome.runtime.id,
 );
@@ -107,6 +100,8 @@ const navigation = new NavigationReset(indicator);
 
 chrome.action.onClicked.addListener((tab) => {
   void toggle.toggle(tab);
+});
+chrome.action.onClicked.addListener((tab) => {
   void clickScheme.clicked(tab);
 });
 chrome.runtime.onMessage.addListener((message, sender, reply) =>
