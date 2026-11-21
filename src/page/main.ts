@@ -2,6 +2,7 @@
 // waits for the click. A disarm takes all of it away again, the message
 // listener included, so a disarmed frame is no longer there to answer.
 import { CommandRouter } from "../shared/command-router";
+import { TrustedMessages } from "../shared/trusted-messages";
 import { pageGuards } from "../shared/message-guards";
 import { PAGE, type PageMessage, type Reply } from "../shared/messages";
 import { BackgroundClient } from "./background-client";
@@ -153,10 +154,8 @@ const session = new PickSession(
   ),
 );
 const router = new CommandRouter<PageMessage>(
-  PAGE,
+  new TrustedMessages(PAGE, pageGuards, chrome.runtime.id),
   new PageCommands(session),
-  pageGuards,
-  chrome.runtime.id,
 );
 const listener: Listener = (message, sender, reply) =>
   router.route(message, sender as { id?: string }, reply);

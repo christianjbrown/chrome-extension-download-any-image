@@ -1,23 +1,14 @@
-import { isMessageFor, type Reply } from "./messages";
+import type { Reply } from "./messages";
 import { replyWhenDone } from "./replies";
-import type {
-  CommandHandlers,
-  Message,
-  MessageGuards,
-  Sender,
-} from "./routing";
+import type { CommandHandlers, Message, MessageGate, Sender } from "./routing";
 
-// Runs the handler for each message meant for this context and answers with its
-// result. Only the extension's own contexts are answered, and only with a
-// message whose fields are what its type needs. Returns whether it will answer,
-// which is what Chrome's onMessage listener has to return to keep the reply
-// channel open.
+// Runs the handler for each message the gate lets in and answers with its
+// result. Returns whether it will answer, which is what Chrome's onMessage
+// listener has to return to keep the reply channel open.
 export class CommandRouter<M extends Message> {
   constructor(
-    private readonly target: M["target"],
+    private readonly gate: MessageGate<M>,
     private readonly handlers: CommandHandlers<M>,
-    private readonly guards: MessageGuards<M>,
-    private readonly extensionId: string,
   ) {}
 
   route(
@@ -25,25 +16,18 @@ export class CommandRouter<M extends Message> {
     sender: Sender | undefined,
     reply: (reply: Reply<unknown>) => void,
   ): boolean {
-    if (
-      sender?.id !== this.extensionId ||
-      !isMessageFor(message, this.target)
-    ) {
+    if (!this.gate.admits(message, sender) || sender === undefined) {
       return false;
     }
-    const type = message.type;
-    if (
-      typeof type !== "string" ||
-      !Object.hasOwn(this.handlers, type) ||
-      !this.guards[type as M["type"]](message)
-    ) {
+    const type: M["type"] = message.type;
+    if (!Object.hasOwn(this.handlers, type)) {
       return false;
     }
-    const handler = this.handlers[type as M["type"]] as (
+    const handler = this.handlers[type] as (
       message: M,
       sender: Sender,
     ) => Promise<unknown>;
-    replyWhenDone(handler(message as M, sender), reply);
+    replyWhenDone(handler(message, sender), reply);
     return true;
   }
 }

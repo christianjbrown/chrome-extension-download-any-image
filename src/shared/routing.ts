@@ -24,3 +24,8 @@ export type CommandHandlers<M extends Message> = {
 export type MessageGuards<M extends { type: string }> = {
   [T in M["type"]]: (message: unknown) => message is Extract<M, { type: T }>;
 };
+
+// Decides whether a message is one this context should answer at all.
+export interface MessageGate<M extends Message> {
+  admits(message: unknown, sender: Sender | undefined): message is M;
+}
