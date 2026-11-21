@@ -1,16 +1,15 @@
 // The pictures there are to save, one kind for each way a page can hold one.
-import type { CanvasLike, SvgLike } from "./dom";
-
-// The kinds of picture there are to save.
-export const URL_SOURCE = "url";
-export const CANVAS_SOURCE = "canvas";
-export const SVG_SOURCE = "svg";
+// Each kind is declared in a module of its own, and a new one is one more
+// line in SourceFields here.
+import type { CANVAS_SOURCE, CanvasFields } from "./canvas-source";
+import type { SVG_SOURCE, SvgFields } from "./svg-source";
+import type { URL_SOURCE, UrlFields } from "./url-source";
 
 // What each kind of picture carries.
 interface SourceFields {
-  [URL_SOURCE]: { url: string };
-  [CANVAS_SOURCE]: { canvas: CanvasLike };
-  [SVG_SOURCE]: { svg: SvgLike };
+  [URL_SOURCE]: UrlFields;
+  [CANVAS_SOURCE]: CanvasFields;
+  [SVG_SOURCE]: SvgFields;
 }
 
 export type SourceKind = keyof SourceFields;

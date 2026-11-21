@@ -45,8 +45,8 @@ import {
 import { EventBindings } from "./event-bindings";
 import { HoverOutline } from "./hover-outline";
 import { ImageLocator } from "./image-locator";
+import { CANVAS_SOURCE } from "./canvas-source";
 import { ImagePick } from "./image-pick";
-import { CANVAS_SOURCE, SVG_SOURCE, URL_SOURCE } from "./image-source";
 import {
   BlobUrlReader,
   CanvasReader,
@@ -62,6 +62,8 @@ import { DisarmCommand, FrameSlot } from "./page-commands";
 import { PICK_GESTURES } from "./pick-gestures";
 import { PickSession } from "./pick-session";
 import { MediaHits, PointHits, StackHits } from "./point-hits";
+import { SVG_SOURCE } from "./svg-source";
+import { URL_SOURCE } from "./url-source";
 import {
   CancelOnKey,
   ClickPick,

@@ -7,12 +7,10 @@ import {
   type PageElement,
   type SvgLike,
 } from "./dom";
-import {
-  CANVAS_SOURCE,
-  SVG_SOURCE,
-  URL_SOURCE,
-  type ImageSource,
-} from "./image-source";
+import { CANVAS_SOURCE } from "./canvas-source";
+import type { ImageSource } from "./image-source";
+import { SVG_SOURCE } from "./svg-source";
+import { URL_SOURCE } from "./url-source";
 import type { ImageFinder, PlacedKind } from "./locating";
 
 // The fields read off each kind of element, by the names the browser gives
