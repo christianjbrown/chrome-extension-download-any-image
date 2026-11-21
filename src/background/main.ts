@@ -1,7 +1,12 @@
 // The service worker: builds the object graph and connects it to Chrome's events.
 import { CommandRouter } from "../shared/command-router";
 import { TrustedMessages } from "../shared/trusted-messages";
-import { backgroundGuards } from "../shared/message-guards";
+import {
+  DisarmedGuard,
+  FailedGuard,
+  SaveGuard,
+  SchemeGuard,
+} from "../shared/message-guards";
 import {
   BACKGROUND,
   DISARMED,
@@ -10,7 +15,7 @@ import {
   SCHEME,
   type BackgroundMessage,
 } from "../shared/messages";
-import type { CommandSet } from "../shared/routing";
+import type { CommandSet, GuardSet } from "../shared/routing";
 import {
   DisarmedCommand,
   FailedCommand,
@@ -111,9 +116,14 @@ const suggester = new FilenameSuggester(
   ),
 );
 const router = new CommandRouter<BackgroundMessage>(
-  new TrustedMessages(
+  new TrustedMessages<BackgroundMessage>(
     BACKGROUND,
-    backgroundGuards(BACKGROUND_CONFIG.maxMessageText),
+    Object.values({
+      [SAVE]: new SaveGuard(BACKGROUND_CONFIG.maxMessageText),
+      [DISARMED]: new DisarmedGuard(),
+      [FAILED]: new FailedGuard(BACKGROUND_CONFIG.maxMessageText),
+      [SCHEME]: new SchemeGuard(),
+    } satisfies GuardSet<BackgroundMessage>),
     chrome.runtime.id,
   ),
   Object.values({

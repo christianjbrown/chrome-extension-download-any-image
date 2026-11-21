@@ -26,9 +26,20 @@ export type CommandSet<M extends Message> = {
   [T in M["type"]]: Command<M, T>;
 };
 
-// Whether a message that names a type also carries the fields that type needs.
-export type MessageGuards<M extends { type: string }> = {
-  [T in M["type"]]: (message: unknown) => message is Extract<M, { type: T }>;
+// Whether a message that names one type also carries the fields that type
+// needs. A new message is a new guard, handed to the gate with the others.
+export interface MessageGuard<
+  M extends Message,
+  T extends M["type"] = M["type"],
+> {
+  readonly type: T;
+  admits(message: unknown): message is Extract<M, { type: T }>;
+}
+
+// Exactly one guard for every type of message, each under its own type, built
+// by an entry point the way its commands are.
+export type GuardSet<M extends Message> = {
+  [T in M["type"]]: MessageGuard<M, T>;
 };
 
 // Decides whether a message is one this context should answer at all.

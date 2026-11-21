@@ -1,7 +1,10 @@
 import { errorMessage } from "../../src/shared/error-message";
 import {
-  backgroundGuards as guardsFor,
-  pageGuards,
+  DisarmGuard,
+  DisarmedGuard,
+  FailedGuard,
+  SaveGuard,
+  SchemeGuard,
 } from "../../src/shared/message-guards";
 import { isMessageFor } from "../../src/shared/messages";
 
@@ -31,14 +34,28 @@ describe("errorMessage", () => {
   });
 });
 
-describe("pageGuards", () => {
+describe("DisarmGuard", () => {
   it("accepts a disarm", () => {
-    expect(pageGuards.disarm({ target: "page", type: "disarm" })).toBe(true);
+    const guard = new DisarmGuard();
+
+    expect(guard.type).toBe("disarm");
+    expect(guard.admits({ target: "page", type: "disarm" })).toBe(true);
   });
 });
 
-describe("backgroundGuards", () => {
-  const backgroundGuards = guardsFor(2000);
+describe("the background's guards", () => {
+  const backgroundGuards = {
+    save: new SaveGuard(2000),
+    disarmed: new DisarmedGuard(),
+    failed: new FailedGuard(2000),
+    scheme: new SchemeGuard(),
+  };
+
+  it("each guard its own type", () => {
+    for (const [type, guard] of Object.entries(backgroundGuards)) {
+      expect(guard.type).toBe(type);
+    }
+  });
 
   it.each([
     "https://example.com/cat.png",
@@ -46,7 +63,7 @@ describe("backgroundGuards", () => {
     "data:image/png;base64,AAAA",
     "DATA:image/svg+xml;charset=utf-8,%3Csvg%3E",
   ])("accepts a save of %s", (url) => {
-    expect(backgroundGuards.save({ url, title: "Cats" })).toBe(true);
+    expect(backgroundGuards.save.admits({ url, title: "Cats" })).toBe(true);
   });
 
   it.each([
@@ -58,11 +75,11 @@ describe("backgroundGuards", () => {
     ["https://example.com/cat.png", 7],
     ["https://example.com/cat.png", "x".repeat(2001)],
   ])("refuses a save of %s titled %s", (url, title) => {
-    expect(backgroundGuards.save({ url, title })).toBe(false);
+    expect(backgroundGuards.save.admits({ url, title })).toBe(false);
   });
 
   it("accepts a disarmed report", () => {
-    expect(backgroundGuards.disarmed({})).toBe(true);
+    expect(backgroundGuards.disarmed.admits({})).toBe(true);
   });
 
   it.each([
@@ -70,14 +87,14 @@ describe("backgroundGuards", () => {
     ["no reason", undefined, false],
     ["a novel", "x".repeat(2001), false],
   ])("checks a failure with %s", (_what, error, accepted) => {
-    expect(backgroundGuards.failed({ error })).toBe(accepted);
+    expect(backgroundGuards.failed.admits({ error })).toBe(accepted);
   });
 
   it.each(["light", "dark"])("accepts a %s colour scheme", (scheme) => {
-    expect(backgroundGuards.scheme({ scheme })).toBe(true);
+    expect(backgroundGuards.scheme.admits({ scheme })).toBe(true);
   });
 
   it.each(["sepia", 7, undefined])("refuses a %s colour scheme", (scheme) => {
-    expect(backgroundGuards.scheme({ scheme })).toBe(false);
+    expect(backgroundGuards.scheme.admits({ scheme })).toBe(false);
   });
 });

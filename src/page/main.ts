@@ -3,9 +3,9 @@
 // listener included, so a disarmed frame is no longer there to answer.
 import { CommandRouter } from "../shared/command-router";
 import { TrustedMessages } from "../shared/trusted-messages";
-import { pageGuards } from "../shared/message-guards";
+import { DisarmGuard } from "../shared/message-guards";
 import { DISARM, PAGE, type PageMessage, type Reply } from "../shared/messages";
-import type { CommandSet } from "../shared/routing";
+import type { CommandSet, GuardSet } from "../shared/routing";
 import { BackgroundClient } from "./background-client";
 import { AFTER, BEFORE, CssImageFinder, type Pseudo } from "./css-finder";
 import {
@@ -168,7 +168,13 @@ const session = new PickSession(
   ),
 );
 const router = new CommandRouter<PageMessage>(
-  new TrustedMessages(PAGE, pageGuards, chrome.runtime.id),
+  new TrustedMessages<PageMessage>(
+    PAGE,
+    Object.values({
+      [DISARM]: new DisarmGuard(),
+    } satisfies GuardSet<PageMessage>),
+    chrome.runtime.id,
+  ),
   Object.values({
     [DISARM]: new DisarmCommand(session),
   } satisfies CommandSet<PageMessage>),

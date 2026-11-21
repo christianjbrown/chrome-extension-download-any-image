@@ -1,13 +1,14 @@
 import { isColourScheme } from "./colour-scheme";
-import type {
-  BackgroundMessage,
+import {
+  DISARM,
   DISARMED,
   FAILED,
-  PageMessage,
   SAVE,
   SCHEME,
+  type BackgroundMessage,
+  type PageMessage,
 } from "./messages";
-import type { MessageGuards } from "./routing";
+import type { MessageGuard } from "./routing";
 
 type Fields = Record<string, unknown>;
 
@@ -20,29 +21,70 @@ type Background<T extends BackgroundMessage["type"]> = Extract<
 // actually hold an image get through: the web, and bytes the page read itself.
 const DOWNLOADABLE = /^(?:https?:|data:image\/)/i;
 
-export const pageGuards: MessageGuards<PageMessage> = {
-  disarm: (_message): _message is PageMessage => true,
-};
-
 // A page's title or error is somebody else's text, and no longer than maxText.
-export function backgroundGuards(
-  maxText: number,
-): MessageGuards<BackgroundMessage> {
-  const isShortText = (value: unknown): boolean =>
-    typeof value === "string" && value.length <= maxText;
-  return {
-    save: (message): message is Background<typeof SAVE> => {
-      const fields = message as Fields;
-      return (
-        typeof fields.url === "string" &&
-        DOWNLOADABLE.test(fields.url) &&
-        isShortText(fields.title)
-      );
-    },
-    disarmed: (_message): _message is Background<typeof DISARMED> => true,
-    failed: (message): message is Background<typeof FAILED> =>
-      isShortText((message as Fields).error),
-    scheme: (message): message is Background<typeof SCHEME> =>
-      isColourScheme((message as Fields).scheme),
-  };
+function isShortText(value: unknown, maxText: number): boolean {
+  return typeof value === "string" && value.length <= maxText;
+}
+
+// A disarm carries nothing but its type.
+export class DisarmGuard implements MessageGuard<PageMessage, typeof DISARM> {
+  readonly type = DISARM;
+
+  admits(_message: unknown): _message is PageMessage {
+    return true;
+  }
+}
+
+// A picked image: an address Chrome may download, and the page's title.
+export class SaveGuard implements MessageGuard<BackgroundMessage, typeof SAVE> {
+  readonly type = SAVE;
+
+  constructor(private readonly maxText: number) {}
+
+  admits(message: unknown): message is Background<typeof SAVE> {
+    const fields = message as Fields;
+    return (
+      typeof fields.url === "string" &&
+      DOWNLOADABLE.test(fields.url) &&
+      isShortText(fields.title, this.maxText)
+    );
+  }
+}
+
+// A page that has stopped picking carries nothing but its type.
+export class DisarmedGuard implements MessageGuard<
+  BackgroundMessage,
+  typeof DISARMED
+> {
+  readonly type = DISARMED;
+
+  admits(_message: unknown): _message is Background<typeof DISARMED> {
+    return true;
+  }
+}
+
+// A failed pick, and why.
+export class FailedGuard implements MessageGuard<
+  BackgroundMessage,
+  typeof FAILED
+> {
+  readonly type = FAILED;
+
+  constructor(private readonly maxText: number) {}
+
+  admits(message: unknown): message is Background<typeof FAILED> {
+    return isShortText((message as Fields).error, this.maxText);
+  }
+}
+
+// The colour scheme the offscreen document sees.
+export class SchemeGuard implements MessageGuard<
+  BackgroundMessage,
+  typeof SCHEME
+> {
+  readonly type = SCHEME;
+
+  admits(message: unknown): message is Background<typeof SCHEME> {
+    return isColourScheme((message as Fields).scheme);
+  }
 }

@@ -35,11 +35,18 @@ function router() {
   return new CommandRouter<TestMessage>(
     new TrustedMessages<TestMessage>(
       "here",
-      {
-        double: (message): message is TestMessage & { type: "double" } =>
-          typeof (message as { n?: unknown }).n === "number",
-        fail: (_message): _message is TestMessage & { type: "fail" } => true,
-      },
+      [
+        {
+          type: "double",
+          admits: (message): message is TestMessage & { type: "double" } =>
+            typeof (message as { n?: unknown }).n === "number",
+        },
+        {
+          type: "fail",
+          admits: (_message): _message is TestMessage & { type: "fail" } =>
+            true,
+        },
+      ],
       "me",
     ),
     [
