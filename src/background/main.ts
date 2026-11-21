@@ -1,5 +1,6 @@
 // The service worker: builds the object graph and connects it to Chrome's events.
 import { CommandRouter } from "../shared/command-router";
+import { TrustedMessages } from "../shared/trusted-messages";
 import { backgroundGuards } from "../shared/message-guards";
 import { BACKGROUND, type BackgroundMessage } from "../shared/messages";
 import { BackgroundCommands } from "./background-commands";
@@ -93,10 +94,12 @@ const suggester = new FilenameSuggester(
   ),
 );
 const router = new CommandRouter<BackgroundMessage>(
-  BACKGROUND,
+  new TrustedMessages(
+    BACKGROUND,
+    backgroundGuards(BACKGROUND_CONFIG.maxMessageText),
+    chrome.runtime.id,
+  ),
   new BackgroundCommands(reports, toolbarScheme),
-  backgroundGuards(BACKGROUND_CONFIG.maxMessageText),
-  chrome.runtime.id,
 );
 const navigation = new NavigationReset(indicator);
 
