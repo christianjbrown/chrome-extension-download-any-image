@@ -26,14 +26,11 @@ import {
 import { CssImageUrls } from "./css-image-urls";
 import { DpcmUnit, DpiUnit, DppxUnit, XUnit } from "./css-resolutions";
 import { instanceOf } from "./checks";
-import {
-  DocumentBackdrop,
-  DocumentOverlay,
-  ElementCheck,
-  ElementStyles,
-  XmlSvgSerializer,
-} from "./document-adapters";
+import { DocumentBackdrop } from "./document-backdrop";
 import { DisarmCommand } from "./disarm-command";
+import { DocumentOverlay } from "./document-overlay";
+import { ElementCheck } from "./element-check";
+import { ElementStyles } from "./element-styles";
 import type { Listenable, StyleLook } from "./dom";
 import {
   CanvasFinder,
@@ -73,6 +70,7 @@ import {
   StopOnNavigate,
   StopOnPageHide,
 } from "./session-parts";
+import { XmlSvgSerializer } from "./xml-svg-serializer";
 
 // Where a frame keeps its armed session, so a second injection can find it.
 const KEY = "__downloadAnyImage";
