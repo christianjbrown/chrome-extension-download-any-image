@@ -1,4 +1,4 @@
-import { safeStem } from "./filename-text";
+import type { TextCleaner } from "./text-cleaner";
 
 export interface OriginalName {
   stem: string;
@@ -12,8 +12,6 @@ export interface OriginalNames {
 
 // What makes a name from an address worth keeping.
 export interface NameRules {
-  // The longest a kept name gets.
-  maxStemLength: number;
   // The longest ending that counts as an extension rather than part of the name.
   maxExtensionLength: number;
   // Fewer letters than this is a number, not a name.
@@ -54,7 +52,11 @@ export class UrlOriginalNames implements OriginalNames {
   private readonly hash: RegExp;
   private readonly split: RegExp;
 
-  constructor(private readonly rules: NameRules) {
+  constructor(
+    private readonly rules: NameRules,
+    // Makes a name from the address safe to keep.
+    private readonly stems: TextCleaner,
+  ) {
     this.generic = new Set(rules.generic);
     this.hash = new RegExp(
       `^[0-9a-f-]{${String(rules.minHashLength)},}$`,
@@ -69,10 +71,7 @@ export class UrlOriginalNames implements OriginalNames {
   from(url: string): OriginalName | undefined {
     const segment = this.lastSegment(url);
     const parts = this.split.exec(segment);
-    const stem = safeStem(
-      parts?.at(STEM_GROUP) ?? segment,
-      this.rules.maxStemLength,
-    );
+    const stem = this.stems.clean(parts?.at(STEM_GROUP) ?? segment);
     if (!this.meaningful(stem)) {
       return undefined;
     }

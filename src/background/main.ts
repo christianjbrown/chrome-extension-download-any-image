@@ -12,6 +12,7 @@ import { IMAGE_TYPES, MimeExtensions } from "./file-extensions";
 import { ImageFilenameChooser } from "./filename-chooser";
 import { FilenameListening } from "./filename-listening";
 import { FilenameSuggester, type Suggest } from "./filename-suggester";
+import { KebabText, SafeStemText } from "./filename-text";
 import { ImageSaver } from "./image-saver";
 import { NavigationReset } from "./navigation-reset";
 import { UrlOriginalNames } from "./original-name";
@@ -77,8 +78,14 @@ const suggester = new FilenameSuggester(
   chrome.runtime.id,
   names,
   new ImageFilenameChooser(
-    new UrlOriginalNames(BACKGROUND_CONFIG.originalNames),
-    new TimestampedName(new SystemClock(), BACKGROUND_CONFIG.maxTitleLength),
+    new UrlOriginalNames(
+      BACKGROUND_CONFIG.originalNames,
+      new SafeStemText(BACKGROUND_CONFIG.maxStemLength),
+    ),
+    new TimestampedName(
+      new SystemClock(),
+      new KebabText(BACKGROUND_CONFIG.maxTitleLength),
+    ),
     new MimeExtensions(IMAGE_TYPES),
   ),
 );

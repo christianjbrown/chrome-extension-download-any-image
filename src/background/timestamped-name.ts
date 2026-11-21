@@ -1,4 +1,4 @@
-import { kebab } from "./filename-text";
+import type { TextCleaner } from "./text-cleaner";
 
 export interface Clock {
   now(): Date;
@@ -32,11 +32,11 @@ function stamp(date: Date): string {
 export class TimestampedName implements FallbackNames {
   constructor(
     private readonly clock: Clock,
-    // The longest the title part gets.
-    private readonly maxTitleLength: number,
+    // Makes the page's title into the name's last part.
+    private readonly titles: TextCleaner,
   ) {}
 
   name(title: string): string {
-    return `${stamp(this.clock.now())}-${kebab(title, this.maxTitleLength) || UNTITLED}`;
+    return `${stamp(this.clock.now())}-${this.titles.clean(title) || UNTITLED}`;
   }
 }

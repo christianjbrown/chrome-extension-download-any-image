@@ -4,15 +4,16 @@ import {
   MimeExtensions,
 } from "../../src/background/file-extensions";
 import { ImageFilenameChooser } from "../../src/background/filename-chooser";
-import { kebab, safeStem } from "../../src/background/filename-text";
+import { KebabText, SafeStemText } from "../../src/background/filename-text";
 import { UrlOriginalNames } from "../../src/background/original-name";
 import { SystemClock } from "../../src/background/system-clock";
 import { TimestampedName } from "../../src/background/timestamped-name";
 
 const clock = { now: () => new Date(2026, 9, 30, 14, 5) };
 const rules = BACKGROUND_CONFIG.originalNames;
+const stems = new SafeStemText(BACKGROUND_CONFIG.maxStemLength);
 
-describe("kebab", () => {
+describe("KebabText", () => {
   it.each([
     ["My Cool Page!", "my-cool-page"],
     ["Café déjà vu", "cafe-deja-vu"],
@@ -20,11 +21,11 @@ describe("kebab", () => {
     ["  --  ", ""],
     ["a".repeat(79) + " b", "a".repeat(79)],
   ])("turns %s into %s", (text, expected) => {
-    expect(kebab(text, 80)).toBe(expected);
+    expect(new KebabText(80).clean(text)).toBe(expected);
   });
 });
 
-describe("safeStem", () => {
+describe("SafeStemText", () => {
   it.each([
     ["My Photo", "My Photo"],
     ["../../etc/passwd", "etc-passwd"],
@@ -33,12 +34,12 @@ describe("safeStem", () => {
     ["trailing.  ", "trailing"],
     ["x".repeat(99) + "--y", "x".repeat(99)],
   ])("cleans %s into %s", (text, expected) => {
-    expect(safeStem(text, 100)).toBe(expected);
+    expect(new SafeStemText(100).clean(text)).toBe(expected);
   });
 });
 
 describe("UrlOriginalNames", () => {
-  const names = new UrlOriginalNames(rules);
+  const names = new UrlOriginalNames(rules, stems);
 
   it.each([
     ["https://x.com/a/sunset-over-sea.JPG?w=200", "sunset-over-sea", "jpg"],
@@ -64,14 +65,13 @@ describe("UrlOriginalNames", () => {
   });
 
   it("follows the rules it is given", () => {
-    const strict = new UrlOriginalNames({
-      ...rules,
-      maxStemLength: 4,
-      maxExtensionLength: 3,
-    });
+    const strict = new UrlOriginalNames(
+      { ...rules, maxExtensionLength: 3 },
+      new SafeStemText(4),
+    );
 
     expect(
-      new UrlOriginalNames({ ...rules, generic: ["kitten"] }).from(
+      new UrlOriginalNames({ ...rules, generic: ["kitten"] }, stems).from(
         "https://x.com/kitten.png",
       ),
     ).toBeUndefined();
@@ -112,19 +112,19 @@ describe("MimeExtensions", () => {
 
 describe("TimestampedName", () => {
   it("puts the local date and time before the kebab-case title", () => {
-    expect(new TimestampedName(clock, 80).name("My Cool Page")).toBe(
-      "2026-10-30-14-05-my-cool-page",
-    );
+    expect(
+      new TimestampedName(clock, new KebabText(80)).name("My Cool Page"),
+    ).toBe("2026-10-30-14-05-my-cool-page");
   });
 
   it("cuts a long title to the length it is given", () => {
-    expect(new TimestampedName(clock, 5).name("My Cool Page")).toBe(
-      "2026-10-30-14-05-my-co",
-    );
+    expect(
+      new TimestampedName(clock, new KebabText(5)).name("My Cool Page"),
+    ).toBe("2026-10-30-14-05-my-co");
   });
 
   it("falls back to image without a usable title", () => {
-    expect(new TimestampedName(clock, 80).name("!!!")).toBe(
+    expect(new TimestampedName(clock, new KebabText(80)).name("!!!")).toBe(
       "2026-10-30-14-05-image",
     );
   });
@@ -139,8 +139,8 @@ describe("SystemClock", () => {
 
 describe("ImageFilenameChooser", () => {
   const chooser = new ImageFilenameChooser(
-    new UrlOriginalNames(rules),
-    new TimestampedName(clock, 80),
+    new UrlOriginalNames(rules, stems),
+    new TimestampedName(clock, new KebabText(80)),
     new MimeExtensions(IMAGE_TYPES),
   );
 

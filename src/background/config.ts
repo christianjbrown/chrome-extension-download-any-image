@@ -7,6 +7,8 @@ export interface BackgroundConfig {
   maxMessageText: number;
   // The longest a page's title gets in a fallback filename.
   maxTitleLength: number;
+  // The longest a name kept from the image's address gets.
+  maxStemLength: number;
   // When a name from the image's address is worth keeping.
   originalNames: NameRules;
 }
@@ -14,8 +16,8 @@ export interface BackgroundConfig {
 export const BACKGROUND_CONFIG: BackgroundConfig = {
   maxMessageText: 2000,
   maxTitleLength: 80,
+  maxStemLength: 100,
   originalNames: {
-    maxStemLength: 100,
     maxExtensionLength: 5,
     minLetters: 2,
     minHashLength: 16,
