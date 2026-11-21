@@ -1,8 +1,5 @@
-import {
-  CssImageFinder,
-  OwnStyle,
-  PseudoStyle,
-} from "../../src/page/css-finder";
+import { CssImageFinder } from "../../src/page/css-finder";
+import { OwnStyle, PseudoStyle } from "../../src/page/css-styles";
 import {
   IMAGE_SET,
   ImageSetFunction,

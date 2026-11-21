@@ -9,13 +9,8 @@ import type { PageMessage } from "../shared/messages";
 import type { Reply } from "../shared/replies";
 import type { CommandSet, GuardSet } from "../shared/routing";
 import { BackgroundClient } from "./background-client";
-import {
-  AFTER,
-  BEFORE,
-  CssImageFinder,
-  OwnStyle,
-  PseudoStyle,
-} from "./css-finder";
+import { CssImageFinder } from "./css-finder";
+import { AFTER, BEFORE, OwnStyle, PseudoStyle } from "./css-styles";
 import type { ElementStyle } from "./css-reading";
 import {
   IMAGE_SET,
