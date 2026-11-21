@@ -1,4 +1,5 @@
 // What the toolbar button's looks are made of.
+import type { ButtonKind, ButtonState } from "./button-states";
 
 // How the button looks: its badge, the badge's colour and its title.
 export interface Look {
@@ -7,22 +8,15 @@ export interface Look {
   title: string;
 }
 
-// The states the button can show.
-export const IDLE = "idle";
-export const ARMED = "armed";
-export const ERROR = "error";
-export type ButtonState = typeof IDLE | typeof ARMED | typeof ERROR;
-
-// The look for one state, from the message that goes with it. Only an error
-// has one.
-export interface ButtonLook<S extends ButtonState = ButtonState> {
-  readonly state: S;
-  look(message: string): Look;
+// The look for one kind of state, from the state itself.
+export interface ButtonLook<K extends ButtonKind = ButtonKind> {
+  readonly kind: K;
+  look(state: ButtonState<K>): Look;
 }
 
-// Exactly one look for every state, each under its own state. The entry point
+// Exactly one look for every state, each under its own kind. The entry point
 // builds its looks as one of these, so the compiler refuses a state with no
 // look. A new state is a new look.
 export type LookSet = {
-  readonly [S in ButtonState]: ButtonLook<S>;
+  readonly [K in ButtonKind]: ButtonLook<K>;
 };

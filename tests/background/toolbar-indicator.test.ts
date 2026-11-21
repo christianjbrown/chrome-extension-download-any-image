@@ -1,4 +1,5 @@
 import type { LookSet } from "../../src/background/button-looks";
+import { ARMED_STATE, IDLE_STATE } from "../../src/background/button-states";
 import { ClosedTabAction } from "../../src/background/closed-tab-action";
 import { ToolbarIndicator } from "../../src/background/toolbar-indicator";
 import {
@@ -25,19 +26,20 @@ function action() {
 describe("ToolbarIndicator", () => {
   it.each([
     {
-      show: (indicator: ToolbarIndicator) => indicator.showIdle(3),
+      show: (indicator: ToolbarIndicator) => indicator.show(3, IDLE_STATE),
       text: "",
       color: "#5a5a60",
       title: "Download next image I click on",
     },
     {
-      show: (indicator: ToolbarIndicator) => indicator.showArmed(3),
+      show: (indicator: ToolbarIndicator) => indicator.show(3, ARMED_STATE),
       text: "ON",
       color: "#1a73e8",
       title: "Click an image to download it, or click here again to stop",
     },
     {
-      show: (indicator: ToolbarIndicator) => indicator.showError(3, "no luck"),
+      show: (indicator: ToolbarIndicator) =>
+        indicator.show(3, { kind: "error", reason: "no luck" }),
       text: "!",
       color: "#dc2626",
       title: "Download failed: no luck",
@@ -82,10 +84,10 @@ describe("ClosedTabAction", () => {
     toolbar.setTitle.mockRejectedValue(new Error("No tab with id: 3."));
 
     await expect(
-      new ToolbarIndicator(
-        new ClosedTabAction(toolbar),
-        TOOLBAR_LOOKS,
-      ).showIdle(3),
+      new ToolbarIndicator(new ClosedTabAction(toolbar), TOOLBAR_LOOKS).show(
+        3,
+        IDLE_STATE,
+      ),
     ).resolves.toBeUndefined();
   });
 
@@ -94,10 +96,10 @@ describe("ClosedTabAction", () => {
     toolbar.setTitle.mockRejectedValue(new Error("Something else"));
 
     await expect(
-      new ToolbarIndicator(
-        new ClosedTabAction(toolbar),
-        TOOLBAR_LOOKS,
-      ).showIdle(3),
+      new ToolbarIndicator(new ClosedTabAction(toolbar), TOOLBAR_LOOKS).show(
+        3,
+        IDLE_STATE,
+      ),
     ).rejects.toThrow("Something else");
   });
 });
@@ -105,12 +107,12 @@ describe("ClosedTabAction", () => {
 describe("ToolbarIndicator with looks of its own", () => {
   it("paints the look the table gives for each state", async () => {
     const toolbar = action();
-    const look = <S extends string>(state: S, title?: string) => ({
-      state,
-      look: (message: string) => ({
+    const look = <K extends string>(kind: K, title?: string) => ({
+      kind,
+      look: (state: { reason?: string }) => ({
         badge: "b",
         colour: "c",
-        title: title ?? message,
+        title: title ?? state.reason ?? "",
       }),
     });
     const indicator = new ToolbarIndicator(toolbar, {
@@ -119,8 +121,8 @@ describe("ToolbarIndicator with looks of its own", () => {
       error: look("error"),
     });
 
-    await indicator.showArmed(1);
-    await indicator.showError(1, "why");
+    await indicator.show(1, ARMED_STATE);
+    await indicator.show(1, { kind: "error", reason: "why" });
 
     expect(toolbar.setTitle).toHaveBeenNthCalledWith(1, {
       tabId: 1,

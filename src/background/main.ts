@@ -13,7 +13,8 @@ import { DisarmedCommand } from "./disarmed-command";
 import { FailedCommand } from "./failed-command";
 import { SaveCommand } from "./save-command";
 import { SchemeCommand } from "./scheme-command";
-import { ARMED, ERROR, IDLE, type LookSet } from "./button-looks";
+import type { LookSet } from "./button-looks";
+import { ARMED, ERROR, IDLE } from "./button-states";
 import { ChromeErrorExplainer } from "./chrome-errors";
 import {
   ActiveTabRefusal,

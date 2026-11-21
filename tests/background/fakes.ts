@@ -12,9 +12,7 @@ export function fakePicker(armed = false): Mocked<Picker> {
 
 export function fakeIndicator(): Mocked<PickIndicator> {
   return {
-    showIdle: vi.fn<PickIndicator["showIdle"]>().mockResolvedValue(undefined),
-    showArmed: vi.fn<PickIndicator["showArmed"]>().mockResolvedValue(undefined),
-    showError: vi.fn<PickIndicator["showError"]>().mockResolvedValue(undefined),
+    show: vi.fn<PickIndicator["show"]>().mockResolvedValue(undefined),
   };
 }
 

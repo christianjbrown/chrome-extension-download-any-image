@@ -23,7 +23,7 @@ describe("NavigationReset", () => {
 
     await new NavigationReset(indicator).changed(4, { status: "loading" });
 
-    expect(indicator.showIdle).toHaveBeenCalledWith(4);
+    expect(indicator.show).toHaveBeenCalledWith(4, { kind: "idle" });
   });
 
   it.each([{ status: "complete" }, {}])(
@@ -33,7 +33,7 @@ describe("NavigationReset", () => {
 
       await new NavigationReset(indicator).changed(4, change);
 
-      expect(indicator.showIdle).not.toHaveBeenCalled();
+      expect(indicator.show).not.toHaveBeenCalled();
     },
   );
 });

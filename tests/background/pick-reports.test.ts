@@ -21,7 +21,7 @@ describe("PickReports", () => {
 
     expect(picker.disarm).toHaveBeenCalledWith(9);
     expect(saver.save).toHaveBeenCalledWith("https://x/cat.png", "Cats");
-    expect(indicator.showIdle).toHaveBeenCalledWith(9);
+    expect(indicator.show).toHaveBeenCalledWith(9, { kind: "idle" });
   });
 
   it("shows why a download failed", async () => {
@@ -30,10 +30,10 @@ describe("PickReports", () => {
 
     await reports.picked(9, "https://x/cat.png", "Cats");
 
-    expect(indicator.showError).toHaveBeenCalledWith(
-      9,
-      "explained: SERVER_FORBIDDEN",
-    );
+    expect(indicator.show).toHaveBeenCalledWith(9, {
+      kind: "error",
+      reason: "explained: SERVER_FORBIDDEN",
+    });
   });
 
   it("clears the button when the page stopped by itself", async () => {
@@ -42,7 +42,7 @@ describe("PickReports", () => {
     await reports.disarmed(9);
 
     expect(picker.disarm).toHaveBeenCalledWith(9);
-    expect(indicator.showIdle).toHaveBeenCalledWith(9);
+    expect(indicator.show).toHaveBeenCalledWith(9, { kind: "idle" });
   });
 
   it("shows the page's reason when it could not read the image", async () => {
@@ -51,6 +51,9 @@ describe("PickReports", () => {
     await reports.failed(9, "tainted");
 
     expect(picker.disarm).toHaveBeenCalledWith(9);
-    expect(indicator.showError).toHaveBeenCalledWith(9, "tainted");
+    expect(indicator.show).toHaveBeenCalledWith(9, {
+      kind: "error",
+      reason: "tainted",
+    });
   });
 });

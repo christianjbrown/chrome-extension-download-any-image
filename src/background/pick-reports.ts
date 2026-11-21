@@ -1,3 +1,4 @@
+import { ERROR, IDLE_STATE } from "./button-states";
 import type { OutcomeIndicator } from "./pick-indicator";
 import type {
   ErrorExplainer,
@@ -20,19 +21,22 @@ export class PickReports implements PickOutcomes {
     await this.picker.disarm(tabId);
     try {
       await this.saver.save(url, title);
-      await this.indicator.showIdle(tabId);
+      await this.indicator.show(tabId, IDLE_STATE);
     } catch (error) {
-      await this.indicator.showError(tabId, this.errors.explain(error));
+      await this.indicator.show(tabId, {
+        kind: ERROR,
+        reason: this.errors.explain(error),
+      });
     }
   }
 
   async disarmed(tabId: number): Promise<void> {
     await this.picker.disarm(tabId);
-    await this.indicator.showIdle(tabId);
+    await this.indicator.show(tabId, IDLE_STATE);
   }
 
   async failed(tabId: number, error: string): Promise<void> {
     await this.picker.disarm(tabId);
-    await this.indicator.showError(tabId, error);
+    await this.indicator.show(tabId, { kind: ERROR, reason: error });
   }
 }
