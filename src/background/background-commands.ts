@@ -6,7 +6,7 @@ import {
   type BackgroundMessage,
 } from "../shared/messages";
 import type { Command, Sender } from "../shared/routing";
-import type { PickOutcomes } from "./picking";
+import type { DisarmedOutcome, FailedOutcome, PickedOutcome } from "./picking";
 import type { DeviceSchemeSink } from "./scheme-ports";
 import { senderTab } from "./sender-tab";
 
@@ -22,7 +22,7 @@ type Message<T extends BackgroundMessage["type"]> = Extract<
 export class SaveCommand implements Command<BackgroundMessage, typeof SAVE> {
   readonly type = SAVE;
 
-  constructor(private readonly outcomes: PickOutcomes) {}
+  constructor(private readonly outcomes: PickedOutcome) {}
 
   handle(message: Message<typeof SAVE>, sender: Sender): Promise<void> {
     return this.outcomes.picked(senderTab(sender), message.url, message.title);
@@ -36,7 +36,7 @@ export class DisarmedCommand implements Command<
 > {
   readonly type = DISARMED;
 
-  constructor(private readonly outcomes: PickOutcomes) {}
+  constructor(private readonly outcomes: DisarmedOutcome) {}
 
   handle(_message: Message<typeof DISARMED>, sender: Sender): Promise<void> {
     return this.outcomes.disarmed(senderTab(sender));
@@ -50,7 +50,7 @@ export class FailedCommand implements Command<
 > {
   readonly type = FAILED;
 
-  constructor(private readonly outcomes: PickOutcomes) {}
+  constructor(private readonly outcomes: FailedOutcome) {}
 
   handle(message: Message<typeof FAILED>, sender: Sender): Promise<void> {
     return this.outcomes.failed(senderTab(sender), message.error);
