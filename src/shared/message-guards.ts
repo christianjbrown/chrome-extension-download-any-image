@@ -1,16 +1,17 @@
 import { isColourScheme } from "./colour-scheme";
 import {
+  BACKGROUND,
   DISARM,
   DISARMED,
   FAILED,
   SAVE,
   SCHEME,
+  isMessageOf,
+  PAGE,
   type BackgroundMessage,
   type PageMessage,
 } from "./messages";
 import type { MessageGuard } from "./routing";
-
-type Fields = Record<string, unknown>;
 
 type Background<T extends BackgroundMessage["type"]> = Extract<
   BackgroundMessage,
@@ -34,8 +35,8 @@ function isShortText(value: unknown, maxText: number): boolean {
 export class DisarmGuard implements MessageGuard<PageMessage, typeof DISARM> {
   readonly type = DISARM;
 
-  admits(_message: unknown): _message is PageMessage {
-    return true;
+  admits(message: unknown): message is PageMessage {
+    return isMessageOf(message, PAGE, this.type);
   }
 }
 
@@ -46,10 +47,13 @@ export class SaveGuard implements MessageGuard<BackgroundMessage, typeof SAVE> {
   constructor(private readonly maxText: number) {}
 
   admits(message: unknown): message is Background<typeof SAVE> {
-    const fields = message as Fields;
     return (
-      isDownloadable(fields.url) && isShortText(fields.title, this.maxText)
+      isMessageOf(message, BACKGROUND, this.type) && this.fieldsRight(message)
     );
+  }
+
+  private fieldsRight({ url, title }: Record<string, unknown>): boolean {
+    return isDownloadable(url) && isShortText(title, this.maxText);
   }
 }
 
@@ -60,8 +64,8 @@ export class DisarmedGuard implements MessageGuard<
 > {
   readonly type = DISARMED;
 
-  admits(_message: unknown): _message is Background<typeof DISARMED> {
-    return true;
+  admits(message: unknown): message is Background<typeof DISARMED> {
+    return isMessageOf(message, BACKGROUND, this.type);
   }
 }
 
@@ -75,7 +79,10 @@ export class FailedGuard implements MessageGuard<
   constructor(private readonly maxText: number) {}
 
   admits(message: unknown): message is Background<typeof FAILED> {
-    return isShortText((message as Fields).error, this.maxText);
+    return (
+      isMessageOf(message, BACKGROUND, this.type) &&
+      isShortText(message.error, this.maxText)
+    );
   }
 }
 
@@ -87,6 +94,9 @@ export class SchemeGuard implements MessageGuard<
   readonly type = SCHEME;
 
   admits(message: unknown): message is Background<typeof SCHEME> {
-    return isColourScheme((message as Fields).scheme);
+    return (
+      isMessageOf(message, BACKGROUND, this.type) &&
+      isColourScheme(message.scheme)
+    );
   }
 }
