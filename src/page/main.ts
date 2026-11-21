@@ -7,7 +7,13 @@ import { PAGE, type PageMessage, type Reply } from "../shared/messages";
 import { BackgroundClient } from "./background-client";
 import { AFTER, BEFORE, CssImageFinder, type Pseudo } from "./css-finder";
 import { CssImageUrls } from "./css-image-urls";
-import type { Listenable, StyleLook } from "./dom";
+import {
+  CANVAS_SOURCE,
+  SVG_SOURCE,
+  URL_SOURCE,
+  type Listenable,
+  type StyleLook,
+} from "./dom";
 import {
   CanvasFinder,
   ImgFinder,
@@ -25,6 +31,7 @@ import {
   ImageReaders,
   PassThroughReader,
   SvgReader,
+  UrlReaders,
 } from "./image-readers";
 import { OutlineBox } from "./outline-box";
 import { PageBlobs, type DataUrlReader } from "./page-blobs";
@@ -105,20 +112,25 @@ const session = new PickSession({
   ),
   gestures: PICK_GESTURES,
   locator,
-  readers: new ImageReaders([
-    new PassThroughReader(),
-    new BlobUrlReader(
-      new PageBlobs(
-        (url) => fetch(url),
-        () => new FileReader() as unknown as DataUrlReader,
+  readers: new ImageReaders({
+    [URL_SOURCE]: new UrlReaders([
+      new PassThroughReader(),
+      new BlobUrlReader(
+        new PageBlobs(
+          (url) => fetch(url),
+          () => new FileReader() as unknown as DataUrlReader,
+        ),
       ),
-    ),
-    new CanvasReader(),
-    new SvgReader(
-      (svg) => new XMLSerializer().serializeToString(svg as unknown as Node),
+    ]),
+    [CANVAS_SOURCE]: new CanvasReader(),
+    [SVG_SOURCE]: new SvgReader(
+      {
+        serialize: (svg) =>
+          new XMLSerializer().serializeToString(svg as unknown as Node),
+      },
       look,
     ),
-  ]),
+  }),
   reporter: new BackgroundClient(chrome.runtime),
   title: () => document.title,
 });

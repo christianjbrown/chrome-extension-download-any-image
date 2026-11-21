@@ -4,7 +4,7 @@ import type { Listenable } from "./dom";
 import type { Bindings } from "./event-bindings";
 import type { Hover } from "./hover-outline";
 import type { Locator } from "./image-locator";
-import type { ImageReading } from "./image-readers";
+import type { ImageReading } from "./image-reading";
 import type { PickGestures } from "./pick-gestures";
 
 interface PointerLike {

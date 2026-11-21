@@ -1,4 +1,4 @@
-import type { BlobAccess, BlobLike } from "./image-readers";
+import type { BlobAccess, BlobLike } from "./image-reading";
 
 // What the person is told when the browser cannot read a blob's bytes.
 const UNREADABLE = "The image could not be read";
