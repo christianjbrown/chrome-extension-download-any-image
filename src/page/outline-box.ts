@@ -14,6 +14,9 @@ export interface Outline {
 // The largest z-index there is, so the frame sits over anything the page draws.
 const TOPMOST = "2147483647";
 
+// A thin white edge either side of the blue, so it shows on a blue picture too.
+const WHITE = "#ffffff";
+
 const LOOK: readonly (readonly [string, string])[] = [
   ["position", "fixed"],
   ["z-index", TOPMOST],
@@ -21,7 +24,7 @@ const LOOK: readonly (readonly [string, string])[] = [
   ["box-sizing", "border-box"],
   ["border", `3px solid ${PICKER_BLUE}`],
   ["border-radius", "2px"],
-  ["box-shadow", "0 0 0 1px #ffffff, inset 0 0 0 1px #ffffff"],
+  ["box-shadow", `0 0 0 1px ${WHITE}, inset 0 0 0 1px ${WHITE}`],
   ["margin", "0"],
   ["padding", "0"],
 ];

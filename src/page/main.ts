@@ -60,6 +60,8 @@ const IMAGE_PROPERTIES = [
   "mask-image",
   "-webkit-mask-image",
 ];
+// A list item's marker, which has no pseudo-element of its own to look at.
+const LIST_MARKER_PROPERTY = "list-style-image";
 // Top down: the element's own picture, then what its ::after and ::before
 // paint over its background, then the background and the rest.
 const finders: ImageFinder[] = [
@@ -72,7 +74,7 @@ const finders: ImageFinder[] = [
   ...IMAGE_PROPERTIES.map((property) => css(property, AFTER)),
   ...IMAGE_PROPERTIES.map((property) => css(property, BEFORE)),
   ...IMAGE_PROPERTIES.map((property) => css(property)),
-  css("list-style-image"),
+  css(LIST_MARKER_PROPERTY),
 ];
 const locator = new ImageLocator(
   new PointHits([

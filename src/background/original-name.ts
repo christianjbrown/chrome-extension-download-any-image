@@ -32,6 +32,10 @@ const SEPARATOR = /[ ._-]/;
 const LETTER = /\p{L}/gu;
 const WEB = /^https?:$/;
 const PATH_SEPARATOR = "/";
+const CASE_INSENSITIVE = "i";
+
+// What an address with no path worth reading yields as its last part.
+const NO_SEGMENT = "";
 
 // Where the name and the extension sit in a match of the split pattern.
 const STEM_GROUP = 1;
@@ -52,10 +56,13 @@ export class UrlOriginalNames implements OriginalNames {
 
   constructor(private readonly rules: NameRules) {
     this.generic = new Set(rules.generic);
-    this.hash = new RegExp(`^[0-9a-f-]{${String(rules.minHashLength)},}$`, "i");
+    this.hash = new RegExp(
+      `^[0-9a-f-]{${String(rules.minHashLength)},}$`,
+      CASE_INSENSITIVE,
+    );
     this.split = new RegExp(
       `^(.+)\\.([a-z0-9]{1,${String(rules.maxExtensionLength)}})$`,
-      "i",
+      CASE_INSENSITIVE,
     );
   }
 
@@ -90,11 +97,11 @@ export class UrlOriginalNames implements OriginalNames {
   private lastSegment(url: string): string {
     const parsed = URL.parse(url);
     if (parsed === null || !WEB.test(parsed.protocol)) {
-      return "";
+      return NO_SEGMENT;
     }
     const segments = parsed.pathname
       .split(PATH_SEPARATOR)
       .filter((part) => part !== "");
-    return decoded(segments.at(-1) ?? "");
+    return decoded(segments.at(-1) ?? NO_SEGMENT);
   }
 }

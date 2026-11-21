@@ -24,6 +24,11 @@ const PER_X: Readonly<Record<string, number>> = {
   dpcm: CM_PER_INCH / CSS_DPI,
 };
 
+// How an image-set() option's density is written: a number, then its unit,
+// with options' parts set apart by spaces.
+const LEADING_NUMBER = /^[\d.]+/;
+const SPACES = /\s+/;
+
 // What a picture in an image-set() is when it does not say.
 const ONE_X = 1;
 
@@ -82,8 +87,8 @@ export class CssImageUrls implements CssImages {
 
   // "2x", "192dpi" and so on. A picture that does not say is 1x.
   private density(text: string): number {
-    for (const token of text.trim().split(/\s+/)) {
-      const unit = token.replace(/^[\d.]+/, "").toLowerCase();
+    for (const token of text.trim().split(SPACES)) {
+      const unit = token.replace(LEADING_NUMBER, "").toLowerCase();
       const perX = Object.hasOwn(PER_X, unit) ? PER_X[unit] : undefined;
       const amount = Number(token.slice(0, token.length - unit.length));
       if (perX !== undefined && unit !== token && Number.isFinite(amount)) {
