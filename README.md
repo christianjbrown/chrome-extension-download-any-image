@@ -93,7 +93,7 @@ npm run ci        # everything CI checks: format, lint, types, unused code, 100%
 How it fits together, in `src`:
 
 - **`background/`** is the service worker. A toolbar click asks the tab whether it's armed, and either disarms it or injects the page script and the crosshair. When the page reports a pick, it downloads the image and names it once Chrome knows the file's type (`filename-suggester.ts`).
-- **`page/`** is the script injected into the page. `pick-session.ts` waits for the click, `point-hits.ts` lists what's under it, `image-locator.ts` asks each finder in turn, and `image-readers.ts` turns the picture into something the service worker can download.
+- **`page/`** is the script injected into the page. `pick-session.ts` waits for the click with the listeners in `session-parts.ts`, `point-hits.ts` lists what's under it, `image-locator.ts` asks each finder in turn, and `image-readers.ts` turns the picture into something the service worker can download.
 - **`shared/`** is the messages the two send each other, with a shape check for every one.
 
 Each way of finding a picture is its own small class (`element-finders.ts`, `css-finder.ts`), handed to the locator as a list, so teaching it a new trick means adding a class. Each context's `main.ts` is the only file that touches `chrome`, `window` or `document`; everything else gets its collaborators through its constructor, behind an interface, and is tested on its own with fakes.
