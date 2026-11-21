@@ -10,7 +10,8 @@ import { DownloadWatcher } from "./download-completion";
 import { OFFSCREEN_DOCUMENT_FILE, PAGE_SCRIPT_FILE } from "./entry-files";
 import { IMAGE_TYPES, MimeExtensions } from "./file-extensions";
 import { ImageFilenameChooser } from "./filename-chooser";
-import { FilenameSuggester } from "./filename-suggester";
+import { FilenameListening } from "./filename-listening";
+import { FilenameSuggester, type Suggest } from "./filename-suggester";
 import { ImageSaver } from "./image-saver";
 import { NavigationReset } from "./navigation-reset";
 import { UrlOriginalNames } from "./original-name";
@@ -50,7 +51,17 @@ const picker = new TabPicker(
   new PageScript(chrome.scripting, chrome.tabs, PAGE_SCRIPT_FILE),
   new CrosshairCursor(chrome.scripting),
 );
-const names = new PendingNames();
+// Chrome's filename listener is only registered while one of this
+// extension's downloads is waiting for a name. The suggester it calls is built
+// below, from the names that hold it.
+const names = new PendingNames(
+  new FilenameListening(
+    chrome.downloads.onDeterminingFilename,
+    (item: chrome.downloads.DownloadItem, suggest: Suggest) => {
+      suggester.suggest(item, suggest);
+    },
+  ),
+);
 const toggle = new ToggleController(picker, indicator, errors);
 const reports = new PickReports(
   picker,
@@ -95,10 +106,6 @@ chrome.runtime.onMessage.addListener((message, sender, reply) =>
 );
 chrome.tabs.onUpdated.addListener((tabId, change) => {
   void navigation.changed(tabId, change);
-});
-// Answers on the spot, so Chrome never waits on this for another download.
-chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
-  suggester.suggest(item, suggest);
 });
 // Chrome starts with no offscreen document, and nothing else wakes the service
 // worker then.

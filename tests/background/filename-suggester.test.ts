@@ -1,8 +1,9 @@
 import { FilenameSuggester } from "../../src/background/filename-suggester";
 import { PendingNames } from "../../src/background/pending-names";
+import { fakeHold } from "./fakes";
 
 function setup() {
-  const names = new PendingNames();
+  const names = new PendingNames(fakeHold());
   const chooser = {
     choose: vi.fn(
       (url: string, title: string, mime: string | undefined) =>
@@ -65,13 +66,37 @@ describe("FilenameSuggester", () => {
         finalUrl: "https://x/c.png",
       },
     ],
-  ])("leaves %s download alone", (_whose, item) => {
-    const { names, suggester } = setup();
+  ])("has no opinion on %s download", (_whose, item) => {
+    const { names, chooser, suggester } = setup();
     names.expect({ url: "https://x/a.png", title: "A" });
     const suggest = vi.fn();
 
     suggester.suggest(item, suggest);
 
-    expect(suggest).not.toHaveBeenCalled();
+    expect(suggest).toHaveBeenCalledExactlyOnceWith({
+      filename: "",
+      conflictAction: "uniquify",
+    });
+    expect(chooser.choose).not.toHaveBeenCalled();
+  });
+
+  it("names its own download only once", () => {
+    const { names, suggester } = setup();
+    names.expect({ url: "https://x/a.png", title: "A" });
+    const first = vi.fn();
+    const second = vi.fn();
+    const item = { byExtensionId: "me", url: "https://x/a.png" };
+
+    suggester.suggest(item, first);
+    suggester.suggest(item, second);
+
+    expect(first).toHaveBeenCalledWith({
+      filename: "https://x/a.png|A|undefined",
+      conflictAction: "uniquify",
+    });
+    expect(second).toHaveBeenCalledWith({
+      filename: "",
+      conflictAction: "uniquify",
+    });
   });
 });

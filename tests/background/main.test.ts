@@ -143,6 +143,62 @@ describe("service worker", () => {
     });
   });
 
+  it("does not listen for download names until it saves one", async () => {
+    const chrome = await load();
+
+    expect(chrome.downloads.onDeterminingFilename.listeners).toEqual([]);
+  });
+
+  it("stops listening for download names once its own is named", async () => {
+    const chrome = await load();
+
+    fromPage(chrome, { type: "save", url: "https://x.com/a.jpg", title: "A" });
+    await vi.waitFor(() => {
+      expect(chrome.downloads.download).toHaveBeenCalled();
+    });
+    expect(chrome.downloads.onDeterminingFilename.listeners).toHaveLength(1);
+    chrome.downloads.onDeterminingFilename.fire(
+      { byExtensionId: "ext", url: "https://x.com/a.jpg" },
+      vi.fn(),
+    );
+
+    expect(chrome.downloads.onDeterminingFilename.listeners).toEqual([]);
+  });
+
+  it("has no opinion on someone else's download while it waits for its own", async () => {
+    const chrome = await load();
+
+    fromPage(chrome, { type: "save", url: "https://x.com/a.jpg", title: "A" });
+    await vi.waitFor(() => {
+      expect(chrome.downloads.download).toHaveBeenCalled();
+    });
+    const suggest = vi.fn();
+    chrome.downloads.onDeterminingFilename.fire(
+      { byExtensionId: "other", url: "https://y.com/b.zip" },
+      suggest,
+    );
+
+    expect(suggest).toHaveBeenCalledWith({
+      filename: "",
+      conflictAction: "uniquify",
+    });
+    expect(chrome.downloads.onDeterminingFilename.listeners).toHaveLength(1);
+  });
+
+  it("stops listening for download names when Chrome refuses its download", async () => {
+    const chrome = await load();
+    chrome.downloads.download.mockRejectedValue(new Error("Invalid URL"));
+
+    fromPage(chrome, { type: "save", url: "https://x.com/a.jpg", title: "A" });
+
+    await vi.waitFor(() => {
+      expect(chrome.downloads.download).toHaveBeenCalled();
+    });
+    await vi.waitFor(() => {
+      expect(chrome.downloads.onDeterminingFilename.listeners).toEqual([]);
+    });
+  });
+
   it("clears the button when the page disarms itself", async () => {
     const chrome = await load();
 
