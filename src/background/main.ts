@@ -36,12 +36,26 @@ import { BACKGROUND_CONFIG } from "./config";
 import { CrosshairCursor } from "./cursor-style";
 import { DownloadWatcher } from "./download-completion";
 import { OFFSCREEN_DOCUMENT_FILE, PAGE_SCRIPT_FILE } from "./entry-files";
-import { IMAGE_TYPES, MimeExtensions } from "./file-extensions";
+import { MimeExtensions } from "./file-extensions";
 import { ImageFilenameChooser } from "./filename-chooser";
 import { FilenameListening } from "./filename-listening";
 import { FilenameSuggester, type Suggest } from "./filename-suggester";
 import { KebabText, SafeStemText } from "./filename-text";
 import { ImageSaver } from "./image-saver";
+import {
+  AvifType,
+  BmpType,
+  GifType,
+  HeicType,
+  HeifType,
+  IconType,
+  JpegType,
+  JxlType,
+  PngType,
+  SvgType,
+  TiffType,
+  WebpType,
+} from "./image-types";
 import { MeaningfulNames } from "./meaningful-names";
 import { NavigationReset } from "./navigation-reset";
 import { UrlOriginalNames } from "./original-name";
@@ -125,7 +139,20 @@ const suggester = new FilenameSuggester(
       new SystemClock(),
       new KebabText(BACKGROUND_CONFIG.maxTitleLength),
     ),
-    new MimeExtensions(IMAGE_TYPES),
+    new MimeExtensions([
+      new JpegType(),
+      new PngType(),
+      new GifType(),
+      new WebpType(),
+      new AvifType(),
+      new SvgType(),
+      new BmpType(),
+      new IconType(),
+      new TiffType(),
+      new HeicType(),
+      new HeifType(),
+      new JxlType(),
+    ]),
   ),
 );
 const router = new CommandRouter<BackgroundMessage>(
