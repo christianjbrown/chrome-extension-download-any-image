@@ -20,7 +20,7 @@ export interface PageElement {
   getRootNode(): unknown;
 }
 
-interface StyleDeclaration {
+export interface StyleDeclaration {
   getPropertyValue(property: string): string;
 }
 

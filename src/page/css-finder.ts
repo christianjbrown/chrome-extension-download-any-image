@@ -2,8 +2,10 @@ import {
   URL_SOURCE,
   type ImageSource,
   type PageElement,
+  type StyleDeclaration,
   type StyleLook,
 } from "./dom";
+import type { ElementStyle } from "./css-reading";
 import type { CssImages, ImageFinder } from "./locating";
 
 // The pseudo-elements that can paint a picture over their element.
@@ -16,33 +18,46 @@ export type Pseudo = typeof BEFORE | typeof AFTER;
 const CONTENT = "content";
 const NOT_DRAWN: ReadonlySet<string> = new Set(["", "none", "normal"]);
 
-// A picture a style puts on an element: a background, a mask, content: url(),
-// a list marker. With a pseudo-element, that pseudo-element's, which is only
-// drawn when its content is something.
-export class CssImageFinder implements ImageFinder {
+// The element's own style.
+export class OwnStyle implements ElementStyle {
+  constructor(private readonly look: StyleLook) {}
+
+  of(element: PageElement): StyleDeclaration {
+    return this.look(element);
+  }
+}
+
+// A pseudo-element's style, which only counts when its content is something,
+// since otherwise it is not drawn.
+export class PseudoStyle implements ElementStyle {
   constructor(
     private readonly look: StyleLook,
+    private readonly pseudo: Pseudo,
+  ) {}
+
+  of(element: PageElement): StyleDeclaration | undefined {
+    const style = this.look(element, this.pseudo);
+    return NOT_DRAWN.has(style.getPropertyValue(CONTENT)) ? undefined : style;
+  }
+}
+
+// A picture a style puts on an element: a background, a mask, content: url(),
+// a list marker. Read from the element or one of its pseudo-elements, as the
+// style it is given says.
+export class CssImageFinder implements ImageFinder {
+  constructor(
+    private readonly styles: ElementStyle,
     private readonly images: CssImages,
     private readonly property: string,
-    private readonly pseudo?: Pseudo,
   ) {}
 
   find(element: PageElement): ImageSource | undefined {
-    const style =
-      this.pseudo === undefined
-        ? this.look(element)
-        : this.look(element, this.pseudo);
-    if (
-      this.pseudo !== undefined &&
-      !this.drawn(style.getPropertyValue(CONTENT))
-    ) {
-      return undefined;
-    }
-    const url = this.images.first(style.getPropertyValue(this.property));
-    return url === undefined ? undefined : { kind: URL_SOURCE, url };
+    const style = this.styles.of(element);
+    return style === undefined ? undefined : this.fromStyle(style);
   }
 
-  private drawn(content: string): boolean {
-    return !NOT_DRAWN.has(content);
+  private fromStyle(style: StyleDeclaration): ImageSource | undefined {
+    const url = this.images.first(style.getPropertyValue(this.property));
+    return url === undefined ? undefined : { kind: URL_SOURCE, url };
   }
 }

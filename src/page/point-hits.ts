@@ -1,5 +1,24 @@
-import type { PageElement, PointQueryable } from "./dom";
+import type { Box, PageElement, PointQueryable } from "./dom";
 import type { Backdrop, HitSource, PlacedKind } from "./locating";
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+type Shadow = NonNullable<PageElement["shadowRoot"]>;
+
+// What the shadow root itself holds under the point, not what lies outside it.
+const insideShadow = (shadow: Shadow, point: Point): PageElement[] =>
+  shadow
+    .elementsFromPoint(point.x, point.y)
+    .filter((inner) => inner.getRootNode() === shadow);
+
+const spans = (start: number, length: number, at: number): boolean =>
+  at >= start && at < start + length;
+
+const covers = (box: Box, x: number, y: number): boolean =>
+  spans(box.left, box.width, x) && spans(box.top, box.height, y);
 
 // Everything the browser says is under the point, overlays and ancestors
 // included, with the insides of open shadow roots ahead of their hosts. The
@@ -19,19 +38,24 @@ export class StackHits implements HitSource {
 
   private collect(
     elements: PageElement[],
-    point: { x: number; y: number },
+    point: Point,
     found: PageElement[],
   ): void {
-    for (const element of elements) {
-      const shadow = element.shadowRoot;
-      if (shadow) {
-        const inside = shadow
-          .elementsFromPoint(point.x, point.y)
-          .filter((inner) => inner.getRootNode() === shadow);
-        this.collect(inside, point, found);
-      }
-      found.push(element);
+    elements.forEach((element) => {
+      this.collectOne(element, point, found);
+    });
+  }
+
+  private collectOne(
+    element: PageElement,
+    point: Point,
+    found: PageElement[],
+  ): void {
+    const shadow = element.shadowRoot;
+    if (shadow) {
+      this.collect(insideShadow(shadow, point), point, found);
     }
+    found.push(element);
   }
 }
 
@@ -56,15 +80,7 @@ export class MediaHits implements HitSource {
 
   at(x: number, y: number): PageElement[] {
     return Array.from(this.document.querySelectorAll(this.media))
-      .filter((element) => {
-        const box = element.getBoundingClientRect();
-        return (
-          x >= box.left &&
-          x < box.left + box.width &&
-          y >= box.top &&
-          y < box.top + box.height
-        );
-      })
+      .filter((element) => covers(element.getBoundingClientRect(), x, y))
       .reverse();
   }
 }

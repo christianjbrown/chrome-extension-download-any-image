@@ -1,9 +1,12 @@
+import { firstDefined } from "../shared/defined";
 import type {
+  Box,
   CANVAS_SOURCE,
   ImageSource,
   ImageSourceOf,
   SourceKind,
   StyleLook,
+  SvgLike,
   SVG_SOURCE,
   URL_SOURCE,
 } from "./dom";
@@ -37,6 +40,13 @@ const SVG_DATA_URL_PREFIX = "data:image/svg+xml;charset=utf-8,";
 // often borrow their colour from.
 const SIZES = ["width", "height"] as const;
 const COLOUR = "color";
+
+// The sizes the copy does not say, as the SVG is shown on screen.
+function sizeAsShown(copy: SvgLike, box: Box): void {
+  SIZES.filter((name) => !copy.hasAttribute(name)).forEach((name) => {
+    copy.setAttribute(name, String(box[name]));
+  });
+}
 
 // http(s) brings the browser's cookies when Chrome fetches it, and data: holds
 // its own bytes.
@@ -72,13 +82,10 @@ export class UrlReaders implements SourceReader<
   constructor(private readonly readers: readonly UrlReader[]) {}
 
   read(source: ImageSourceOf<typeof URL_SOURCE>): Promise<string> {
-    for (const reader of this.readers) {
-      const read = reader.read(source.url);
-      if (read !== undefined) {
-        return read;
-      }
-    }
-    return Promise.reject(new Error(NOT_DOWNLOADABLE));
+    return (
+      firstDefined(this.readers, (reader) => reader.read(source.url)) ??
+      Promise.reject(new Error(NOT_DOWNLOADABLE))
+    );
   }
 }
 
@@ -109,12 +116,7 @@ export class SvgReader implements SourceReader<
   read(source: ImageSourceOf<typeof SVG_SOURCE>): Promise<string> {
     const svg = source.svg;
     const copy = svg.cloneNode(true);
-    const box = svg.getBoundingClientRect();
-    for (const name of SIZES) {
-      if (!copy.hasAttribute(name)) {
-        copy.setAttribute(name, String(box[name]));
-      }
-    }
+    sizeAsShown(copy, svg.getBoundingClientRect());
     copy.style.setProperty(COLOUR, this.look(svg).getPropertyValue(COLOUR));
     const xml = this.serializer.serialize(copy);
     return Promise.resolve(`${SVG_DATA_URL_PREFIX}${encodeURIComponent(xml)}`);

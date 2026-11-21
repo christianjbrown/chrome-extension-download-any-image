@@ -7,7 +7,14 @@ import { DisarmGuard } from "../shared/message-guards";
 import { DISARM, PAGE, type PageMessage, type Reply } from "../shared/messages";
 import type { CommandSet, GuardSet } from "../shared/routing";
 import { BackgroundClient } from "./background-client";
-import { AFTER, BEFORE, CssImageFinder, type Pseudo } from "./css-finder";
+import {
+  AFTER,
+  BEFORE,
+  CssImageFinder,
+  OwnStyle,
+  PseudoStyle,
+} from "./css-finder";
+import type { ElementStyle } from "./css-reading";
 import {
   IMAGE_SET,
   ImageSetFunction,
@@ -91,8 +98,11 @@ const images = new CssImageUrls([
   new ImageSetFunction(IMAGE_SET, units),
   new ImageSetFunction(WEBKIT_IMAGE_SET, units),
 ]);
-const css = (property: string, pseudo?: Pseudo): ImageFinder =>
-  new CssImageFinder(look, images, property, pseudo);
+const ownStyle = new OwnStyle(look);
+const afterStyle = new PseudoStyle(look, AFTER);
+const beforeStyle = new PseudoStyle(look, BEFORE);
+const css = (property: string, styles: ElementStyle): ImageFinder =>
+  new CssImageFinder(styles, images, property);
 const IMAGE_PROPERTIES = [
   "content",
   "background-image",
@@ -123,10 +133,10 @@ const finders: ImageFinder[] = [
   inlineSvgFinder,
   canvasFinder,
   videoPosterFinder,
-  ...IMAGE_PROPERTIES.map((property) => css(property, AFTER)),
-  ...IMAGE_PROPERTIES.map((property) => css(property, BEFORE)),
-  ...IMAGE_PROPERTIES.map((property) => css(property)),
-  css(LIST_MARKER_PROPERTY),
+  ...IMAGE_PROPERTIES.map((property) => css(property, afterStyle)),
+  ...IMAGE_PROPERTIES.map((property) => css(property, beforeStyle)),
+  ...IMAGE_PROPERTIES.map((property) => css(property, ownStyle)),
+  css(LIST_MARKER_PROPERTY, ownStyle),
 ];
 const locator = new ImageLocator(
   new PointHits([
