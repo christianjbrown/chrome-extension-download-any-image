@@ -33,6 +33,7 @@ import {
   ElementStyles,
   XmlSvgSerializer,
 } from "./document-adapters";
+import { DisarmCommand } from "./disarm-command";
 import type { Listenable, StyleLook } from "./dom";
 import {
   CanvasFinder,
@@ -43,6 +44,7 @@ import {
   VideoPosterFinder,
 } from "./element-finders";
 import { EventBindings } from "./event-bindings";
+import { FrameSlot } from "./frame-slot";
 import { HoverOutline } from "./hover-outline";
 import { ImageLocator } from "./image-locator";
 import { CANVAS_SOURCE } from "./canvas-source";
@@ -58,7 +60,6 @@ import {
 import type { ImageFinder } from "./locating";
 import { OutlineBox } from "./outline-box";
 import { PageBlobs } from "./page-blobs";
-import { DisarmCommand, FrameSlot } from "./page-commands";
 import { PICK_GESTURES } from "./pick-gestures";
 import { PickSession } from "./pick-session";
 import { MediaHits, PointHits, StackHits } from "./point-hits";
