@@ -22,6 +22,7 @@ import {
   SaveCommand,
   SchemeCommand,
 } from "./background-commands";
+import { ARMED, ERROR, IDLE, type LookSet } from "./button-looks";
 import { CHROME_TRANSLATIONS, ChromeErrorExplainer } from "./chrome-errors";
 import { ClickScheme } from "./click-scheme";
 import { ClosedTabAction } from "./closed-tab-action";
@@ -51,13 +52,14 @@ import { TimestampedName } from "./timestamped-name";
 import { ToggleController } from "./toggle-controller";
 import { ToolbarIcon } from "./toolbar-icon";
 import { ToolbarIndicator } from "./toolbar-indicator";
-import { TOOLBAR_LOOKS } from "./toolbar-looks";
+import { ArmedLook, ErrorLook, IdleLook } from "./toolbar-looks";
 import { ToolbarScheme } from "./toolbar-scheme";
 
-const indicator = new ToolbarIndicator(
-  new ClosedTabAction(chrome.action),
-  TOOLBAR_LOOKS,
-);
+const indicator = new ToolbarIndicator(new ClosedTabAction(chrome.action), {
+  [IDLE]: new IdleLook(),
+  [ARMED]: new ArmedLook(),
+  [ERROR]: new ErrorLook(),
+} satisfies LookSet);
 const toolbarScheme = new ToolbarScheme(
   new SchemeStore(chrome.storage.local, UNKNOWN_SCHEME),
   new ToolbarIcon(chrome.action),

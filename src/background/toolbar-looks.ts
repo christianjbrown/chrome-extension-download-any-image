@@ -1,23 +1,5 @@
 import { PICKER_BLUE } from "../shared/brand-colours";
-
-// How the button looks: its badge, the badge's colour and its title.
-interface Look {
-  badge: string;
-  colour: string;
-  title: string;
-}
-
-// The states the button can show.
-export const IDLE = "idle";
-export const ARMED = "armed";
-export const ERROR = "error";
-export type ButtonState = typeof IDLE | typeof ARMED | typeof ERROR;
-
-// The look for each state, from the message that goes with it. Only an error
-// has one. A new state is a new row.
-export type ToolbarLooks = Readonly<
-  Record<ButtonState, (message: string) => Look>
->;
+import { ARMED, ERROR, IDLE, type ButtonLook, type Look } from "./button-looks";
 
 const RED = "#dc2626";
 const GREY = "#5a5a60";
@@ -32,16 +14,33 @@ const NO_BADGE = "";
 const ARMED_BADGE = "ON";
 const ERROR_BADGE = "!";
 
-export const TOOLBAR_LOOKS: ToolbarLooks = {
-  [IDLE]: () => ({ badge: NO_BADGE, colour: GREY, title: IDLE_TITLE }),
-  [ARMED]: () => ({
-    badge: ARMED_BADGE,
-    colour: PICKER_BLUE,
-    title: ARMED_TITLE,
-  }),
-  [ERROR]: (message) => ({
-    badge: ERROR_BADGE,
-    colour: RED,
-    title: `${ERROR_TITLE_PREFIX}${message}`,
-  }),
-};
+// Waiting for a click on the button.
+export class IdleLook implements ButtonLook<typeof IDLE> {
+  readonly state = IDLE;
+
+  look(_message: string): Look {
+    return { badge: NO_BADGE, colour: GREY, title: IDLE_TITLE };
+  }
+}
+
+// Waiting for a click on an image.
+export class ArmedLook implements ButtonLook<typeof ARMED> {
+  readonly state = ARMED;
+
+  look(_message: string): Look {
+    return { badge: ARMED_BADGE, colour: PICKER_BLUE, title: ARMED_TITLE };
+  }
+}
+
+// The last download failed, and why.
+export class ErrorLook implements ButtonLook<typeof ERROR> {
+  readonly state = ERROR;
+
+  look(message: string): Look {
+    return {
+      badge: ERROR_BADGE,
+      colour: RED,
+      title: `${ERROR_TITLE_PREFIX}${message}`,
+    };
+  }
+}

@@ -1,6 +1,18 @@
+import type { LookSet } from "../../src/background/button-looks";
 import { ClosedTabAction } from "../../src/background/closed-tab-action";
 import { ToolbarIndicator } from "../../src/background/toolbar-indicator";
-import { TOOLBAR_LOOKS } from "../../src/background/toolbar-looks";
+import {
+  ArmedLook,
+  ErrorLook,
+  IdleLook,
+} from "../../src/background/toolbar-looks";
+
+// The looks the service worker is wired with.
+const TOOLBAR_LOOKS = {
+  idle: new IdleLook(),
+  armed: new ArmedLook(),
+  error: new ErrorLook(),
+} satisfies LookSet;
 
 function action() {
   return {
@@ -93,11 +105,18 @@ describe("ClosedTabAction", () => {
 describe("ToolbarIndicator with looks of its own", () => {
   it("paints the look the table gives for each state", async () => {
     const toolbar = action();
-    const look = (title: string) => () => ({ badge: "b", colour: "c", title });
+    const look = <S extends string>(state: S, title?: string) => ({
+      state,
+      look: (message: string) => ({
+        badge: "b",
+        colour: "c",
+        title: title ?? message,
+      }),
+    });
     const indicator = new ToolbarIndicator(toolbar, {
-      idle: look("idle"),
-      armed: look("armed"),
-      error: (message) => ({ badge: "b", colour: "c", title: message }),
+      idle: look("idle", "idle"),
+      armed: look("armed", "armed"),
+      error: look("error"),
     });
 
     await indicator.showArmed(1);
@@ -111,5 +130,29 @@ describe("ToolbarIndicator with looks of its own", () => {
       tabId: 1,
       title: "why",
     });
+  });
+});
+
+// Checked by tsc: the set of looks has one for every state, under its own.
+describe("LookSet", () => {
+  it("refuses a set with a state left out", () => {
+    const set = {
+      idle: new IdleLook(),
+      armed: new ArmedLook(),
+      // @ts-expect-error error has no look
+    } satisfies LookSet;
+
+    expect(set).toBeDefined();
+  });
+
+  it("refuses a look under another state's name", () => {
+    const set = {
+      idle: new IdleLook(),
+      // @ts-expect-error an error look cannot show armed
+      armed: new ErrorLook(),
+      error: new ErrorLook(),
+    } satisfies LookSet;
+
+    expect(set).toBeDefined();
   });
 });
