@@ -16,6 +16,7 @@ import { PageScript } from "./page-script";
 import { PendingNames } from "./pending-names";
 import { PickReports } from "./pick-reports";
 import { SchemeDocument } from "./scheme-document";
+import { SCHEME_POLICY, UNKNOWN_SCHEME } from "./scheme-state";
 import { SchemeStore } from "./scheme-store";
 import { senderTab } from "./sender-tab";
 import { SystemClock } from "./system-clock";
@@ -29,8 +30,9 @@ import { ToolbarScheme } from "./toolbar-scheme";
 
 const indicator = new ToolbarIndicator(chrome.action);
 const toolbarScheme = new ToolbarScheme(
-  new SchemeStore(chrome.storage.local),
+  new SchemeStore(chrome.storage.local, UNKNOWN_SCHEME),
   new ToolbarIcon(chrome.action),
+  SCHEME_POLICY,
 );
 const clickScheme = new ClickScheme(
   new TabScheme(chrome.scripting),
