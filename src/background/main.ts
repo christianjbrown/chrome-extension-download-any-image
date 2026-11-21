@@ -23,7 +23,13 @@ import {
   SchemeCommand,
 } from "./background-commands";
 import { ARMED, ERROR, IDLE, type LookSet } from "./button-looks";
-import { CHROME_TRANSLATIONS, ChromeErrorExplainer } from "./chrome-errors";
+import { ChromeErrorExplainer } from "./chrome-errors";
+import {
+  ActiveTabRefusal,
+  FileUrlRefusal,
+  OwnPageRefusal,
+  WebStoreRefusal,
+} from "./chrome-refusals";
 import { ClickScheme } from "./click-scheme";
 import { ClosedTabAction } from "./closed-tab-action";
 import { BACKGROUND_CONFIG } from "./config";
@@ -74,7 +80,12 @@ const schemeDocument = new SchemeDocument(
   chrome.runtime,
   OFFSCREEN_DOCUMENT_FILE,
 );
-const errors = new ChromeErrorExplainer(CHROME_TRANSLATIONS);
+const errors = new ChromeErrorExplainer([
+  new OwnPageRefusal(),
+  new WebStoreRefusal(),
+  new FileUrlRefusal(),
+  new ActiveTabRefusal(),
+]);
 const picker = new TabPicker(
   new PageScript(chrome.scripting, chrome.tabs, PAGE_SCRIPT_FILE),
   new CrosshairCursor(chrome.scripting),
