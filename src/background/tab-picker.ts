@@ -1,11 +1,15 @@
 import type { Cursor } from "./cursor-style";
 import type { PickerScript } from "./page-script";
 
-// Waiting for the click in one tab, and stopping again.
-export interface Picker {
-  arm(tabId: number): Promise<void>;
+// Stopping the wait for the click in one tab.
+export interface PickerStop {
   // Whether it was waiting. Never fails: there is always a way to stop.
   disarm(tabId: number): Promise<boolean>;
+}
+
+// Waiting for the click in one tab, and stopping again.
+export interface Picker extends PickerStop {
+  arm(tabId: number): Promise<void>;
 }
 
 export class TabPicker implements Picker {

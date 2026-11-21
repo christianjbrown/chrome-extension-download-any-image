@@ -27,6 +27,7 @@ import {
   SvgReader,
 } from "./image-readers";
 import { OutlineBox } from "./outline-box";
+import { PICK_GESTURES } from "./pick-gestures";
 import { PickSession } from "./pick-session";
 import { MediaHits, PointHits, StackHits } from "./point-hits";
 
@@ -100,6 +101,7 @@ const session = new PickSession({
     ),
     (callback) => requestAnimationFrame(callback),
   ),
+  gestures: PICK_GESTURES,
   locator,
   readers: new ImageReaders([
     new PassThroughReader(),

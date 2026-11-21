@@ -1,5 +1,8 @@
 import { BACKGROUND_CONFIG } from "../../src/background/config";
-import { MimeExtensions } from "../../src/background/file-extensions";
+import {
+  IMAGE_TYPES,
+  MimeExtensions,
+} from "../../src/background/file-extensions";
 import { ImageFilenameChooser } from "../../src/background/filename-chooser";
 import { kebab, safeStem } from "../../src/background/filename-text";
 import { UrlOriginalNames } from "../../src/background/original-name";
@@ -84,7 +87,7 @@ describe("UrlOriginalNames", () => {
 });
 
 describe("MimeExtensions", () => {
-  const extensions = new MimeExtensions();
+  const extensions = new MimeExtensions(IMAGE_TYPES);
 
   it.each([
     ["image/jpeg", "png", "jpg"],
@@ -138,7 +141,7 @@ describe("ImageFilenameChooser", () => {
   const chooser = new ImageFilenameChooser(
     new UrlOriginalNames(rules),
     new TimestampedName(clock, 80),
-    new MimeExtensions(),
+    new MimeExtensions(IMAGE_TYPES),
   );
 
   it("keeps a meaningful name, with the extension the file really has", () => {

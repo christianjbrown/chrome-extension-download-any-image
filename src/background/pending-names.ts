@@ -4,14 +4,20 @@ export interface NameRequest {
   title: string;
 }
 
-export interface NameRequests {
+// The side that starts a download: it says a request is coming, and forgets
+// it once the download is over.
+export interface NameExpectations {
   expect(request: NameRequest): void;
-  // The oldest request for this address, which is then no longer waiting.
-  take(url: string): NameRequest | undefined;
   forget(request: NameRequest): void;
 }
 
-export class PendingNames implements NameRequests {
+// The side that names a download when Chrome asks.
+export interface NameLookup {
+  // The oldest request for this address, which is then no longer waiting.
+  take(url: string): NameRequest | undefined;
+}
+
+export class PendingNames implements NameExpectations, NameLookup {
   private readonly waiting: NameRequest[] = [];
 
   expect(request: NameRequest): void {

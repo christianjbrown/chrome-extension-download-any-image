@@ -2,13 +2,13 @@
 import { CommandRouter } from "../shared/command-router";
 import { backgroundGuards } from "../shared/message-guards";
 import { BACKGROUND, type BackgroundMessage } from "../shared/messages";
-import { ChromeErrorExplainer } from "./chrome-errors";
+import { CHROME_TRANSLATIONS, ChromeErrorExplainer } from "./chrome-errors";
 import { ClickScheme } from "./click-scheme";
 import { BACKGROUND_CONFIG } from "./config";
 import { CrosshairCursor } from "./cursor-style";
 import { DownloadWatcher } from "./download-completion";
 import { OFFSCREEN_DOCUMENT_FILE, PAGE_SCRIPT_FILE } from "./entry-files";
-import { MimeExtensions } from "./file-extensions";
+import { IMAGE_TYPES, MimeExtensions } from "./file-extensions";
 import { ImageFilenameChooser } from "./filename-chooser";
 import { FilenameSuggester } from "./filename-suggester";
 import { ImageSaver } from "./image-saver";
@@ -45,7 +45,7 @@ const schemeDocument = new SchemeDocument(
   chrome.runtime,
   OFFSCREEN_DOCUMENT_FILE,
 );
-const errors = new ChromeErrorExplainer();
+const errors = new ChromeErrorExplainer(CHROME_TRANSLATIONS);
 const picker = new TabPicker(
   new PageScript(chrome.scripting, chrome.tabs, PAGE_SCRIPT_FILE),
   new CrosshairCursor(chrome.scripting),
@@ -68,7 +68,7 @@ const suggester = new FilenameSuggester(
   new ImageFilenameChooser(
     new UrlOriginalNames(BACKGROUND_CONFIG.originalNames),
     new TimestampedName(new SystemClock(), BACKGROUND_CONFIG.maxTitleLength),
-    new MimeExtensions(),
+    new MimeExtensions(IMAGE_TYPES),
   ),
 );
 const router = new CommandRouter<BackgroundMessage>(

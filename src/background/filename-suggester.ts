@@ -1,6 +1,6 @@
 import { UNIQUIFY } from "./download-terms";
 import type { FilenameChooser } from "./filename-chooser";
-import type { NameRequests } from "./pending-names";
+import type { NameLookup } from "./pending-names";
 
 export interface DownloadItem {
   byExtensionId?: string | undefined;
@@ -20,7 +20,7 @@ export type Suggest = (suggestion: {
 export class FilenameSuggester {
   constructor(
     private readonly extensionId: string,
-    private readonly names: NameRequests,
+    private readonly names: NameLookup,
     private readonly chooser: FilenameChooser,
   ) {}
 

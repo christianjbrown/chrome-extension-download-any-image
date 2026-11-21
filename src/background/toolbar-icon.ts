@@ -1,4 +1,5 @@
 import type { ColourScheme } from "../shared/colour-scheme";
+import type { SchemeIcon } from "./toolbar-scheme";
 
 export interface IconAction {
   setIcon(details: { path: Record<string, string> }): Promise<void>;
@@ -10,7 +11,7 @@ const iconPath = (scheme: ColourScheme, size: number): string =>
   `icons/on-${scheme}/icon-${String(size)}.png`;
 
 // An almost black icon on a light toolbar, an almost white one on a dark one.
-export class ToolbarIcon {
+export class ToolbarIcon implements SchemeIcon {
   constructor(private readonly action: IconAction) {}
 
   show(scheme: ColourScheme): Promise<void> {

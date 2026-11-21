@@ -1,6 +1,6 @@
 import type { DownloadCompletion } from "./download-completion";
 import { UNIQUIFY } from "./download-terms";
-import type { NameRequests } from "./pending-names";
+import type { NameExpectations } from "./pending-names";
 
 export interface DownloadStarter {
   download(options: {
@@ -20,7 +20,7 @@ export interface ImageDownloader {
 export class ImageSaver implements ImageDownloader {
   constructor(
     private readonly downloads: DownloadStarter,
-    private readonly names: NameRequests,
+    private readonly names: NameExpectations,
     private readonly completion: DownloadCompletion,
   ) {}
 
