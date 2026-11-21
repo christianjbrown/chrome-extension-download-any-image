@@ -1,11 +1,12 @@
-import { FrameSlot, PageCommands } from "../../src/page/page-commands";
+import { DisarmCommand, FrameSlot } from "../../src/page/page-commands";
 
-describe("PageCommands", () => {
+describe("DisarmCommand", () => {
   it("disarms the session, and says it worked", async () => {
     const session = { disarm: vi.fn() };
-    const { disarm } = new PageCommands(session);
+    const command = new DisarmCommand(session);
 
-    await expect(disarm()).resolves.toBe(true);
+    expect(command.type).toBe("disarm");
+    await expect(command.handle()).resolves.toBe(true);
     expect(session.disarm).toHaveBeenCalledOnce();
   });
 });

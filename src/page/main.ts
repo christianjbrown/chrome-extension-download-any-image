@@ -45,7 +45,7 @@ import {
 import type { ImageFinder } from "./locating";
 import { OutlineBox } from "./outline-box";
 import { PageBlobs, type DataUrlReader } from "./page-blobs";
-import { FrameSlot, PageCommands } from "./page-commands";
+import { DisarmCommand, FrameSlot } from "./page-commands";
 import type { Disarmable } from "./pick-control";
 import { PICK_GESTURES } from "./pick-gestures";
 import { PickSession } from "./pick-session";
@@ -155,7 +155,7 @@ const session = new PickSession(
 );
 const router = new CommandRouter<PageMessage>(
   new TrustedMessages(PAGE, pageGuards, chrome.runtime.id),
-  new PageCommands(session),
+  [new DisarmCommand(session)],
 );
 const listener: Listener = (message, sender, reply) =>
   router.route(message, sender as { id?: string }, reply);

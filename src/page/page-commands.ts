@@ -1,16 +1,18 @@
-import type { PageMessage } from "../shared/messages";
-import type { CommandHandlers } from "../shared/routing";
+import { DISARM, type PageMessage } from "../shared/messages";
+import type { Command } from "../shared/routing";
 import type { Disarmable } from "./pick-control";
 
 // What the service worker can ask of a frame: only to stop waiting, which
 // always works.
-export class PageCommands implements CommandHandlers<PageMessage> {
+export class DisarmCommand implements Command<PageMessage, typeof DISARM> {
+  readonly type = DISARM;
+
   constructor(private readonly session: Disarmable) {}
 
-  readonly disarm = (): Promise<boolean> => {
+  handle(): Promise<boolean> {
     this.session.disarm();
     return Promise.resolve(true);
-  };
+  }
 }
 
 // Where a frame keeps its armed session, so a second injection can find it.

@@ -1,4 +1,5 @@
 import { CommandRouter } from "../../src/shared/command-router";
+import type { Sender } from "../../src/shared/routing";
 import { TrustedMessages } from "../../src/shared/trusted-messages";
 import { replyWhenDone } from "../../src/shared/replies";
 
@@ -41,11 +42,14 @@ function router() {
       },
       "me",
     ),
-    {
-      double: (message, sender) =>
-        Promise.resolve(message.n * 2 + (sender.tab?.id ?? 0)),
-      fail: () => Promise.reject(new Error("failed")),
-    },
+    [
+      {
+        type: "double",
+        handle: (message: TestMessage & { type: "double" }, sender: Sender) =>
+          Promise.resolve(message.n * 2 + (sender.tab?.id ?? 0)),
+      },
+      { type: "fail", handle: () => Promise.reject(new Error("failed")) },
+    ],
   );
 }
 
@@ -138,7 +142,12 @@ describe("CommandRouter", () => {
 });
 
 describe("CommandRouter with a gate of its own", () => {
-  const handlers = { fail: () => Promise.reject(new Error("failed")) };
+  const commands = [
+    {
+      type: "fail" as const,
+      handle: () => Promise.reject(new Error("failed")),
+    },
+  ];
 
   it("answers nothing the gate keeps out", () => {
     const asked: unknown[] = [];
@@ -148,7 +157,7 @@ describe("CommandRouter with a gate of its own", () => {
         return false;
       },
     };
-    const router = new CommandRouter<TestMessage>(gate, handlers as never);
+    const router = new CommandRouter<TestMessage>(gate, commands);
 
     expect(router.route({ target: "here", type: "fail" }, ME, vi.fn())).toBe(
       false,
@@ -160,18 +169,18 @@ describe("CommandRouter with a gate of its own", () => {
     const gate = {
       admits: (_message: unknown): _message is TestMessage => true,
     };
-    const router = new CommandRouter<TestMessage>(gate, handlers as never);
+    const router = new CommandRouter<TestMessage>(gate, commands);
 
     expect(
       router.route({ target: "here", type: "fail" }, undefined, vi.fn()),
     ).toBe(false);
   });
 
-  it("answers nothing for a type it has no handler for", () => {
+  it("answers nothing for a type it has no command for", () => {
     const gate = {
       admits: (_message: unknown): _message is TestMessage => true,
     };
-    const router = new CommandRouter<TestMessage>(gate, handlers as never);
+    const router = new CommandRouter<TestMessage>(gate, commands);
 
     expect(router.route({ target: "here", type: "double" }, ME, vi.fn())).toBe(
       false,
