@@ -12,7 +12,8 @@ export interface CssImages {
 }
 
 const URL_FUNCTION = "url";
-const IMAGE_SETS = new Set(["image-set", "-webkit-image-set"]);
+const IMAGE_SET = "image-set";
+const WEBKIT_IMAGE_SET = "-webkit-image-set";
 
 // CSS fixes a pixel at a 96th of an inch, and an inch is 2.54cm.
 const CSS_DPI = 96;
@@ -41,6 +42,16 @@ interface Option {
 // are drawn rather than downloaded, are passed over. Of an image-set(), the
 // sharpest picture is the one worth keeping.
 export class CssImageUrls implements CssImages {
+  // How each image function names its picture. A new function is a new entry.
+  private readonly readers: ReadonlyMap<
+    string,
+    (args: string) => string | undefined
+  > = new Map([
+    [URL_FUNCTION, unquote],
+    [IMAGE_SET, (args: string) => this.sharpest(args)],
+    [WEBKIT_IMAGE_SET, (args: string) => this.sharpest(args)],
+  ]);
+
   first(value: string): string | undefined {
     for (const layer of splitTopLevel(value)) {
       const url = this.layerUrl(functionsIn(layer));
@@ -52,15 +63,13 @@ export class CssImageUrls implements CssImages {
   }
 
   private layerUrl(functions: CssFunction[]): string | undefined {
-    const image = functions.find(
-      ({ name }) => name === URL_FUNCTION || IMAGE_SETS.has(name),
-    );
-    if (image === undefined) {
-      return undefined;
+    for (const { name, args } of functions) {
+      const read = this.readers.get(name);
+      if (read !== undefined) {
+        return read(args);
+      }
     }
-    return image.name === URL_FUNCTION
-      ? unquote(image.args)
-      : this.sharpest(image.args);
+    return undefined;
   }
 
   private sharpest(args: string): string | undefined {
