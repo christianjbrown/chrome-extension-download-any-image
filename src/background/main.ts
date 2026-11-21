@@ -2,27 +2,17 @@
 import { CommandRouter } from "../shared/command-router";
 import { TrustedMessages } from "../shared/trusted-messages";
 import { SerialQueue } from "../shared/serial-queue";
-import {
-  DisarmedGuard,
-  FailedGuard,
-  SaveGuard,
-  SchemeGuard,
-} from "../shared/message-guards";
-import {
-  BACKGROUND,
-  DISARMED,
-  FAILED,
-  SAVE,
-  SCHEME,
-  type BackgroundMessage,
-} from "../shared/messages";
+import { DISARMED, DisarmedGuard } from "../shared/disarmed-message";
+import { FAILED, FailedGuard } from "../shared/failed-message";
+import { BACKGROUND } from "../shared/message-targets";
+import type { BackgroundMessage } from "../shared/messages";
 import type { CommandSet, GuardSet } from "../shared/routing";
-import {
-  DisarmedCommand,
-  FailedCommand,
-  SaveCommand,
-  SchemeCommand,
-} from "./background-commands";
+import { SAVE, SaveGuard } from "../shared/save-message";
+import { SCHEME, SchemeGuard } from "../shared/scheme-message";
+import { DisarmedCommand } from "./disarmed-command";
+import { FailedCommand } from "./failed-command";
+import { SaveCommand } from "./save-command";
+import { SchemeCommand } from "./scheme-command";
 import { ARMED, ERROR, IDLE, type LookSet } from "./button-looks";
 import { ChromeErrorExplainer } from "./chrome-errors";
 import {

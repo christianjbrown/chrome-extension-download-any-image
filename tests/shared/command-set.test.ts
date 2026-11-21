@@ -1,18 +1,14 @@
 // The compiler is what holds an entry point to one command and one guard per
 // message type, so these cases are checked by tsc, and fail the typecheck if
 // the check stops working.
-import {
-  DisarmedCommand,
-  FailedCommand,
-  SaveCommand,
-  SchemeCommand,
-} from "../../src/background/background-commands";
-import {
-  DisarmedGuard,
-  FailedGuard,
-  SaveGuard,
-  SchemeGuard,
-} from "../../src/shared/message-guards";
+import { DisarmedCommand } from "../../src/background/disarmed-command";
+import { FailedCommand } from "../../src/background/failed-command";
+import { SaveCommand } from "../../src/background/save-command";
+import { SchemeCommand } from "../../src/background/scheme-command";
+import { DisarmedGuard } from "../../src/shared/disarmed-message";
+import { FailedGuard } from "../../src/shared/failed-message";
+import { SaveGuard } from "../../src/shared/save-message";
+import { SchemeGuard } from "../../src/shared/scheme-message";
 import type { BackgroundMessage } from "../../src/shared/messages";
 import type { CommandSet, GuardSet } from "../../src/shared/routing";
 

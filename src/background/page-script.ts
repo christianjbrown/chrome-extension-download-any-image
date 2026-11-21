@@ -1,8 +1,6 @@
-import {
-  DISARM_MESSAGE,
-  isOkReply,
-  type PageMessage,
-} from "../shared/messages";
+import { DISARM_MESSAGE } from "../shared/disarm-message";
+import type { PageMessage } from "../shared/messages";
+import { isOkReply } from "../shared/replies";
 import type { PickerScript } from "./picking";
 
 export interface ScriptingApi {

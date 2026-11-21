@@ -1,9 +1,7 @@
-import {
-  DisarmedCommand,
-  FailedCommand,
-  SaveCommand,
-  SchemeCommand,
-} from "../../src/background/background-commands";
+import { DisarmedCommand } from "../../src/background/disarmed-command";
+import { FailedCommand } from "../../src/background/failed-command";
+import { SaveCommand } from "../../src/background/save-command";
+import { SchemeCommand } from "../../src/background/scheme-command";
 
 function outcomes() {
   return {

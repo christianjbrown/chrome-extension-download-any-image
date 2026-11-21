@@ -3,8 +3,10 @@
 // listener included, so a disarmed frame is no longer there to answer.
 import { CommandRouter } from "../shared/command-router";
 import { TrustedMessages } from "../shared/trusted-messages";
-import { DisarmGuard } from "../shared/message-guards";
-import { DISARM, PAGE, type PageMessage, type Reply } from "../shared/messages";
+import { DISARM, DisarmGuard } from "../shared/disarm-message";
+import { PAGE } from "../shared/message-targets";
+import type { PageMessage } from "../shared/messages";
+import type { Reply } from "../shared/replies";
 import type { CommandSet, GuardSet } from "../shared/routing";
 import { BackgroundClient } from "./background-client";
 import {

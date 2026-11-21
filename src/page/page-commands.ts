@@ -1,11 +1,11 @@
-import { DISARM, type PageMessage } from "../shared/messages";
+import { DISARM, type DisarmMessage } from "../shared/disarm-message";
 import { fieldAt, hasMethods } from "./checks";
 import type { Command } from "../shared/routing";
 import type { Disarmable } from "./pick-control";
 
 // What the service worker can ask of a frame: only to stop waiting, which
 // always works.
-export class DisarmCommand implements Command<PageMessage, typeof DISARM> {
+export class DisarmCommand implements Command<DisarmMessage> {
   readonly type = DISARM;
 
   constructor(private readonly session: Disarmable) {}

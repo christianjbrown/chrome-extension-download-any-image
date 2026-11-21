@@ -1,4 +1,4 @@
-import { isMessageFor } from "./messages";
+import { isMessageFor } from "./message-checks";
 import type { Message, MessageGate, MessageGuard, Sender } from "./routing";
 
 // Only the extension's own contexts are answered, only with a message for this

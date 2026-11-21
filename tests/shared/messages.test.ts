@@ -1,16 +1,15 @@
 import { errorMessage } from "../../src/shared/error-message";
-import {
-  DisarmGuard,
-  DisarmedGuard,
-  FailedGuard,
-  SaveGuard,
-  SchemeGuard,
-} from "../../src/shared/message-guards";
+import { DisarmGuard } from "../../src/shared/disarm-message";
+import { DisarmedGuard } from "../../src/shared/disarmed-message";
+import { FailedGuard } from "../../src/shared/failed-message";
+import { SaveGuard } from "../../src/shared/save-message";
+import { SchemeGuard } from "../../src/shared/scheme-message";
 import {
   isMessageFor,
   isMessageOf,
-  isOkReply,
-} from "../../src/shared/messages";
+  isShortText,
+} from "../../src/shared/message-checks";
+import { isOkReply } from "../../src/shared/replies";
 
 describe("isMessageFor", () => {
   it("accepts a message addressed to the target", () => {
@@ -56,6 +55,16 @@ describe("isOkReply", () => {
       expect(isOkReply(reply)).toBe(false);
     },
   );
+});
+
+describe("isShortText", () => {
+  it("accepts text up to the limit", () => {
+    expect(isShortText("ab", 2)).toBe(true);
+  });
+
+  it.each(["abc", 3, undefined])("refuses %o", (value) => {
+    expect(isShortText(value, 2)).toBe(false);
+  });
 });
 
 describe("errorMessage", () => {
