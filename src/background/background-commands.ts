@@ -1,5 +1,3 @@
-import type { ColourScheme } from "../shared/colour-scheme";
-import type { CommandHandlers, Sender } from "../shared/command-router";
 import type {
   BackgroundMessage,
   DISARMED,
@@ -7,24 +5,15 @@ import type {
   SAVE,
   SCHEME,
 } from "../shared/messages";
+import type { CommandHandlers, Sender } from "../shared/routing";
+import type { PickOutcomes } from "./picking";
+import type { DeviceSchemeSink } from "./scheme-ports";
 import { senderTab } from "./sender-tab";
 
 type Message<T extends BackgroundMessage["type"]> = Extract<
   BackgroundMessage,
   { type: T }
 >;
-
-// How a click in a tab turned out, as the page reports it.
-export interface PickOutcomes {
-  picked(tabId: number, url: string, title: string): Promise<void>;
-  disarmed(tabId: number): Promise<void>;
-  failed(tabId: number, error: string): Promise<void>;
-}
-
-// What the offscreen document reports.
-export interface DeviceSchemeSink {
-  deviceIs(scheme: ColourScheme): Promise<void>;
-}
 
 // What the page scripts and the offscreen document tell the service worker,
 // each handed to the part that deals with it.

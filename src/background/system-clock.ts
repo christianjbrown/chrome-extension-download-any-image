@@ -1,4 +1,4 @@
-import type { Clock } from "./timestamped-name";
+import type { Clock } from "./filename-ports";
 
 export class SystemClock implements Clock {
   now(): Date {

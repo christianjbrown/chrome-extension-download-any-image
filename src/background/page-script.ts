@@ -3,6 +3,7 @@ import {
   type PageMessage,
   type Reply,
 } from "../shared/messages";
+import type { PickerScript } from "./picking";
 
 export interface ScriptingApi {
   executeScript(injection: {
@@ -18,13 +19,6 @@ export interface TabMessagingApi {
     tabId: number,
     message: PageMessage,
   ): Promise<Reply<boolean> | undefined>;
-}
-
-// The script that waits in the page for the click.
-export interface PickerScript {
-  inject(tabId: number): Promise<void>;
-  // Whether any frame in the tab was still waiting.
-  disarm(tabId: number): Promise<boolean>;
 }
 
 export class PageScript implements PickerScript {

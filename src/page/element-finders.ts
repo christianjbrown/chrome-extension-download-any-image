@@ -10,7 +10,7 @@ import {
   type PageElement,
   type SvgLike,
 } from "./dom";
-import type { ImageFinder } from "./image-locator";
+import type { ImageFinder } from "./locating";
 
 function urlSource(url: string): ImageSource | undefined {
   return url === "" ? undefined : { kind: URL_SOURCE, url };

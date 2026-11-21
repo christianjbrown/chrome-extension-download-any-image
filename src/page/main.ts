@@ -8,6 +8,13 @@ import { BackgroundClient } from "./background-client";
 import { AFTER, BEFORE, CssImageFinder, type Pseudo } from "./css-finder";
 import { CssImageUrls } from "./css-image-urls";
 import {
+  DocumentBackdrop,
+  DocumentOverlay,
+  XmlSvgSerializer,
+  type MarkupWriter,
+  type OverlayDocument,
+} from "./document-adapters";
+import {
   CANVAS_SOURCE,
   SVG_SOURCE,
   URL_SOURCE,
@@ -22,16 +29,10 @@ import {
   SvgImageFinder,
   VideoPosterFinder,
 } from "./element-finders";
-import {
-  DocumentBackdrop,
-  DocumentOverlay,
-  XmlSvgSerializer,
-  type MarkupWriter,
-  type OverlayDocument,
-} from "./document-adapters";
 import { EventBindings } from "./event-bindings";
 import { HoverOutline } from "./hover-outline";
-import { ImageLocator, type ImageFinder } from "./image-locator";
+import { ImageLocator } from "./image-locator";
+import { ImagePick } from "./image-pick";
 import {
   BlobUrlReader,
   CanvasReader,
@@ -40,12 +41,14 @@ import {
   SvgReader,
   UrlReaders,
 } from "./image-readers";
+import type { ImageFinder } from "./locating";
 import { OutlineBox } from "./outline-box";
 import { PageBlobs, type DataUrlReader } from "./page-blobs";
-import { FrameSlot, PageCommands, type Disarmable } from "./page-commands";
+import { FrameSlot, PageCommands } from "./page-commands";
+import type { Disarmable } from "./pick-control";
 import { PICK_GESTURES } from "./pick-gestures";
-import { ImagePick } from "./image-pick";
 import { PickSession } from "./pick-session";
+import { MediaHits, PointHits, StackHits } from "./point-hits";
 import {
   CancelOnKey,
   ClickPick,
@@ -54,7 +57,6 @@ import {
   StopOnNavigate,
   StopOnPageHide,
 } from "./session-parts";
-import { MediaHits, PointHits, StackHits } from "./point-hits";
 
 type Listener = (
   message: unknown,

@@ -1,5 +1,5 @@
 import type { ColourScheme } from "../shared/colour-scheme";
-import type { SchemeIcon } from "./toolbar-scheme";
+import type { SchemeIcon } from "./scheme-ports";
 
 export interface IconAction {
   setIcon(details: { path: Record<string, string> }): Promise<void>;

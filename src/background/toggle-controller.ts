@@ -1,6 +1,5 @@
-import type { ErrorExplainer } from "./chrome-errors";
 import type { PickIndicator } from "./pick-indicator";
-import type { Picker } from "./tab-picker";
+import type { ErrorExplainer, Picker } from "./picking";
 
 export interface ClickedTab {
   id?: number | undefined;

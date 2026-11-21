@@ -1,4 +1,5 @@
 import { COMPLETE, IN_PROGRESS } from "./download-terms";
+import type { DownloadCompletion } from "./picking";
 
 // What Chrome says when a download stops without giving a reason.
 const INTERRUPTED_MESSAGE = "Download interrupted";
@@ -16,11 +17,6 @@ export interface DownloadEvents {
     addListener(listener: DeltaListener): void;
     removeListener(listener: DeltaListener): void;
   };
-}
-
-export interface DownloadCompletion {
-  // Settles once the file is written, or fails with Chrome's reason.
-  finished(id: number): Promise<void>;
 }
 
 export class DownloadWatcher implements DownloadCompletion {

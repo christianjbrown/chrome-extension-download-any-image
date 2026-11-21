@@ -5,11 +5,7 @@ import {
   unquote,
   type CssFunction,
 } from "./css-text";
-
-export interface CssImages {
-  // The topmost real picture in a computed image value, if there is one.
-  first(value: string): string | undefined;
-}
+import type { CssImages } from "./locating";
 
 const URL_FUNCTION = "url";
 const IMAGE_SET = "image-set";

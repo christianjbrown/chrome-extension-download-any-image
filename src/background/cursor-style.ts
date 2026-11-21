@@ -1,3 +1,4 @@
+import type { Cursor } from "./picking";
 // A user style, rather than the page's own author styles.
 const USER_ORIGIN = "USER";
 
@@ -10,11 +11,6 @@ export interface StyleInjection {
 export interface StylingApi {
   insertCSS(injection: StyleInjection): Promise<void>;
   removeCSS(injection: StyleInjection): Promise<void>;
-}
-
-export interface Cursor {
-  show(tabId: number): Promise<void>;
-  hide(tabId: number): Promise<void>;
 }
 
 // A user style with !important outranks anything the page says, even the page's

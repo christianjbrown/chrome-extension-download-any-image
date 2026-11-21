@@ -1,6 +1,6 @@
-import type { DownloadCompletion } from "./download-completion";
 import { UNIQUIFY } from "./download-terms";
-import type { NameExpectations } from "./pending-names";
+import type { NameExpectations } from "./name-requests";
+import type { DownloadCompletion, ImageDownloader } from "./picking";
 
 export interface DownloadStarter {
   download(options: {
@@ -8,10 +8,6 @@ export interface DownloadStarter {
     saveAs: false;
     conflictAction: typeof UNIQUIFY;
   }): Promise<number>;
-}
-
-export interface ImageDownloader {
-  save(url: string, title: string): Promise<void>;
 }
 
 // Chrome fetches the image itself, with the browser's own cookies and no CORS,

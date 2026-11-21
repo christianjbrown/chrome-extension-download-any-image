@@ -1,8 +1,7 @@
 import type { Mocked } from "vitest";
-import type { ErrorExplainer } from "../../src/background/chrome-errors";
-import type { ListenerHold } from "../../src/background/filename-listening";
+import type { ListenerHold } from "../../src/background/name-requests";
 import type { PickIndicator } from "../../src/background/pick-indicator";
-import type { Picker } from "../../src/background/tab-picker";
+import type { ErrorExplainer, Picker } from "../../src/background/picking";
 
 export function fakePicker(armed = false): Mocked<Picker> {
   return {

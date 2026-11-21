@@ -1,6 +1,10 @@
-import type { Clearing } from "./event-bindings";
-import type { HoverStop } from "./hover-outline";
-import type { PickControl, PickFlow, SessionPart } from "./pick-control";
+import type { HoverStop } from "./outlining";
+import type {
+  Clearing,
+  PickControl,
+  PickFlow,
+  SessionPart,
+} from "./pick-control";
 
 // One frame's wait for the click: arms its parts, and takes everything they
 // added away again once the wait is over, however it ends.

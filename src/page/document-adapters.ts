@@ -1,9 +1,9 @@
 // The page script's few direct dealings with the document, each behind the
 // interface the part that needs it asks for.
 import type { PageElement, SvgLike } from "./dom";
-import type { SvgSerializer } from "./image-readers";
-import type { OverlayElement, OverlayHost } from "./outline-box";
-import type { Backdrop } from "./point-hits";
+import type { SvgSerializer } from "./image-reading";
+import type { Backdrop } from "./locating";
+import type { OverlayElement, OverlayHost } from "./outlining";
 
 // The extension's frame is a plain element of its own.
 const OVERLAY_TAG = "div";

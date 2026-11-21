@@ -5,7 +5,6 @@ import type {
   SourceKind,
   StyleLook,
   SVG_SOURCE,
-  SvgLike,
   URL_SOURCE,
 } from "./dom";
 import type {
@@ -14,6 +13,7 @@ import type {
   ImageReading,
   ReadersByKind,
   SourceReader,
+  SvgSerializer,
   UrlReader,
 } from "./image-reading";
 
@@ -94,11 +94,6 @@ export class CanvasReader implements SourceReader<
       return Promise.reject(new Error(CANVAS_TAINTED));
     }
   }
-}
-
-// Writes an SVG out as markup.
-export interface SvgSerializer {
-  serialize(svg: SvgLike): string;
 }
 
 // An inline SVG as a file of its own: sized as it is on screen when it does not

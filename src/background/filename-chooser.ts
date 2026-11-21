@@ -1,10 +1,9 @@
-import type { FileExtensions } from "./file-extensions";
-import type { OriginalNames } from "./original-name";
-import type { FallbackNames } from "./timestamped-name";
-
-export interface FilenameChooser {
-  choose(url: string, title: string, mime: string | undefined): string;
-}
+import type {
+  FallbackNames,
+  FileExtensions,
+  FilenameChooser,
+  OriginalNames,
+} from "./filename-ports";
 
 // The name the image had on the server when it means something, and otherwise
 // the date, the time and the page's title. Either way the extension comes from

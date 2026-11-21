@@ -4,16 +4,7 @@ import {
   type PageElement,
   type PointQueryable,
 } from "./dom";
-
-// Elements under a point, topmost first.
-export interface HitSource {
-  at(x: number, y: number): PageElement[];
-}
-
-// The page's own backdrop, which a click on plain text should not pick.
-export interface Backdrop {
-  isBackdrop(element: PageElement): boolean;
-}
+import type { Backdrop, HitSource } from "./locating";
 
 // Everything the browser says is under the point, overlays and ancestors
 // included, with the insides of open shadow roots ahead of their hosts. The

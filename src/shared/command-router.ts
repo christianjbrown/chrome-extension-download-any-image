@@ -1,24 +1,11 @@
-import type { MessageGuards } from "./message-guards";
 import { isMessageFor, type Reply } from "./messages";
 import { replyWhenDone } from "./replies";
-
-interface Message {
-  target: string;
-  type: string;
-}
-
-// Who sent a message, as far as Chrome says.
-export interface Sender {
-  id?: string | undefined;
-  tab?: { id?: number | undefined } | undefined;
-}
-
-export type CommandHandlers<M extends Message> = {
-  [T in M["type"]]: (
-    message: Extract<M, { type: T }>,
-    sender: Sender,
-  ) => Promise<unknown>;
-};
+import type {
+  CommandHandlers,
+  Message,
+  MessageGuards,
+  Sender,
+} from "./routing";
 
 // Runs the handler for each message meant for this context and answers with its
 // result. Only the extension's own contexts are answered, and only with a

@@ -1,12 +1,5 @@
+import type { Clock, FallbackNames } from "./filename-ports";
 import type { TextCleaner } from "./text-cleaner";
-
-export interface Clock {
-  now(): Date;
-}
-
-export interface FallbackNames {
-  name(title: string): string;
-}
 
 // What a page with no usable title is called instead.
 const UNTITLED = "image";

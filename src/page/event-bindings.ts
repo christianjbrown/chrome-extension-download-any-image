@@ -1,18 +1,5 @@
 import type { Listenable } from "./dom";
-
-// Adding a listener that is taken away again when the picker stops.
-export interface Listening {
-  listen(
-    target: Listenable,
-    type: string,
-    listener: (event: never) => void,
-  ): void;
-}
-
-// Taking every listener and undo away again.
-export interface Clearing {
-  clear(): void;
-}
+import type { Clearing, Listening } from "./pick-control";
 
 // Anything else to undo when the picker stops.
 interface UndoTracker {

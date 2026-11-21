@@ -1,4 +1,4 @@
-import type { ImageSource, ImageSourceOf, SourceKind } from "./dom";
+import type { ImageSource, ImageSourceOf, SourceKind, SvgLike } from "./dom";
 
 // Turns a picture into an address chrome.downloads can fetch from the service
 // worker. Web addresses pass straight through; anything bound to the page has
@@ -28,4 +28,9 @@ export interface BlobLike {
 export interface BlobAccess {
   fetch(url: string): Promise<BlobLike>;
   toDataUrl(blob: BlobLike): Promise<string>;
+}
+
+// Writes an SVG out as markup.
+export interface SvgSerializer {
+  serialize(svg: SvgLike): string;
 }

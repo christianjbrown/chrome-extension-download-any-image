@@ -1,15 +1,6 @@
+import type { OriginalName, OriginalNames } from "./filename-ports";
 import type { NameFilter } from "./name-filter";
 import type { TextCleaner } from "./text-cleaner";
-
-export interface OriginalName {
-  stem: string;
-  extension?: string | undefined;
-}
-
-export interface OriginalNames {
-  // The image's own name from its address, when it has one worth keeping.
-  from(url: string): OriginalName | undefined;
-}
 
 const WEB = /^https?:$/;
 const PATH_SEPARATOR = "/";

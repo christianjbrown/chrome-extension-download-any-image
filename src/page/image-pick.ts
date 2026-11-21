@@ -1,8 +1,7 @@
 import { errorMessage } from "../shared/error-message";
-import type { PickReporter } from "./background-client";
-import type { Locator } from "./image-locator";
 import type { ImageReading } from "./image-reading";
-import type { PickFlow } from "./pick-control";
+import type { Locator } from "./locating";
+import type { PickFlow, PickReporter } from "./pick-control";
 
 // The page's title, which the fallback filename is made from.
 export type PageTitle = () => string;

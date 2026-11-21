@@ -1,10 +1,6 @@
-import type { CommandHandlers } from "../shared/command-router";
 import type { PageMessage } from "../shared/messages";
-
-// Something that can stop waiting for the click.
-export interface Disarmable {
-  disarm(): void;
-}
+import type { CommandHandlers } from "../shared/routing";
+import type { Disarmable } from "./pick-control";
 
 // What the service worker can ask of a frame: only to stop waiting, which
 // always works.

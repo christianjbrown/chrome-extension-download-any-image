@@ -1,8 +1,12 @@
 import type { Listenable } from "./dom";
-import type { Listening } from "./event-bindings";
-import type { HoverFollow } from "./hover-outline";
-import type { PickControl, SessionPart } from "./pick-control";
-import type { CancelKey, PickButton } from "./pick-gestures";
+import type { HoverFollow } from "./outlining";
+import type {
+  CancelKey,
+  Listening,
+  PickButton,
+  PickControl,
+  SessionPart,
+} from "./pick-control";
 
 // What a listener can do to stop the page from seeing an event.
 interface Swallowable {

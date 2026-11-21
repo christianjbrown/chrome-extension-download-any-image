@@ -1,24 +1,9 @@
-import type { ListenerHold } from "./filename-listening";
-
-// A download the extension started, waiting for Chrome to ask what to call it.
-export interface NameRequest {
-  url: string;
-  title: string;
-}
-
-// The side that starts a download: it says a request is coming, and forgets
-// it once the download is over.
-export interface NameExpectations {
-  expect(request: NameRequest): void;
-  forget(request: NameRequest): void;
-}
-
-// The side that names a download when Chrome asks.
-export interface NameLookup {
-  // Hands the oldest request for this address to answer, after which it is
-  // no longer waiting. Says whether there was one.
-  take(url: string, answer: (request: NameRequest) => void): boolean;
-}
+import type {
+  ListenerHold,
+  NameExpectations,
+  NameLookup,
+  NameRequest,
+} from "./name-requests";
 
 // Every waiting request holds Chrome's filename listener, and lets go of it
 // the moment the request stops waiting, so the two cannot drift apart. A

@@ -1,21 +1,6 @@
 import { PICKER_BLUE } from "../shared/brand-colours";
 import type { Box } from "./dom";
-
-export interface OverlayElement {
-  readonly style: { setProperty(name: string, value: string): void };
-  remove(): void;
-}
-
-// Where the frame is made and put.
-export interface OverlayHost {
-  create(): OverlayElement;
-  attach(element: OverlayElement): void;
-}
-
-export interface Outline {
-  show(box: Box): void;
-  hide(): void;
-}
+import type { Outline, OverlayElement, OverlayHost } from "./outlining";
 
 // The largest z-index there is, so the frame sits over anything the page draws.
 const TOPMOST = "2147483647";
