@@ -10,7 +10,7 @@ import {
   type PageElement,
   type SvgLike,
 } from "./dom";
-import type { ImageFinder } from "./locating";
+import type { ImageFinder, PlacedKind } from "./locating";
 
 function urlSource(url: string): ImageSource | undefined {
   return url === "" ? undefined : { kind: URL_SOURCE, url };
@@ -26,7 +26,9 @@ function isSvg(element: PageElement, name: string): boolean {
 
 // The picture an <img> is showing right now, which for srcset and <picture> is
 // the one the browser chose.
-export class ImgFinder implements ImageFinder {
+export class ImgFinder implements ImageFinder, PlacedKind {
+  readonly selector = TAG.img;
+
   find(element: PageElement): ImageSource | undefined {
     if (!isHtml(element, TAG.img)) {
       return undefined;
@@ -36,7 +38,9 @@ export class ImgFinder implements ImageFinder {
   }
 }
 
-export class InputImageFinder implements ImageFinder {
+export class InputImageFinder implements ImageFinder, PlacedKind {
+  readonly selector = `${TAG.input}[type=${IMAGE_INPUT_TYPE}]`;
+
   find(element: PageElement): ImageSource | undefined {
     const input = element as PageElement & { type?: string; src?: string };
     if (!isHtml(element, TAG.input) || input.type !== IMAGE_INPUT_TYPE) {
@@ -46,7 +50,9 @@ export class InputImageFinder implements ImageFinder {
   }
 }
 
-export class VideoPosterFinder implements ImageFinder {
+export class VideoPosterFinder implements ImageFinder, PlacedKind {
+  readonly selector = TAG.video;
+
   find(element: PageElement): ImageSource | undefined {
     if (!isHtml(element, TAG.video)) {
       return undefined;
@@ -56,7 +62,9 @@ export class VideoPosterFinder implements ImageFinder {
 }
 
 // Whatever a script drew, read out of the canvas itself.
-export class CanvasFinder implements ImageFinder {
+export class CanvasFinder implements ImageFinder, PlacedKind {
+  readonly selector = TAG.canvas;
+
   find(element: PageElement): ImageSource | undefined {
     if (!isHtml(element, TAG.canvas)) {
       return undefined;
@@ -87,7 +95,9 @@ export class SvgImageFinder implements ImageFinder {
 
 // An SVG drawn in the page, saved whole. The outermost one, since an <svg> can
 // nest inside another.
-export class InlineSvgFinder implements ImageFinder {
+export class InlineSvgFinder implements ImageFinder, PlacedKind {
+  readonly selector = TAG.svg;
+
   find(element: PageElement): ImageSource | undefined {
     const svg = element as SvgLike & { ownerSVGElement: unknown };
     if (!isSvg(element, TAG.svg) || svg.ownerSVGElement !== null) {

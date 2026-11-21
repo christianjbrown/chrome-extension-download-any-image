@@ -103,13 +103,26 @@ const IMAGE_PROPERTIES = [
 const LIST_MARKER_PROPERTY = "list-style-image";
 // Top down: the element's own picture, then what its ::after and ::before
 // paint over its background, then the background and the rest.
+const imgFinder = new ImgFinder();
+const inputImageFinder = new InputImageFinder();
+const inlineSvgFinder = new InlineSvgFinder();
+const canvasFinder = new CanvasFinder();
+const videoPosterFinder = new VideoPosterFinder();
+// The finders whose elements can also be found by where they sit.
+const placedKinds = [
+  imgFinder,
+  inputImageFinder,
+  inlineSvgFinder,
+  canvasFinder,
+  videoPosterFinder,
+];
 const finders: ImageFinder[] = [
-  new ImgFinder(),
-  new InputImageFinder(),
+  imgFinder,
+  inputImageFinder,
   new SvgImageFinder(() => document.baseURI),
-  new InlineSvgFinder(),
-  new CanvasFinder(),
-  new VideoPosterFinder(),
+  inlineSvgFinder,
+  canvasFinder,
+  videoPosterFinder,
   ...IMAGE_PROPERTIES.map((property) => css(property, AFTER)),
   ...IMAGE_PROPERTIES.map((property) => css(property, BEFORE)),
   ...IMAGE_PROPERTIES.map((property) => css(property)),
@@ -118,7 +131,7 @@ const finders: ImageFinder[] = [
 const locator = new ImageLocator(
   new PointHits([
     new StackHits(document, new DocumentBackdrop(document)),
-    new MediaHits(document),
+    new MediaHits(document, placedKinds),
   ]),
   finders,
 );

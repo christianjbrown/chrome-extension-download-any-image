@@ -6,6 +6,12 @@ export interface ImageFinder {
   find(element: PageElement): ImageSource | undefined;
 }
 
+// An element kind that can be found by where it sits on the page, so a
+// picture with pointer-events: none is still under the point.
+export interface PlacedKind {
+  readonly selector: string;
+}
+
 export interface FoundImage {
   element: PageElement;
   source: ImageSource;

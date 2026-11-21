@@ -1,10 +1,5 @@
-import {
-  IMAGE_INPUT_TYPE,
-  TAG,
-  type PageElement,
-  type PointQueryable,
-} from "./dom";
-import type { Backdrop, HitSource } from "./locating";
+import type { PageElement, PointQueryable } from "./dom";
+import type { Backdrop, HitSource, PlacedKind } from "./locating";
 
 // Everything the browser says is under the point, overlays and ancestors
 // included, with the insides of open shadow roots ahead of their hosts. The
@@ -45,21 +40,22 @@ export interface MediaQueryable {
 }
 
 const SELECTOR_LIST = ", ";
-const MEDIA = [
-  TAG.img,
-  TAG.svg,
-  TAG.canvas,
-  TAG.video,
-  `${TAG.input}[type=${IMAGE_INPUT_TYPE}]`,
-].join(SELECTOR_LIST);
 
 // Pictures with pointer-events: none never show up in the stack, so these are
-// found by where they are. Later in the page is usually painted on top.
+// found by where they are, for each kind the finders can place. Later in the
+// page is usually painted on top.
 export class MediaHits implements HitSource {
-  constructor(private readonly document: MediaQueryable) {}
+  private readonly media: string;
+
+  constructor(
+    private readonly document: MediaQueryable,
+    kinds: readonly PlacedKind[],
+  ) {
+    this.media = kinds.map((kind) => kind.selector).join(SELECTOR_LIST);
+  }
 
   at(x: number, y: number): PageElement[] {
-    return Array.from(this.document.querySelectorAll(MEDIA))
+    return Array.from(this.document.querySelectorAll(this.media))
       .filter((element) => {
         const box = element.getBoundingClientRect();
         return (
