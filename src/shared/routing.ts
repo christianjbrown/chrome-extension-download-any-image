@@ -12,13 +12,12 @@ export interface Sender {
   tab?: { id?: number | undefined } | undefined;
 }
 
-// The handler for each type of message a context answers.
-export type CommandHandlers<M extends Message> = {
-  [T in M["type"]]: (
-    message: Extract<M, { type: T }>,
-    sender: Sender,
-  ) => Promise<unknown>;
-};
+// What a context does with one type of message. A new message is a new
+// command, handed to the router with the others.
+export interface Command<M extends Message, T extends M["type"] = M["type"]> {
+  readonly type: T;
+  handle(message: Extract<M, { type: T }>, sender: Sender): Promise<unknown>;
+}
 
 // Whether a message that names a type also carries the fields that type needs.
 export type MessageGuards<M extends { type: string }> = {

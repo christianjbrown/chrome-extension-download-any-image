@@ -1,11 +1,11 @@
-import type {
-  BackgroundMessage,
+import {
   DISARMED,
   FAILED,
   SAVE,
   SCHEME,
+  type BackgroundMessage,
 } from "../shared/messages";
-import type { CommandHandlers, Sender } from "../shared/routing";
+import type { Command, Sender } from "../shared/routing";
 import type { PickOutcomes } from "./picking";
 import type { DeviceSchemeSink } from "./scheme-ports";
 import { senderTab } from "./sender-tab";
@@ -16,29 +16,57 @@ type Message<T extends BackgroundMessage["type"]> = Extract<
 >;
 
 // What the page scripts and the offscreen document tell the service worker,
-// each handed to the part that deals with it.
-export class BackgroundCommands implements CommandHandlers<BackgroundMessage> {
-  constructor(
-    private readonly outcomes: PickOutcomes,
-    private readonly schemeSink: DeviceSchemeSink,
-  ) {}
+// one command per message, each handing it to the part that deals with it.
 
-  readonly save = (
-    message: Message<typeof SAVE>,
-    sender: Sender,
-  ): Promise<void> =>
-    this.outcomes.picked(senderTab(sender), message.url, message.title);
+// The page picked an image, to be saved from the tab it came from.
+export class SaveCommand implements Command<BackgroundMessage, typeof SAVE> {
+  readonly type = SAVE;
 
-  readonly disarmed = (
-    _message: Message<typeof DISARMED>,
-    sender: Sender,
-  ): Promise<void> => this.outcomes.disarmed(senderTab(sender));
+  constructor(private readonly outcomes: PickOutcomes) {}
 
-  readonly failed = (
-    message: Message<typeof FAILED>,
-    sender: Sender,
-  ): Promise<void> => this.outcomes.failed(senderTab(sender), message.error);
+  handle(message: Message<typeof SAVE>, sender: Sender): Promise<void> {
+    return this.outcomes.picked(senderTab(sender), message.url, message.title);
+  }
+}
 
-  readonly scheme = (message: Message<typeof SCHEME>): Promise<void> =>
-    this.schemeSink.deviceIs(message.scheme);
+// The page stopped waiting with nothing picked.
+export class DisarmedCommand implements Command<
+  BackgroundMessage,
+  typeof DISARMED
+> {
+  readonly type = DISARMED;
+
+  constructor(private readonly outcomes: PickOutcomes) {}
+
+  handle(_message: Message<typeof DISARMED>, sender: Sender): Promise<void> {
+    return this.outcomes.disarmed(senderTab(sender));
+  }
+}
+
+// The page could not read the picture.
+export class FailedCommand implements Command<
+  BackgroundMessage,
+  typeof FAILED
+> {
+  readonly type = FAILED;
+
+  constructor(private readonly outcomes: PickOutcomes) {}
+
+  handle(message: Message<typeof FAILED>, sender: Sender): Promise<void> {
+    return this.outcomes.failed(senderTab(sender), message.error);
+  }
+}
+
+// The offscreen document saw the device's colour scheme.
+export class SchemeCommand implements Command<
+  BackgroundMessage,
+  typeof SCHEME
+> {
+  readonly type = SCHEME;
+
+  constructor(private readonly sink: DeviceSchemeSink) {}
+
+  handle(message: Message<typeof SCHEME>): Promise<void> {
+    return this.sink.deviceIs(message.scheme);
+  }
 }

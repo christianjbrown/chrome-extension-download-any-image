@@ -7,7 +7,7 @@ export const PAGE = "page";
 export const BACKGROUND = "background";
 
 // What the page script is asked to do.
-const DISARM = "disarm";
+export const DISARM = "disarm";
 
 // What the service worker is told.
 export const SAVE = "save";

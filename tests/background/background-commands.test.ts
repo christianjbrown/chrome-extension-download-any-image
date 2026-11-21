@@ -1,60 +1,74 @@
-import { BackgroundCommands } from "../../src/background/background-commands";
+import {
+  DisarmedCommand,
+  FailedCommand,
+  SaveCommand,
+  SchemeCommand,
+} from "../../src/background/background-commands";
 
-function setup() {
-  const outcomes = {
+function outcomes() {
+  return {
     picked: vi.fn().mockResolvedValue(undefined),
     disarmed: vi.fn().mockResolvedValue(undefined),
     failed: vi.fn().mockResolvedValue(undefined),
-  };
-  const scheme = { deviceIs: vi.fn().mockResolvedValue(undefined) };
-  return {
-    outcomes,
-    scheme,
-    commands: new BackgroundCommands(outcomes, scheme),
   };
 }
 
 const fromTab = { id: "ext", tab: { id: 6 } };
 
-describe("BackgroundCommands", () => {
+describe("the service worker's commands", () => {
   it("hands each report from a page on with the tab it came from", async () => {
-    const { outcomes, commands } = setup();
+    const reports = outcomes();
 
-    await commands.save(
+    await new SaveCommand(reports).handle(
       { target: "background", type: "save", url: "https://x", title: "T" },
       fromTab,
     );
-    await commands.disarmed(
+    await new DisarmedCommand(reports).handle(
       { target: "background", type: "disarmed" },
       fromTab,
     );
-    await commands.failed(
+    await new FailedCommand(reports).handle(
       { target: "background", type: "failed", error: "no" },
       fromTab,
     );
 
-    expect(outcomes.picked).toHaveBeenCalledWith(6, "https://x", "T");
-    expect(outcomes.disarmed).toHaveBeenCalledWith(6);
-    expect(outcomes.failed).toHaveBeenCalledWith(6, "no");
+    expect(reports.picked).toHaveBeenCalledWith(6, "https://x", "T");
+    expect(reports.disarmed).toHaveBeenCalledWith(6);
+    expect(reports.failed).toHaveBeenCalledWith(6, "no");
+  });
+
+  it("each answers its own type of message", () => {
+    const reports = outcomes();
+    const sink = { deviceIs: vi.fn() };
+
+    expect(
+      [
+        new SaveCommand(reports),
+        new DisarmedCommand(reports),
+        new FailedCommand(reports),
+        new SchemeCommand(sink),
+      ].map(({ type }) => type),
+    ).toEqual(["save", "disarmed", "failed", "scheme"]);
   });
 
   it("refuses a report from outside a tab", () => {
-    const { commands } = setup();
-
     expect(() =>
-      commands.disarmed({ target: "background", type: "disarmed" }, {}),
+      new DisarmedCommand(outcomes()).handle(
+        { target: "background", type: "disarmed" },
+        {},
+      ),
     ).toThrow("Only a page in a tab can pick an image");
   });
 
   it("hands the device's scheme to the toolbar", async () => {
-    const { scheme, commands } = setup();
+    const sink = { deviceIs: vi.fn().mockResolvedValue(undefined) };
 
-    await commands.scheme({
+    await new SchemeCommand(sink).handle({
       target: "background",
       type: "scheme",
       scheme: "light",
     });
 
-    expect(scheme.deviceIs).toHaveBeenCalledWith("light");
+    expect(sink.deviceIs).toHaveBeenCalledWith("light");
   });
 });

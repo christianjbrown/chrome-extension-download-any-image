@@ -3,7 +3,12 @@ import { CommandRouter } from "../shared/command-router";
 import { TrustedMessages } from "../shared/trusted-messages";
 import { backgroundGuards } from "../shared/message-guards";
 import { BACKGROUND, type BackgroundMessage } from "../shared/messages";
-import { BackgroundCommands } from "./background-commands";
+import {
+  DisarmedCommand,
+  FailedCommand,
+  SaveCommand,
+  SchemeCommand,
+} from "./background-commands";
 import { CHROME_TRANSLATIONS, ChromeErrorExplainer } from "./chrome-errors";
 import { ClickScheme } from "./click-scheme";
 import { ClosedTabAction } from "./closed-tab-action";
@@ -103,7 +108,12 @@ const router = new CommandRouter<BackgroundMessage>(
     backgroundGuards(BACKGROUND_CONFIG.maxMessageText),
     chrome.runtime.id,
   ),
-  new BackgroundCommands(reports, toolbarScheme),
+  [
+    new SaveCommand(reports),
+    new DisarmedCommand(reports),
+    new FailedCommand(reports),
+    new SchemeCommand(toolbarScheme),
+  ],
 );
 const navigation = new NavigationReset(indicator);
 
