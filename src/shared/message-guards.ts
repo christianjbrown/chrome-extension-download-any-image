@@ -1,7 +1,19 @@
-import { COLOUR_SCHEMES } from "./colour-scheme";
-import type { BackgroundMessage, PageMessage } from "./messages";
+import { isColourScheme } from "./colour-scheme";
+import type {
+  BackgroundMessage,
+  DISARMED,
+  FAILED,
+  PageMessage,
+  SAVE,
+  SCHEME,
+} from "./messages";
 
 type Fields = Record<string, unknown>;
+
+type Background<T extends BackgroundMessage["type"]> = Extract<
+  BackgroundMessage,
+  { type: T }
+>;
 
 // Whether a message that names a type also carries the fields that type needs.
 export type MessageGuards<M extends { type: string }> = {
@@ -21,7 +33,7 @@ export const pageGuards: MessageGuards<PageMessage> = {
 };
 
 export const backgroundGuards: MessageGuards<BackgroundMessage> = {
-  save: (message): message is Extract<BackgroundMessage, { type: "save" }> => {
+  save: (message): message is Background<typeof SAVE> => {
     const fields = message as Fields;
     return (
       typeof fields.url === "string" &&
@@ -29,15 +41,9 @@ export const backgroundGuards: MessageGuards<BackgroundMessage> = {
       isShortText(fields.title)
     );
   },
-  disarmed: (
-    _message,
-  ): _message is Extract<BackgroundMessage, { type: "disarmed" }> => true,
-  failed: (
-    message,
-  ): message is Extract<BackgroundMessage, { type: "failed" }> =>
+  disarmed: (_message): _message is Background<typeof DISARMED> => true,
+  failed: (message): message is Background<typeof FAILED> =>
     isShortText((message as Fields).error),
-  scheme: (
-    message,
-  ): message is Extract<BackgroundMessage, { type: "scheme" }> =>
-    (COLOUR_SCHEMES as readonly unknown[]).includes((message as Fields).scheme),
+  scheme: (message): message is Background<typeof SCHEME> =>
+    isColourScheme((message as Fields).scheme),
 };

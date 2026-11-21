@@ -1,11 +1,12 @@
 // The service worker: builds the object graph and connects it to Chrome's events.
 import { CommandRouter } from "../shared/command-router";
 import { backgroundGuards } from "../shared/message-guards";
-import type { BackgroundMessage } from "../shared/messages";
+import { BACKGROUND, type BackgroundMessage } from "../shared/messages";
 import { ChromeErrorExplainer } from "./chrome-errors";
 import { ClickScheme } from "./click-scheme";
 import { CrosshairCursor } from "./cursor-style";
 import { DownloadWatcher } from "./download-completion";
+import { OFFSCREEN_DOCUMENT_FILE, PAGE_SCRIPT_FILE } from "./entry-files";
 import { MimeExtensions } from "./file-extensions";
 import { ImageFilenameChooser } from "./filename-chooser";
 import { FilenameSuggester } from "./filename-suggester";
@@ -41,11 +42,11 @@ const clickScheme = new ClickScheme(
 const schemeDocument = new SchemeDocument(
   chrome.offscreen,
   chrome.runtime,
-  "offscreen.html",
+  OFFSCREEN_DOCUMENT_FILE,
 );
 const errors = new ChromeErrorExplainer();
 const picker = new TabPicker(
-  new PageScript(chrome.scripting, chrome.tabs, "page.js"),
+  new PageScript(chrome.scripting, chrome.tabs, PAGE_SCRIPT_FILE),
   new CrosshairCursor(chrome.scripting),
 );
 const names = new PendingNames();
@@ -70,7 +71,7 @@ const suggester = new FilenameSuggester(
   ),
 );
 const router = new CommandRouter<BackgroundMessage>(
-  "background",
+  BACKGROUND,
   {
     save: (message, sender) =>
       reports.picked(senderTab(sender), message.url, message.title),

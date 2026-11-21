@@ -1,13 +1,13 @@
 import { schemeFor, type ColourScheme } from "../shared/colour-scheme";
-import type { BackgroundMessage } from "../shared/messages";
+import {
+  BACKGROUND,
+  SCHEME,
+  type BackgroundMessenger,
+} from "../shared/messages";
 
 // The part of a MediaQueryList this needs.
 export interface SchemeQuery {
   readonly matches: boolean;
-}
-
-export interface MessageChannel {
-  sendMessage(message: BackgroundMessage): Promise<unknown>;
 }
 
 // Runs the work again and again, the way setInterval does.
@@ -23,7 +23,7 @@ export class SchemeReporter {
 
   constructor(
     private readonly dark: SchemeQuery,
-    private readonly channel: MessageChannel,
+    private readonly channel: BackgroundMessenger,
     private readonly repeat: Repeat,
     private readonly everyMs: number,
   ) {}
@@ -44,7 +44,7 @@ export class SchemeReporter {
     }
     this.reported = scheme;
     this.channel
-      .sendMessage({ target: "background", type: "scheme", scheme })
+      .sendMessage({ target: BACKGROUND, type: SCHEME, scheme })
       .catch(() => {
         this.reported = undefined;
       });

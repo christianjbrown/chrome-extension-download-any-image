@@ -1,4 +1,4 @@
-import type { PageMessage } from "../shared/messages";
+import { DISARM, PAGE, type PageMessage } from "../shared/messages";
 
 export interface ScriptingApi {
   executeScript(injection: {
@@ -37,11 +37,9 @@ export class PageScript implements PickerScript {
   // A disarmed frame stops listening, so when no frame is armed nobody is there
   // to answer and Chrome rejects the message.
   disarm(tabId: number): Promise<boolean> {
-    return this.tabs
-      .sendMessage(tabId, { target: "page", type: "disarm" })
-      .then(
-        (reply) => (reply as { ok?: unknown } | undefined)?.ok === true,
-        () => false,
-      );
+    return this.tabs.sendMessage(tabId, { target: PAGE, type: DISARM }).then(
+      (reply) => (reply as { ok?: unknown } | undefined)?.ok === true,
+      () => false,
+    );
   }
 }

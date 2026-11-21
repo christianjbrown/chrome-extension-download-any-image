@@ -1,7 +1,10 @@
+// A user style, rather than the page's own author styles.
+const USER_ORIGIN = "USER";
+
 export interface StyleInjection {
   target: { tabId: number; allFrames: true };
   css: string;
-  origin: "USER";
+  origin: typeof USER_ORIGIN;
 }
 
 export interface StylingApi {
@@ -33,7 +36,7 @@ export class CrosshairCursor implements Cursor {
     return {
       target: { tabId, allFrames: true },
       css: CROSSHAIR,
-      origin: "USER",
+      origin: USER_ORIGIN,
     };
   }
 }

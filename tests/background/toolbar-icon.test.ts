@@ -1,4 +1,5 @@
 import { ToolbarIcon } from "../../src/background/toolbar-icon";
+import manifest from "../../static/manifest.json";
 
 describe("ToolbarIcon", () => {
   it("shows the almost white icon on a dark toolbar", async () => {
@@ -25,6 +26,16 @@ describe("ToolbarIcon", () => {
       path: expect.objectContaining({
         "16": "icons/on-light/icon-16.png",
       }) as unknown,
+    });
+  });
+
+  it("draws from the same files the manifest starts with", async () => {
+    const setIcon = vi.fn().mockResolvedValue(undefined);
+
+    await new ToolbarIcon({ setIcon }).show("dark");
+
+    expect(setIcon).toHaveBeenCalledWith({
+      path: manifest.action.default_icon,
     });
   });
 });

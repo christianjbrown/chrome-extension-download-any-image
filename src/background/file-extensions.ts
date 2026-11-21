@@ -29,6 +29,9 @@ const IMAGE_EXTENSIONS: ReadonlySet<string> = new Set([
   "tif",
 ]);
 
+// What a file of no known type is written as.
+const UNKNOWN_EXTENSION = "bin";
+
 // What the file is, by the type the server or the page said, since an address
 // ending .jpg can quite happily serve a WebP.
 export class MimeExtensions implements FileExtensions {
@@ -37,7 +40,12 @@ export class MimeExtensions implements FileExtensions {
     const end = raw.indexOf(";");
     const type = (end === -1 ? raw : raw.slice(0, end)).trim().toLowerCase();
     const known = Object.hasOwn(BY_MIME, type) ? BY_MIME[type] : undefined;
-    return known ?? this.subtype(type) ?? this.fromAddress(fromUrl) ?? "bin";
+    return (
+      known ??
+      this.subtype(type) ??
+      this.fromAddress(fromUrl) ??
+      UNKNOWN_EXTENSION
+    );
   }
 
   // The address's own extension, only when it is one an image has.

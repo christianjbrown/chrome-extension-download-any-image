@@ -6,6 +6,21 @@ export interface CssFunction {
   args: string;
 }
 
+const OPEN = "(";
+const CLOSE = ")";
+const COMMA = ",";
+const ESCAPE = "\\";
+const QUOTES: ReadonlySet<string> = new Set(['"', "'"]);
+const IDENTIFIER = /[-\w]/;
+const ESCAPED_CHAR = /\\([\s\S])/g;
+const WITHOUT_ESCAPE = "$1";
+
+// A quoted string is at least its two quotes.
+const BARE_QUOTES = 2;
+
+const isQuote = (char: string | undefined): char is string =>
+  char !== undefined && QUOTES.has(char);
+
 interface ScanState {
   depth: number;
   quote: string | undefined;
@@ -23,11 +38,11 @@ function scan(
     if (inString(state, char)) {
       return;
     }
-    if (char === ")") {
+    if (char === CLOSE) {
       state.depth -= 1;
     }
     visit(char, index, state.depth);
-    if (char === "(") {
+    if (char === OPEN) {
       state.depth += 1;
     }
   });
@@ -40,7 +55,7 @@ function inString(state: ScanState, char: string): boolean {
     state.escaped = false;
     return true;
   }
-  if (char === "\\") {
+  if (char === ESCAPE) {
     state.escaped = true;
     return true;
   }
@@ -48,7 +63,7 @@ function inString(state: ScanState, char: string): boolean {
     state.quote = char === state.quote ? undefined : state.quote;
     return true;
   }
-  if (char === '"' || char === "'") {
+  if (isQuote(char)) {
     state.quote = char;
     return true;
   }
@@ -60,7 +75,7 @@ export function splitTopLevel(text: string): string[] {
   const parts: string[] = [];
   let start = 0;
   scan(text, (char, index, depth) => {
-    if (char === "," && depth === 0) {
+    if (char === COMMA && depth === 0) {
       parts.push(text.slice(start, index));
       start = index + 1;
     }
@@ -74,10 +89,10 @@ export function functionsIn(text: string): CssFunction[] {
   const found: CssFunction[] = [];
   let open = -1;
   scan(text, (char, index, depth) => {
-    if (char === "(" && depth === 0) {
+    if (char === OPEN && depth === 0) {
       open = index;
     }
-    if (char === ")" && depth === 0 && open !== -1) {
+    if (char === CLOSE && depth === 0 && open !== -1) {
       found.push({
         name: nameBefore(text, open).toLowerCase(),
         args: text.slice(open + 1, index),
@@ -91,7 +106,7 @@ export function functionsIn(text: string): CssFunction[] {
 // The identifier that ends where a bracket opens: "url" in "url(".
 function nameBefore(text: string, end: number): string {
   let start = end;
-  while (start > 0 && /[-\w]/.test(text.charAt(start - 1))) {
+  while (start > 0 && IDENTIFIER.test(text.charAt(start - 1))) {
     start -= 1;
   }
   return text.slice(start, end);
@@ -102,23 +117,21 @@ export function unquote(text: string): string {
   const trimmed = text.trim();
   const quote = trimmed[0];
   const quoted =
-    trimmed.length >= 2 &&
-    (quote === '"' || quote === "'") &&
-    trimmed.endsWith(quote);
+    trimmed.length >= BARE_QUOTES && isQuote(quote) && trimmed.endsWith(quote);
   const inner = quoted ? trimmed.slice(1, -1) : trimmed;
-  return inner.replace(/\\([\s\S])/g, "$1");
+  return inner.replace(ESCAPED_CHAR, WITHOUT_ESCAPE);
 }
 
 // The quoted string the text starts with, quotes and all.
 export function leadingString(text: string): string | undefined {
   const trimmed = text.trimStart();
   const quote = trimmed[0];
-  if (quote !== '"' && quote !== "'") {
+  if (!isQuote(quote)) {
     return undefined;
   }
   for (let index = 1; index < trimmed.length; index += 1) {
     const char = trimmed[index];
-    if (char === "\\") {
+    if (char === ESCAPE) {
       index += 1;
     } else if (char === quote) {
       return trimmed.slice(0, index + 1);

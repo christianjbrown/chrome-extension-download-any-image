@@ -1,14 +1,21 @@
+// Chrome's names for why the document is open and what kind of context it is.
+const MATCH_MEDIA = "MATCH_MEDIA";
+const OFFSCREEN_DOCUMENT = "OFFSCREEN_DOCUMENT";
+
+// What Chrome is told the document is for.
+const JUSTIFICATION = "Reads the colour scheme so the toolbar icon matches it";
+
 export interface OffscreenDocuments {
   createDocument(parameters: {
     url: string;
-    reasons: ["MATCH_MEDIA"];
+    reasons: [typeof MATCH_MEDIA];
     justification: string;
   }): Promise<void>;
 }
 
 export interface ContextLookup {
   getContexts(filter: {
-    contextTypes: ["OFFSCREEN_DOCUMENT"];
+    contextTypes: [typeof OFFSCREEN_DOCUMENT];
   }): Promise<unknown[]>;
 }
 
@@ -32,15 +39,15 @@ export class SchemeDocument {
 
   private async create(): Promise<void> {
     const open = await this.contexts.getContexts({
-      contextTypes: ["OFFSCREEN_DOCUMENT"],
+      contextTypes: [OFFSCREEN_DOCUMENT],
     });
     if (open.length > 0) {
       return;
     }
     await this.documents.createDocument({
       url: this.path,
-      reasons: ["MATCH_MEDIA"],
-      justification: "Reads the colour scheme so the toolbar icon matches it",
+      reasons: [MATCH_MEDIA],
+      justification: JUSTIFICATION,
     });
   }
 }

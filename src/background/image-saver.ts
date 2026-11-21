@@ -1,11 +1,12 @@
 import type { DownloadCompletion } from "./download-completion";
+import { UNIQUIFY } from "./download-terms";
 import type { NameRequests } from "./pending-names";
 
 export interface DownloadStarter {
   download(options: {
     url: string;
     saveAs: false;
-    conflictAction: "uniquify";
+    conflictAction: typeof UNIQUIFY;
   }): Promise<number>;
 }
 
@@ -30,7 +31,7 @@ export class ImageSaver implements ImageDownloader {
       const id = await this.downloads.download({
         url,
         saveAs: false,
-        conflictAction: "uniquify",
+        conflictAction: UNIQUIFY,
       });
       await this.completion.finished(id);
     } finally {

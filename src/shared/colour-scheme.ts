@@ -10,3 +10,6 @@ export const DARK_SCHEME_QUERY = "(prefers-color-scheme: dark)";
 
 export const schemeFor = (prefersDark: boolean): ColourScheme =>
   prefersDark ? DARK : LIGHT;
+
+export const isColourScheme = (value: unknown): value is ColourScheme =>
+  (COLOUR_SCHEMES as readonly unknown[]).includes(value);
