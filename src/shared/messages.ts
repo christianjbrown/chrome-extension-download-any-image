@@ -2,16 +2,34 @@
 // say to each other.
 import type { ColourScheme } from "./colour-scheme";
 
+// Who a message is for. Every context hears every message.
+export const PAGE = "page";
+export const BACKGROUND = "background";
+
+// What the page script is asked to do.
+export const DISARM = "disarm";
+
+// What the service worker is told.
+export const SAVE = "save";
+export const DISARMED = "disarmed";
+export const FAILED = "failed";
+export const SCHEME = "scheme";
+
 export interface PageMessage {
-  target: "page";
-  type: "disarm";
+  target: typeof PAGE;
+  type: typeof DISARM;
 }
 
 export type BackgroundMessage =
-  | { target: "background"; type: "save"; url: string; title: string }
-  | { target: "background"; type: "disarmed" }
-  | { target: "background"; type: "failed"; error: string }
-  | { target: "background"; type: "scheme"; scheme: ColourScheme };
+  | { target: typeof BACKGROUND; type: typeof SAVE; url: string; title: string }
+  | { target: typeof BACKGROUND; type: typeof DISARMED }
+  | { target: typeof BACKGROUND; type: typeof FAILED; error: string }
+  | { target: typeof BACKGROUND; type: typeof SCHEME; scheme: ColourScheme };
+
+// The part of chrome.runtime that sends to the service worker.
+export interface BackgroundMessenger {
+  sendMessage(message: BackgroundMessage): Promise<unknown>;
+}
 
 export type Reply<T> = { ok: true; value: T } | { ok: false; error: string };
 

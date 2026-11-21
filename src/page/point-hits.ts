@@ -1,4 +1,9 @@
-import type { PageElement, PointQueryable } from "./dom";
+import {
+  IMAGE_INPUT_TYPE,
+  TAG,
+  type PageElement,
+  type PointQueryable,
+} from "./dom";
 
 // Elements under a point, topmost first.
 export interface HitSource {
@@ -43,7 +48,14 @@ export interface MediaQueryable {
   querySelectorAll(selectors: string): Iterable<PageElement>;
 }
 
-const MEDIA = "img, svg, canvas, video, input[type=image]";
+const SELECTOR_LIST = ", ";
+const MEDIA = [
+  TAG.img,
+  TAG.svg,
+  TAG.canvas,
+  TAG.video,
+  `${TAG.input}[type=${IMAGE_INPUT_TYPE}]`,
+].join(SELECTOR_LIST);
 
 // Pictures with pointer-events: none never show up in the stack, so these are
 // found by where they are. Later in the page is usually painted on top.

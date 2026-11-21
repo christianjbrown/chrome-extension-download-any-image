@@ -44,10 +44,28 @@ export interface SvgLike extends PageElement {
   readonly style: { setProperty(name: string, value: string): void };
 }
 
+// The kinds of picture there are to save.
+export const URL_SOURCE = "url";
+export const CANVAS_SOURCE = "canvas";
+export const SVG_SOURCE = "svg";
+
 export type ImageSource =
-  | { kind: "url"; url: string }
-  | { kind: "canvas"; canvas: CanvasLike }
-  | { kind: "svg"; svg: SvgLike };
+  | { kind: typeof URL_SOURCE; url: string }
+  | { kind: typeof CANVAS_SOURCE; canvas: CanvasLike }
+  | { kind: typeof SVG_SOURCE; svg: SvgLike };
+
+// The elements that can show a picture of their own, by local name.
+export const TAG = {
+  img: "img",
+  input: "input",
+  video: "video",
+  canvas: "canvas",
+  svg: "svg",
+  svgImage: "image",
+} as const;
+
+// The type that makes an <input> a picture button.
+export const IMAGE_INPUT_TYPE = "image";
 
 export interface Listenable {
   addEventListener(

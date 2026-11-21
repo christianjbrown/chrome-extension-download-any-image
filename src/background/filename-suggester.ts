@@ -1,5 +1,6 @@
+import { UNIQUIFY } from "./download-terms";
 import type { FilenameChooser } from "./filename-chooser";
-import type { NameRequests } from "./pending-names";
+import type { NameLookup } from "./pending-names";
 
 export interface DownloadItem {
   byExtensionId?: string | undefined;
@@ -10,7 +11,7 @@ export interface DownloadItem {
 
 export type Suggest = (suggestion: {
   filename: string;
-  conflictAction: "uniquify";
+  conflictAction: typeof UNIQUIFY;
 }) => void;
 
 // Chrome asks every listener to name every download. Only the ones this
@@ -19,7 +20,7 @@ export type Suggest = (suggestion: {
 export class FilenameSuggester {
   constructor(
     private readonly extensionId: string,
-    private readonly names: NameRequests,
+    private readonly names: NameLookup,
     private readonly chooser: FilenameChooser,
   ) {}
 
@@ -37,7 +38,7 @@ export class FilenameSuggester {
     }
     suggest({
       filename: this.chooser.choose(request.url, request.title, item.mime),
-      conflictAction: "uniquify",
+      conflictAction: UNIQUIFY,
     });
   }
 }

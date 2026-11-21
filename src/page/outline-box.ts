@@ -1,3 +1,4 @@
+import { PICKER_BLUE } from "../shared/brand-colours";
 import type { Box } from "./dom";
 
 export interface OverlayElement {
@@ -10,17 +11,25 @@ export interface Outline {
   hide(): void;
 }
 
+// The largest z-index there is, so the frame sits over anything the page draws.
+const TOPMOST = "2147483647";
+
 const LOOK: readonly (readonly [string, string])[] = [
   ["position", "fixed"],
-  ["z-index", "2147483647"],
+  ["z-index", TOPMOST],
   ["pointer-events", "none"],
   ["box-sizing", "border-box"],
-  ["border", "3px solid #1a73e8"],
+  ["border", `3px solid ${PICKER_BLUE}`],
   ["border-radius", "2px"],
   ["box-shadow", "0 0 0 1px #ffffff, inset 0 0 0 1px #ffffff"],
   ["margin", "0"],
   ["padding", "0"],
 ];
+
+// Where the frame goes, each one a CSS property named as the box's field is.
+const PLACEMENT = ["left", "top", "width", "height"] as const;
+
+const pixels = (length: number): string => `${String(length)}px`;
 
 // A frame drawn over the picture that would be picked. It is the extension's
 // own element, so nothing on the page is restyled, and it ignores the pointer,
@@ -36,10 +45,9 @@ export class OutlineBox implements Outline {
 
   show(box: Box): void {
     const element = this.element ?? this.added();
-    element.style.setProperty("left", `${String(box.left)}px`);
-    element.style.setProperty("top", `${String(box.top)}px`);
-    element.style.setProperty("width", `${String(box.width)}px`);
-    element.style.setProperty("height", `${String(box.height)}px`);
+    for (const side of PLACEMENT) {
+      element.style.setProperty(side, pixels(box[side]));
+    }
   }
 
   hide(): void {

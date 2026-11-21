@@ -1,5 +1,10 @@
 import {
+  CANVAS_SOURCE,
+  IMAGE_INPUT_TYPE,
   SVG_NAMESPACE,
+  SVG_SOURCE,
+  TAG,
+  URL_SOURCE,
   type CanvasLike,
   type ImageSource,
   type PageElement,
@@ -8,18 +13,22 @@ import {
 import type { ImageFinder } from "./image-locator";
 
 function urlSource(url: string): ImageSource | undefined {
-  return url === "" ? undefined : { kind: "url", url };
+  return url === "" ? undefined : { kind: URL_SOURCE, url };
 }
 
 function isHtml(element: PageElement, name: string): boolean {
   return element.localName === name && element.namespaceURI !== SVG_NAMESPACE;
 }
 
+function isSvg(element: PageElement, name: string): boolean {
+  return element.localName === name && element.namespaceURI === SVG_NAMESPACE;
+}
+
 // The picture an <img> is showing right now, which for srcset and <picture> is
 // the one the browser chose.
 export class ImgFinder implements ImageFinder {
   find(element: PageElement): ImageSource | undefined {
-    if (!isHtml(element, "img")) {
+    if (!isHtml(element, TAG.img)) {
       return undefined;
     }
     const img = element as PageElement & { currentSrc: string; src: string };
@@ -30,7 +39,7 @@ export class ImgFinder implements ImageFinder {
 export class InputImageFinder implements ImageFinder {
   find(element: PageElement): ImageSource | undefined {
     const input = element as PageElement & { type?: string; src?: string };
-    if (!isHtml(element, "input") || input.type !== "image") {
+    if (!isHtml(element, TAG.input) || input.type !== IMAGE_INPUT_TYPE) {
       return undefined;
     }
     return urlSource(input.src ?? "");
@@ -39,7 +48,7 @@ export class InputImageFinder implements ImageFinder {
 
 export class VideoPosterFinder implements ImageFinder {
   find(element: PageElement): ImageSource | undefined {
-    if (!isHtml(element, "video")) {
+    if (!isHtml(element, TAG.video)) {
       return undefined;
     }
     return urlSource((element as PageElement & { poster: string }).poster);
@@ -49,10 +58,13 @@ export class VideoPosterFinder implements ImageFinder {
 // Whatever a script drew, read out of the canvas itself.
 export class CanvasFinder implements ImageFinder {
   find(element: PageElement): ImageSource | undefined {
-    if (!isHtml(element, "canvas")) {
+    if (!isHtml(element, TAG.canvas)) {
       return undefined;
     }
-    return { kind: "canvas", canvas: element as PageElement & CanvasLike };
+    return {
+      kind: CANVAS_SOURCE,
+      canvas: element as PageElement & CanvasLike,
+    };
   }
 }
 
@@ -61,10 +73,7 @@ export class SvgImageFinder implements ImageFinder {
   constructor(private readonly baseUrl: () => string) {}
 
   find(element: PageElement): ImageSource | undefined {
-    if (
-      element.localName !== "image" ||
-      element.namespaceURI !== SVG_NAMESPACE
-    ) {
+    if (!isSvg(element, TAG.svgImage)) {
       return undefined;
     }
     const href = (element as PageElement & { href: { baseVal: string } }).href
@@ -72,7 +81,7 @@ export class SvgImageFinder implements ImageFinder {
     if (href === "") {
       return undefined;
     }
-    return { kind: "url", url: new URL(href, this.baseUrl()).href };
+    return { kind: URL_SOURCE, url: new URL(href, this.baseUrl()).href };
   }
 }
 
@@ -81,13 +90,9 @@ export class SvgImageFinder implements ImageFinder {
 export class InlineSvgFinder implements ImageFinder {
   find(element: PageElement): ImageSource | undefined {
     const svg = element as SvgLike & { ownerSVGElement: unknown };
-    if (
-      element.localName !== "svg" ||
-      element.namespaceURI !== SVG_NAMESPACE ||
-      svg.ownerSVGElement !== null
-    ) {
+    if (!isSvg(element, TAG.svg) || svg.ownerSVGElement !== null) {
       return undefined;
     }
-    return { kind: "svg", svg };
+    return { kind: SVG_SOURCE, svg };
   }
 }

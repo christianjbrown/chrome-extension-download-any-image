@@ -1,3 +1,4 @@
+import { IDLE_TITLE } from "../src/background/toolbar-indicator";
 import manifest from "../static/manifest.json";
 
 describe("manifest", () => {
@@ -6,6 +7,10 @@ describe("manifest", () => {
     expect(manifest.action.default_title).toBe(
       "Download next image I click on",
     );
+  });
+
+  it("starts the button on the title it goes back to when idle", () => {
+    expect(manifest.action.default_title).toBe(IDLE_TITLE);
   });
 
   // activeTab and scripting put the picker into the clicked tab, and only that

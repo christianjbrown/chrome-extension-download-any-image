@@ -11,13 +11,21 @@ export interface CssImages {
   first(value: string): string | undefined;
 }
 
+const URL_FUNCTION = "url";
 const IMAGE_SETS = new Set(["image-set", "-webkit-image-set"]);
+
+// CSS fixes a pixel at a 96th of an inch, and an inch is 2.54cm.
+const CSS_DPI = 96;
+const CM_PER_INCH = 2.54;
 const PER_X: Readonly<Record<string, number>> = {
   x: 1,
   dppx: 1,
-  dpi: 1 / 96,
-  dpcm: 2.54 / 96,
+  dpi: 1 / CSS_DPI,
+  dpcm: CM_PER_INCH / CSS_DPI,
 };
+
+// What a picture in an image-set() is when it does not say.
+const ONE_X = 1;
 
 interface Option {
   url: string;
@@ -40,12 +48,12 @@ export class CssImageUrls implements CssImages {
 
   private layerUrl(functions: CssFunction[]): string | undefined {
     const image = functions.find(
-      ({ name }) => name === "url" || IMAGE_SETS.has(name),
+      ({ name }) => name === URL_FUNCTION || IMAGE_SETS.has(name),
     );
     if (image === undefined) {
       return undefined;
     }
-    return image.name === "url"
+    return image.name === URL_FUNCTION
       ? unquote(image.args)
       : this.sharpest(image.args);
   }
@@ -59,9 +67,9 @@ export class CssImageUrls implements CssImages {
   }
 
   private option(text: string): Option | undefined {
-    const url = functionsIn(text).find(({ name }) => name === "url");
+    const url = functionsIn(text).find(({ name }) => name === URL_FUNCTION);
     const quoted = leadingString(text);
-    const picture = url === undefined ? quoted : `url(${url.args})`;
+    const picture = url === undefined ? quoted : `${URL_FUNCTION}(${url.args})`;
     if (picture === undefined) {
       return undefined;
     }
@@ -82,6 +90,6 @@ export class CssImageUrls implements CssImages {
         return amount * perX;
       }
     }
-    return 1;
+    return ONE_X;
   }
 }

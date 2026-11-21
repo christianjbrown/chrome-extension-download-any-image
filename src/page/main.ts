@@ -3,9 +3,9 @@
 // listener included, so a disarmed frame is no longer there to answer.
 import { CommandRouter } from "../shared/command-router";
 import { pageGuards } from "../shared/message-guards";
-import type { PageMessage, Reply } from "../shared/messages";
+import { PAGE, type PageMessage, type Reply } from "../shared/messages";
 import { BackgroundClient } from "./background-client";
-import { CssImageFinder } from "./css-finder";
+import { AFTER, BEFORE, CssImageFinder, type Pseudo } from "./css-finder";
 import { CssImageUrls } from "./css-image-urls";
 import type { Listenable, StyleLook } from "./dom";
 import {
@@ -27,6 +27,7 @@ import {
   SvgReader,
 } from "./image-readers";
 import { OutlineBox } from "./outline-box";
+import { PICK_GESTURES } from "./pick-gestures";
 import { PickSession } from "./pick-session";
 import { MediaHits, PointHits, StackHits } from "./point-hits";
 
@@ -36,7 +37,10 @@ type Listener = (
   reply: (reply: Reply<unknown>) => void,
 ) => boolean;
 
+// Where a frame keeps its armed session, so a second injection can find it.
 const KEY = "__downloadAnyImage";
+const OVERLAY_TAG = "div";
+const UNREADABLE = "The image could not be read";
 const globals = globalThis as unknown as Record<
   string,
   PickSession | undefined
@@ -48,7 +52,7 @@ globals[KEY]?.disarm();
 const look: StyleLook = (element, pseudo) =>
   getComputedStyle(element as unknown as Element, pseudo);
 const images = new CssImageUrls();
-const css = (property: string, pseudo?: "::before" | "::after"): ImageFinder =>
+const css = (property: string, pseudo?: Pseudo): ImageFinder =>
   new CssImageFinder(look, images, property, pseudo);
 const IMAGE_PROPERTIES = [
   "content",
@@ -65,8 +69,8 @@ const finders: ImageFinder[] = [
   new InlineSvgFinder(),
   new CanvasFinder(),
   new VideoPosterFinder(),
-  ...IMAGE_PROPERTIES.map((property) => css(property, "::after")),
-  ...IMAGE_PROPERTIES.map((property) => css(property, "::before")),
+  ...IMAGE_PROPERTIES.map((property) => css(property, AFTER)),
+  ...IMAGE_PROPERTIES.map((property) => css(property, BEFORE)),
   ...IMAGE_PROPERTIES.map((property) => css(property)),
   css("list-style-image"),
 ];
@@ -90,13 +94,14 @@ const session = new PickSession({
   hover: new HoverOutline(
     locator,
     new OutlineBox(
-      () => document.createElement("div"),
+      () => document.createElement(OVERLAY_TAG),
       (element) => {
         document.documentElement.append(element as unknown as Node);
       },
     ),
     (callback) => requestAnimationFrame(callback),
   ),
+  gestures: PICK_GESTURES,
   locator,
   readers: new ImageReaders([
     new PassThroughReader(),
@@ -109,7 +114,7 @@ const session = new PickSession({
             resolve(reader.result as string);
           };
           reader.onerror = () => {
-            reject(new Error("The image could not be read"));
+            reject(new Error(UNREADABLE));
           };
           reader.readAsDataURL(blob as Blob);
         }),
@@ -124,7 +129,7 @@ const session = new PickSession({
   title: () => document.title,
 });
 const router = new CommandRouter<PageMessage>(
-  "page",
+  PAGE,
   {
     disarm: () => {
       session.disarm();

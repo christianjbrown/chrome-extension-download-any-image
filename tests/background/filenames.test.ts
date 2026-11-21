@@ -1,4 +1,8 @@
-import { MimeExtensions } from "../../src/background/file-extensions";
+import { BACKGROUND_CONFIG } from "../../src/background/config";
+import {
+  IMAGE_TYPES,
+  MimeExtensions,
+} from "../../src/background/file-extensions";
 import { ImageFilenameChooser } from "../../src/background/filename-chooser";
 import { kebab, safeStem } from "../../src/background/filename-text";
 import { UrlOriginalNames } from "../../src/background/original-name";
@@ -6,6 +10,7 @@ import { SystemClock } from "../../src/background/system-clock";
 import { TimestampedName } from "../../src/background/timestamped-name";
 
 const clock = { now: () => new Date(2026, 9, 30, 14, 5) };
+const rules = BACKGROUND_CONFIG.originalNames;
 
 describe("kebab", () => {
   it.each([
@@ -15,7 +20,7 @@ describe("kebab", () => {
     ["  --  ", ""],
     ["a".repeat(79) + " b", "a".repeat(79)],
   ])("turns %s into %s", (text, expected) => {
-    expect(kebab(text)).toBe(expected);
+    expect(kebab(text, 80)).toBe(expected);
   });
 });
 
@@ -28,12 +33,12 @@ describe("safeStem", () => {
     ["trailing.  ", "trailing"],
     ["x".repeat(99) + "--y", "x".repeat(99)],
   ])("cleans %s into %s", (text, expected) => {
-    expect(safeStem(text)).toBe(expected);
+    expect(safeStem(text, 100)).toBe(expected);
   });
 });
 
 describe("UrlOriginalNames", () => {
-  const names = new UrlOriginalNames();
+  const names = new UrlOriginalNames(rules);
 
   it.each([
     ["https://x.com/a/sunset-over-sea.JPG?w=200", "sunset-over-sea", "jpg"],
@@ -57,10 +62,32 @@ describe("UrlOriginalNames", () => {
   ])("finds nothing worth keeping in %s", (url) => {
     expect(names.from(url)).toBeUndefined();
   });
+
+  it("follows the rules it is given", () => {
+    const strict = new UrlOriginalNames({
+      ...rules,
+      maxStemLength: 4,
+      maxExtensionLength: 3,
+    });
+
+    expect(
+      new UrlOriginalNames({ ...rules, generic: ["kitten"] }).from(
+        "https://x.com/kitten.png",
+      ),
+    ).toBeUndefined();
+    expect(strict.from("https://x.com/sunset.png")).toEqual({
+      stem: "suns",
+      extension: "png",
+    });
+    expect(strict.from("https://x.com/sunset.webp")).toEqual({
+      stem: "suns",
+      extension: undefined,
+    });
+  });
 });
 
 describe("MimeExtensions", () => {
-  const extensions = new MimeExtensions();
+  const extensions = new MimeExtensions(IMAGE_TYPES);
 
   it.each([
     ["image/jpeg", "png", "jpg"],
@@ -85,13 +112,19 @@ describe("MimeExtensions", () => {
 
 describe("TimestampedName", () => {
   it("puts the local date and time before the kebab-case title", () => {
-    expect(new TimestampedName(clock).name("My Cool Page")).toBe(
+    expect(new TimestampedName(clock, 80).name("My Cool Page")).toBe(
       "2026-10-30-14-05-my-cool-page",
     );
   });
 
+  it("cuts a long title to the length it is given", () => {
+    expect(new TimestampedName(clock, 5).name("My Cool Page")).toBe(
+      "2026-10-30-14-05-my-co",
+    );
+  });
+
   it("falls back to image without a usable title", () => {
-    expect(new TimestampedName(clock).name("!!!")).toBe(
+    expect(new TimestampedName(clock, 80).name("!!!")).toBe(
       "2026-10-30-14-05-image",
     );
   });
@@ -106,9 +139,9 @@ describe("SystemClock", () => {
 
 describe("ImageFilenameChooser", () => {
   const chooser = new ImageFilenameChooser(
-    new UrlOriginalNames(),
-    new TimestampedName(clock),
-    new MimeExtensions(),
+    new UrlOriginalNames(rules),
+    new TimestampedName(clock, 80),
+    new MimeExtensions(IMAGE_TYPES),
   );
 
   it("keeps a meaningful name, with the extension the file really has", () => {

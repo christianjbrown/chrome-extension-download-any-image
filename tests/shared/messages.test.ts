@@ -1,5 +1,8 @@
 import { errorMessage } from "../../src/shared/error-message";
-import { backgroundGuards, pageGuards } from "../../src/shared/message-guards";
+import {
+  backgroundGuards as guardsFor,
+  pageGuards,
+} from "../../src/shared/message-guards";
 import { isMessageFor } from "../../src/shared/messages";
 
 describe("isMessageFor", () => {
@@ -35,6 +38,8 @@ describe("pageGuards", () => {
 });
 
 describe("backgroundGuards", () => {
+  const backgroundGuards = guardsFor(2000);
+
   it.each([
     "https://example.com/cat.png",
     "http://example.com/cat.png",

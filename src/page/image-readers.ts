@@ -1,4 +1,33 @@
-import type { CanvasLike, ImageSource, StyleLook, SvgLike } from "./dom";
+import {
+  CANVAS_SOURCE,
+  SVG_SOURCE,
+  URL_SOURCE,
+  type CanvasLike,
+  type ImageSource,
+  type StyleLook,
+  type SvgLike,
+} from "./dom";
+
+// What the person is told when a picture cannot be read.
+const BLOB_GONE = "The page has already thrown that image away";
+const CANVAS_TAINTED =
+  "That canvas has another site's picture on it, so the browser will not hand it over";
+const NOT_DOWNLOADABLE = "That image's address is not one Chrome can download";
+
+// Addresses Chrome can fetch for itself, and ones only this page can read.
+const FETCHABLE = /^(?:https?|data):/i;
+const BLOB_URL = /^blob:/i;
+
+// A canvas is read out as a PNG, which keeps every pixel as drawn.
+const PNG = "image/png";
+
+// An SVG goes across as its own text.
+const SVG_DATA_URL_PREFIX = "data:image/svg+xml;charset=utf-8,";
+
+// The sizes an SVG is given when it does not say, and the property its shapes
+// often borrow their colour from.
+const SIZES = ["width", "height"] as const;
+const COLOUR = "color";
 
 // Turns a picture into an address chrome.downloads can fetch from the service
 // worker. Web addresses pass straight through; anything bound to the page has
@@ -8,16 +37,16 @@ export interface ImageReader {
   read(source: ImageSource): Promise<string>;
 }
 
-type UrlSource = Extract<ImageSource, { kind: "url" }>;
+type UrlSource = Extract<ImageSource, { kind: typeof URL_SOURCE }>;
 
 const isUrl = (source: ImageSource): source is UrlSource =>
-  source.kind === "url";
+  source.kind === URL_SOURCE;
 
 // http(s) brings the browser's cookies when Chrome fetches it, and data: holds
 // its own bytes.
 export class PassThroughReader implements ImageReader {
   reads(source: ImageSource): boolean {
-    return isUrl(source) && /^(?:https?|data):/i.test(source.url);
+    return isUrl(source) && FETCHABLE.test(source.url);
   }
 
   read(source: ImageSource): Promise<string> {
@@ -39,7 +68,7 @@ export class BlobUrlReader implements ImageReader {
   constructor(private readonly blobs: BlobAccess) {}
 
   reads(source: ImageSource): boolean {
-    return isUrl(source) && /^blob:/i.test(source.url);
+    return isUrl(source) && BLOB_URL.test(source.url);
   }
 
   async read(source: ImageSource): Promise<string> {
@@ -47,7 +76,7 @@ export class BlobUrlReader implements ImageReader {
     try {
       blob = await this.blobs.fetch((source as UrlSource).url);
     } catch {
-      throw new Error("The page has already thrown that image away");
+      throw new Error(BLOB_GONE);
     }
     return this.blobs.toDataUrl(blob);
   }
@@ -57,19 +86,15 @@ export class BlobUrlReader implements ImageReader {
 // browser will not let anyone read it back.
 export class CanvasReader implements ImageReader {
   reads(source: ImageSource): boolean {
-    return source.kind === "canvas";
+    return source.kind === CANVAS_SOURCE;
   }
 
   read(source: ImageSource): Promise<string> {
     const canvas = (source as { canvas: CanvasLike }).canvas;
     try {
-      return Promise.resolve(canvas.toDataURL("image/png"));
+      return Promise.resolve(canvas.toDataURL(PNG));
     } catch {
-      return Promise.reject(
-        new Error(
-          "That canvas has another site's picture on it, so the browser will not hand it over",
-        ),
-      );
+      return Promise.reject(new Error(CANVAS_TAINTED));
     }
   }
 }
@@ -83,26 +108,21 @@ export class SvgReader implements ImageReader {
   ) {}
 
   reads(source: ImageSource): boolean {
-    return source.kind === "svg";
+    return source.kind === SVG_SOURCE;
   }
 
   read(source: ImageSource): Promise<string> {
     const svg = (source as { svg: SvgLike }).svg;
     const copy = svg.cloneNode(true);
     const box = svg.getBoundingClientRect();
-    for (const [name, size] of [
-      ["width", box.width],
-      ["height", box.height],
-    ] as const) {
+    for (const name of SIZES) {
       if (!copy.hasAttribute(name)) {
-        copy.setAttribute(name, String(size));
+        copy.setAttribute(name, String(box[name]));
       }
     }
-    copy.style.setProperty("color", this.look(svg).getPropertyValue("color"));
+    copy.style.setProperty(COLOUR, this.look(svg).getPropertyValue(COLOUR));
     const xml = this.serialize(copy);
-    return Promise.resolve(
-      `data:image/svg+xml;charset=utf-8,${encodeURIComponent(xml)}`,
-    );
+    return Promise.resolve(`${SVG_DATA_URL_PREFIX}${encodeURIComponent(xml)}`);
   }
 }
 
@@ -117,9 +137,7 @@ export class ImageReaders implements ImageReading {
   read(source: ImageSource): Promise<string> {
     const reader = this.readers.find((candidate) => candidate.reads(source));
     if (reader === undefined) {
-      return Promise.reject(
-        new Error("That image's address is not one Chrome can download"),
-      );
+      return Promise.reject(new Error(NOT_DOWNLOADABLE));
     }
     return reader.read(source);
   }

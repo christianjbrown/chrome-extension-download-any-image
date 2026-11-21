@@ -1,12 +1,14 @@
 // The service worker: builds the object graph and connects it to Chrome's events.
 import { CommandRouter } from "../shared/command-router";
 import { backgroundGuards } from "../shared/message-guards";
-import type { BackgroundMessage } from "../shared/messages";
-import { ChromeErrorExplainer } from "./chrome-errors";
+import { BACKGROUND, type BackgroundMessage } from "../shared/messages";
+import { CHROME_TRANSLATIONS, ChromeErrorExplainer } from "./chrome-errors";
 import { ClickScheme } from "./click-scheme";
+import { BACKGROUND_CONFIG } from "./config";
 import { CrosshairCursor } from "./cursor-style";
 import { DownloadWatcher } from "./download-completion";
-import { MimeExtensions } from "./file-extensions";
+import { OFFSCREEN_DOCUMENT_FILE, PAGE_SCRIPT_FILE } from "./entry-files";
+import { IMAGE_TYPES, MimeExtensions } from "./file-extensions";
 import { ImageFilenameChooser } from "./filename-chooser";
 import { FilenameSuggester } from "./filename-suggester";
 import { ImageSaver } from "./image-saver";
@@ -16,6 +18,7 @@ import { PageScript } from "./page-script";
 import { PendingNames } from "./pending-names";
 import { PickReports } from "./pick-reports";
 import { SchemeDocument } from "./scheme-document";
+import { SCHEME_POLICY, UNKNOWN_SCHEME } from "./scheme-state";
 import { SchemeStore } from "./scheme-store";
 import { senderTab } from "./sender-tab";
 import { SystemClock } from "./system-clock";
@@ -29,8 +32,9 @@ import { ToolbarScheme } from "./toolbar-scheme";
 
 const indicator = new ToolbarIndicator(chrome.action);
 const toolbarScheme = new ToolbarScheme(
-  new SchemeStore(chrome.storage.local),
+  new SchemeStore(chrome.storage.local, UNKNOWN_SCHEME),
   new ToolbarIcon(chrome.action),
+  SCHEME_POLICY,
 );
 const clickScheme = new ClickScheme(
   new TabScheme(chrome.scripting),
@@ -39,11 +43,11 @@ const clickScheme = new ClickScheme(
 const schemeDocument = new SchemeDocument(
   chrome.offscreen,
   chrome.runtime,
-  "offscreen.html",
+  OFFSCREEN_DOCUMENT_FILE,
 );
-const errors = new ChromeErrorExplainer();
+const errors = new ChromeErrorExplainer(CHROME_TRANSLATIONS);
 const picker = new TabPicker(
-  new PageScript(chrome.scripting, chrome.tabs, "page.js"),
+  new PageScript(chrome.scripting, chrome.tabs, PAGE_SCRIPT_FILE),
   new CrosshairCursor(chrome.scripting),
 );
 const names = new PendingNames();
@@ -62,13 +66,13 @@ const suggester = new FilenameSuggester(
   chrome.runtime.id,
   names,
   new ImageFilenameChooser(
-    new UrlOriginalNames(),
-    new TimestampedName(new SystemClock()),
-    new MimeExtensions(),
+    new UrlOriginalNames(BACKGROUND_CONFIG.originalNames),
+    new TimestampedName(new SystemClock(), BACKGROUND_CONFIG.maxTitleLength),
+    new MimeExtensions(IMAGE_TYPES),
   ),
 );
 const router = new CommandRouter<BackgroundMessage>(
-  "background",
+  BACKGROUND,
   {
     save: (message, sender) =>
       reports.picked(senderTab(sender), message.url, message.title),
@@ -77,7 +81,7 @@ const router = new CommandRouter<BackgroundMessage>(
       reports.failed(senderTab(sender), message.error),
     scheme: (message) => toolbarScheme.deviceIs(message.scheme),
   },
-  backgroundGuards,
+  backgroundGuards(BACKGROUND_CONFIG.maxMessageText),
   chrome.runtime.id,
 );
 const navigation = new NavigationReset(indicator);

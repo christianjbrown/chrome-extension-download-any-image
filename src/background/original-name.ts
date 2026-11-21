@@ -10,21 +10,32 @@ export interface OriginalNames {
   from(url: string): OriginalName | undefined;
 }
 
-const GENERIC = new Set([
-  "download",
-  "default",
-  "file",
-  "image",
-  "img",
-  "index",
-  "photo",
-  "pic",
-  "picture",
-  "thumb",
-  "thumbnail",
-]);
-const HEX_HASH = /^[0-9a-f-]{16,}$/i;
-const SPLIT = /^(.+)\.([a-z0-9]{1,5})$/i;
+// What makes a name from an address worth keeping.
+export interface NameRules {
+  // The longest a kept name gets.
+  maxStemLength: number;
+  // The longest ending that counts as an extension rather than part of the name.
+  maxExtensionLength: number;
+  // Fewer letters than this is a number, not a name.
+  minLetters: number;
+  // A run of hex digits at least this long is a hash.
+  minHashLength: number;
+  // Unbroken text at least this long, with no space, dot, dash or underscore,
+  // is a token.
+  minTokenLength: number;
+  // Names that say nothing about the picture, in lower case.
+  generic: readonly string[];
+}
+
+// Separators a name made of words has, and a token does not.
+const SEPARATOR = /[ ._-]/;
+const LETTER = /\p{L}/gu;
+const WEB = /^https?:$/;
+const PATH_SEPARATOR = "/";
+
+// Where the name and the extension sit in a match of the split pattern.
+const STEM_GROUP = 1;
+const EXTENSION_GROUP = 2;
 
 function decoded(segment: string): string {
   try {
@@ -34,37 +45,56 @@ function decoded(segment: string): string {
   }
 }
 
-// A name with words in it, rather than a number, a hash or "image".
-function meaningful(stem: string): boolean {
-  const letters = stem.match(/\p{L}/gu)?.length ?? 0;
-  const looksLikeToken = stem.length >= 24 && !/[ ._-]/.test(stem);
-  return (
-    letters >= 2 &&
-    !GENERIC.has(stem.toLowerCase()) &&
-    !HEX_HASH.test(stem) &&
-    !looksLikeToken
-  );
-}
-
 export class UrlOriginalNames implements OriginalNames {
+  private readonly generic: ReadonlySet<string>;
+  private readonly hash: RegExp;
+  private readonly split: RegExp;
+
+  constructor(private readonly rules: NameRules) {
+    this.generic = new Set(rules.generic);
+    this.hash = new RegExp(`^[0-9a-f-]{${String(rules.minHashLength)},}$`, "i");
+    this.split = new RegExp(
+      `^(.+)\\.([a-z0-9]{1,${String(rules.maxExtensionLength)}})$`,
+      "i",
+    );
+  }
+
   from(url: string): OriginalName | undefined {
     const segment = this.lastSegment(url);
-    const parts = SPLIT.exec(segment);
-    const stem = safeStem(parts?.[1] ?? segment);
-    if (!meaningful(stem)) {
+    const parts = this.split.exec(segment);
+    const stem = safeStem(
+      parts?.at(STEM_GROUP) ?? segment,
+      this.rules.maxStemLength,
+    );
+    if (!this.meaningful(stem)) {
       return undefined;
     }
-    return { stem, extension: parts?.[2]?.toLowerCase() };
+    return { stem, extension: parts?.at(EXTENSION_GROUP)?.toLowerCase() };
+  }
+
+  // A name with words in it, rather than a number, a hash or "image".
+  private meaningful(stem: string): boolean {
+    const letters = stem.match(LETTER)?.length ?? 0;
+    const looksLikeToken =
+      stem.length >= this.rules.minTokenLength && !SEPARATOR.test(stem);
+    return (
+      letters >= this.rules.minLetters &&
+      !this.generic.has(stem.toLowerCase()) &&
+      !this.hash.test(stem) &&
+      !looksLikeToken
+    );
   }
 
   // Only a web address has a path worth reading. Bytes the page handed over
   // arrive as data: URLs, which have none.
   private lastSegment(url: string): string {
     const parsed = URL.parse(url);
-    if (parsed === null || !/^https?:$/.test(parsed.protocol)) {
+    if (parsed === null || !WEB.test(parsed.protocol)) {
       return "";
     }
-    const segments = parsed.pathname.split("/").filter((part) => part !== "");
+    const segments = parsed.pathname
+      .split(PATH_SEPARATOR)
+      .filter((part) => part !== "");
     return decoded(segments.at(-1) ?? "");
   }
 }

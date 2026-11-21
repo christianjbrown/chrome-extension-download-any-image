@@ -1,4 +1,7 @@
-import { ChromeErrorExplainer } from "../../src/background/chrome-errors";
+import {
+  CHROME_TRANSLATIONS,
+  ChromeErrorExplainer,
+} from "../../src/background/chrome-errors";
 
 describe("ChromeErrorExplainer", () => {
   it.each([
@@ -24,8 +27,19 @@ describe("ChromeErrorExplainer", () => {
     ],
     ["Something else", "Something else"],
   ])("explains %s", (message, explained) => {
-    expect(new ChromeErrorExplainer().explain(new Error(message))).toBe(
-      explained,
+    expect(
+      new ChromeErrorExplainer(CHROME_TRANSLATIONS).explain(new Error(message)),
+    ).toBe(explained);
+  });
+
+  it("explains only by the translations it is given", () => {
+    const explainer = new ChromeErrorExplainer([
+      { pattern: /^Nope/, message: "Try again" },
+    ]);
+
+    expect(explainer.explain(new Error("Nope, not today"))).toBe("Try again");
+    expect(explainer.explain("Cannot access a chrome:// URL")).toBe(
+      "Cannot access a chrome:// URL",
     );
   });
 });

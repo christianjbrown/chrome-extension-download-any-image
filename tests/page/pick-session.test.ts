@@ -1,4 +1,5 @@
 import { EventBindings } from "../../src/page/event-bindings";
+import { PICK_GESTURES } from "../../src/page/pick-gestures";
 import { PickSession } from "../../src/page/pick-session";
 import { element, target } from "./fakes";
 
@@ -38,6 +39,7 @@ function setup(options: { found?: boolean; navigation?: boolean } = {}) {
     window,
     navigation: options.navigation === false ? undefined : navigation,
     hover,
+    gestures: PICK_GESTURES,
     locator,
     readers,
     reporter,
