@@ -36,9 +36,9 @@ export class OutlineBox implements Outline {
 
   show(box: Box): void {
     const element = this.element ?? this.added();
-    for (const side of PLACEMENT) {
+    PLACEMENT.forEach((side) => {
       element.style.setProperty(side, pixels(box[side]));
-    }
+    });
   }
 
   hide(): void {

@@ -11,6 +11,12 @@ export interface ScriptRunner {
 // Runs inside the tab, so it can use nothing from this file: Chrome sends the
 // function's own text across, and the query has to be written out in it. A
 // test pins it to DARK_SCHEME_QUERY.
+const resultOf = (frame: { result?: unknown } | undefined): unknown =>
+  frame?.result;
+
+const schemeOf = (result: unknown): ColourScheme | undefined =>
+  typeof result === "boolean" ? schemeFor(result) : undefined;
+
 export function tabPrefersDark(): boolean {
   return matchMedia("(prefers-color-scheme: dark)").matches;
 }
@@ -23,16 +29,17 @@ export class TabScheme implements SchemeReader {
   // Chrome's own pages, and tabs that have closed, cannot be asked.
   async read(tabId: number): Promise<ColourScheme | undefined> {
     try {
-      const [frame] = await this.scripting.executeScript({
-        target: { tabId },
-        func: tabPrefersDark,
-      });
-      if (typeof frame?.result !== "boolean") {
-        return undefined;
-      }
-      return schemeFor(frame.result);
+      return await this.ask(tabId);
     } catch {
       return undefined;
     }
+  }
+
+  private async ask(tabId: number): Promise<ColourScheme | undefined> {
+    const [frame] = await this.scripting.executeScript({
+      target: { tabId },
+      func: tabPrefersDark,
+    });
+    return schemeOf(resultOf(frame));
   }
 }

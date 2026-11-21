@@ -1,4 +1,8 @@
-import { CssImageFinder } from "../../src/page/css-finder";
+import {
+  CssImageFinder,
+  OwnStyle,
+  PseudoStyle,
+} from "../../src/page/css-finder";
 import {
   IMAGE_SET,
   ImageSetFunction,
@@ -38,6 +42,10 @@ describe("css text", () => {
         { name: "", args: "x" },
       ],
     );
+  });
+
+  it("looks past an escaped quote inside a string", () => {
+    expect(splitTopLevel('"a\\", b", c')).toEqual(['"a\\", b"', "c"]);
   });
 
   it("ignores a stray closing bracket", () => {
@@ -140,6 +148,14 @@ describe("ImageSetFunction", () => {
       "https://x/b.png",
     );
   });
+
+  it("takes a unit with no number in front as saying nothing", () => {
+    const set = new ImageSetFunction(IMAGE_SET, [{ unit: "x", perX: 1 }]);
+
+    expect(set.picture('"https://x/a.png" x, "https://x/b.png" 0.5x')).toBe(
+      "https://x/a.png",
+    );
+  });
 });
 
 describe("CssImageFinder", () => {
@@ -151,7 +167,9 @@ describe("CssImageFinder", () => {
     });
 
     expect(
-      new CssImageFinder(look, urls, "background-image").find(element("div")),
+      new CssImageFinder(new OwnStyle(look), urls, "background-image").find(
+        element("div"),
+      ),
     ).toEqual({ kind: "url", url: "https://x/bg.png" });
   });
 
@@ -164,9 +182,11 @@ describe("CssImageFinder", () => {
     });
 
     expect(
-      new CssImageFinder(look, urls, "background-image", "::before").find(
-        element("div"),
-      ),
+      new CssImageFinder(
+        new PseudoStyle(look, "::before"),
+        urls,
+        "background-image",
+      ).find(element("div")),
     ).toEqual({ kind: "url", url: "https://x/b.png" });
   });
 
@@ -178,16 +198,20 @@ describe("CssImageFinder", () => {
       });
 
       expect(
-        new CssImageFinder(look, urls, "background-image", "::after").find(
-          element("div"),
-        ),
+        new CssImageFinder(
+          new PseudoStyle(look, "::after"),
+          urls,
+          "background-image",
+        ).find(element("div")),
       ).toBeUndefined();
     },
   );
 
   it("finds nothing without a picture", () => {
     expect(
-      new CssImageFinder(styles({}), urls, "mask-image").find(element("div")),
+      new CssImageFinder(new OwnStyle(styles({})), urls, "mask-image").find(
+        element("div"),
+      ),
     ).toBeUndefined();
   });
 });

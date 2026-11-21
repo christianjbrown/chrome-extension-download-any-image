@@ -40,9 +40,21 @@ export interface ErrorExplainer {
   explain(error: unknown): string;
 }
 
-// How a click in a tab turned out, as the page reports it.
-export interface PickOutcomes {
+// The page picked an image in a tab.
+export interface PickedOutcome {
   picked(tabId: number, url: string, title: string): Promise<void>;
+}
+
+// The page in a tab stopped waiting with nothing picked.
+export interface DisarmedOutcome {
   disarmed(tabId: number): Promise<void>;
+}
+
+// The page in a tab could not read the picture.
+export interface FailedOutcome {
   failed(tabId: number, error: string): Promise<void>;
 }
+
+// How a click in a tab turned out, as the page reports it.
+export interface PickOutcomes
+  extends PickedOutcome, DisarmedOutcome, FailedOutcome {}

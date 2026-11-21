@@ -32,14 +32,21 @@ export class MeaningfulNames implements NameFilter {
   }
 
   keeps(stem: string): boolean {
-    const letters = stem.match(LETTER)?.length ?? 0;
-    const looksLikeToken =
-      stem.length >= this.rules.minTokenLength && !SEPARATOR.test(stem);
+    return this.hasWords(stem) && this.saysSomething(stem);
+  }
+
+  private hasWords(stem: string): boolean {
     return (
-      letters >= this.rules.minLetters &&
-      !this.generic.has(stem.toLowerCase()) &&
-      !this.hash.test(stem) &&
-      !looksLikeToken
+      Array.from(stem.matchAll(LETTER)).length >= this.rules.minLetters &&
+      !this.looksLikeToken(stem)
     );
+  }
+
+  private looksLikeToken(stem: string): boolean {
+    return stem.length >= this.rules.minTokenLength && !SEPARATOR.test(stem);
+  }
+
+  private saysSomething(stem: string): boolean {
+    return !this.generic.has(stem.toLowerCase()) && !this.hash.test(stem);
   }
 }

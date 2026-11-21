@@ -41,12 +41,13 @@ describe("MediaHits", () => {
     );
     query.mockReturnValue([under, over, away]);
 
-    const hits = new MediaHits({ querySelectorAll: query }).at(60, 60);
+    const hits = new MediaHits({ querySelectorAll: query }, [
+      { selector: "img" },
+      { selector: "canvas" },
+    ]).at(60, 60);
 
     expect(hits).toEqual([over, under]);
-    expect(query).toHaveBeenCalledWith(
-      "img, svg, canvas, video, input[type=image]",
-    );
+    expect(query).toHaveBeenCalledWith("img, canvas");
   });
 
   it.each([
@@ -62,7 +63,7 @@ describe("MediaHits", () => {
     );
 
     expect(
-      new MediaHits({ querySelectorAll: () => [picture] }).at(x, y),
+      new MediaHits({ querySelectorAll: () => [picture] }, []).at(x, y),
     ).toEqual([]);
   });
 });

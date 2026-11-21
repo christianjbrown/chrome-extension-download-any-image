@@ -17,7 +17,16 @@ export class ImageFilenameChooser implements FilenameChooser {
 
   choose(url: string, title: string, mime: string | undefined): string {
     const original = this.originals.from(url);
-    const stem = original?.stem ?? this.fallback.name(title);
-    return `${stem}.${this.extensions.for(mime, original?.extension)}`;
+    return original === undefined
+      ? this.named(this.fallback.name(title), mime, undefined)
+      : this.named(original.stem, mime, original.extension);
+  }
+
+  private named(
+    stem: string,
+    mime: string | undefined,
+    fromUrl: string | undefined,
+  ): string {
+    return `${stem}.${this.extensions.for(mime, fromUrl)}`;
   }
 }

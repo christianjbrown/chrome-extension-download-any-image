@@ -16,11 +16,19 @@ export class ToggleController {
   ) {}
 
   async toggle(tab: ClickedTab): Promise<void> {
-    const tabId = tab.id;
-    // A click while the last one is still arming does nothing.
-    if (tabId === undefined || this.busy.has(tabId)) {
-      return;
+    if (tab.id !== undefined) {
+      await this.toggleTab(tab.id);
     }
+  }
+
+  // A click while the last one is still arming does nothing.
+  private async toggleTab(tabId: number): Promise<void> {
+    if (!this.busy.has(tabId)) {
+      await this.flipOnce(tabId);
+    }
+  }
+
+  private async flipOnce(tabId: number): Promise<void> {
     this.busy.add(tabId);
     try {
       await this.flip(tabId);

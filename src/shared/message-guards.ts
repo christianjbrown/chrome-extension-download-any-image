@@ -21,6 +21,10 @@ type Background<T extends BackgroundMessage["type"]> = Extract<
 // actually hold an image get through: the web, and bytes the page read itself.
 const DOWNLOADABLE = /^(?:https?:|data:image\/)/i;
 
+function isDownloadable(value: unknown): boolean {
+  return typeof value === "string" && DOWNLOADABLE.test(value);
+}
+
 // A page's title or error is somebody else's text, and no longer than maxText.
 function isShortText(value: unknown, maxText: number): boolean {
   return typeof value === "string" && value.length <= maxText;
@@ -44,9 +48,7 @@ export class SaveGuard implements MessageGuard<BackgroundMessage, typeof SAVE> {
   admits(message: unknown): message is Background<typeof SAVE> {
     const fields = message as Fields;
     return (
-      typeof fields.url === "string" &&
-      DOWNLOADABLE.test(fields.url) &&
-      isShortText(fields.title, this.maxText)
+      isDownloadable(fields.url) && isShortText(fields.title, this.maxText)
     );
   }
 }

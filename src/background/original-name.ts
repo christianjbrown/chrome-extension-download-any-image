@@ -9,9 +9,9 @@ const CASE_INSENSITIVE = "i";
 // What an address with no path worth reading yields as its last part.
 const NO_SEGMENT = "";
 
-// Where the name and the extension sit in a match of the split pattern.
-const STEM_GROUP = 1;
-const EXTENSION_GROUP = 2;
+// The name and the extension, out of a match of the split pattern.
+const STEM_ONLY = "$1";
+const EXTENSION_ONLY = "$2";
 
 function decoded(segment: string): string {
   try {
@@ -19,6 +19,17 @@ function decoded(segment: string): string {
   } catch {
     return segment;
   }
+}
+
+// Only a web address has a path worth reading. Bytes the page handed over
+// arrive as data: URLs, which have none.
+function isWeb(parsed: URL | null): parsed is URL {
+  return parsed !== null && WEB.test(parsed.protocol);
+}
+
+function lastPathPart(pathname: string): string {
+  const segments = pathname.split(PATH_SEPARATOR).filter((part) => part !== "");
+  return decoded(segments.at(-1) ?? NO_SEGMENT);
 }
 
 // The last part of a web address's path, split into the name and an
@@ -42,24 +53,21 @@ export class UrlOriginalNames implements OriginalNames {
 
   from(url: string): OriginalName | undefined {
     const segment = this.lastSegment(url);
-    const parts = this.split.exec(segment);
-    const stem = this.stems.clean(parts?.at(STEM_GROUP) ?? segment);
-    if (!this.filter.keeps(stem)) {
-      return undefined;
-    }
-    return { stem, extension: parts?.at(EXTENSION_GROUP)?.toLowerCase() };
+    // A segment with no extension is all name.
+    const stem = this.stems.clean(segment.replace(this.split, STEM_ONLY));
+    return this.filter.keeps(stem)
+      ? { stem, extension: this.extensionOf(segment) }
+      : undefined;
   }
 
-  // Only a web address has a path worth reading. Bytes the page handed over
-  // arrive as data: URLs, which have none.
+  private extensionOf(segment: string): string | undefined {
+    return this.split.test(segment)
+      ? segment.replace(this.split, EXTENSION_ONLY).toLowerCase()
+      : undefined;
+  }
+
   private lastSegment(url: string): string {
     const parsed = URL.parse(url);
-    if (parsed === null || !WEB.test(parsed.protocol)) {
-      return NO_SEGMENT;
-    }
-    const segments = parsed.pathname
-      .split(PATH_SEPARATOR)
-      .filter((part) => part !== "");
-    return decoded(segments.at(-1) ?? NO_SEGMENT);
+    return isWeb(parsed) ? lastPathPart(parsed.pathname) : NO_SEGMENT;
   }
 }

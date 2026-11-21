@@ -6,6 +6,7 @@ import {
   SvgImageFinder,
   VideoPosterFinder,
 } from "../../src/page/element-finders";
+import type { PlacedKind } from "../../src/page/locating";
 import { element, svgElement } from "./fakes";
 
 describe("ImgFinder", () => {
@@ -122,4 +123,16 @@ describe("InlineSvgFinder", () => {
       expect(new InlineSvgFinder().find(candidate)).toBeUndefined();
     },
   );
+});
+
+describe("placed kinds", () => {
+  it.each<[PlacedKind, string]>([
+    [new ImgFinder(), "img"],
+    [new InputImageFinder(), "input[type=image]"],
+    [new InlineSvgFinder(), "svg"],
+    [new CanvasFinder(), "canvas"],
+    [new VideoPosterFinder(), "video"],
+  ])("%o is found by the selector %s", (finder, selector) => {
+    expect(finder.selector).toBe(selector);
+  });
 });

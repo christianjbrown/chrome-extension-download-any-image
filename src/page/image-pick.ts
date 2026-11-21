@@ -1,4 +1,5 @@
 import { errorMessage } from "../shared/error-message";
+import type { ImageSource } from "./dom";
 import type { ImageReading } from "./image-reading";
 import type { Locator } from "./locating";
 import type { PickFlow, PickReporter } from "./pick-control";
@@ -26,8 +27,12 @@ export class ImagePick implements PickFlow {
       this.reporter.disarmed();
       return;
     }
+    await this.save(found.source);
+  }
+
+  private async save(source: ImageSource): Promise<void> {
     try {
-      const url = await this.readers.read(found.source);
+      const url = await this.readers.read(source);
       this.reporter.picked(url, this.title());
     } catch (error) {
       this.reporter.failed(errorMessage(error));

@@ -10,7 +10,7 @@ import {
   type PageElement,
   type SvgLike,
 } from "./dom";
-import type { ImageFinder } from "./locating";
+import type { ImageFinder, PlacedKind } from "./locating";
 
 function urlSource(url: string): ImageSource | undefined {
   return url === "" ? undefined : { kind: URL_SOURCE, url };
@@ -24,29 +24,55 @@ function isSvg(element: PageElement, name: string): boolean {
   return element.localName === name && element.namespaceURI === SVG_NAMESPACE;
 }
 
+type ImgLike = PageElement & { currentSrc: string; src: string };
+type InputLike = PageElement & { type?: string; src?: string };
+type SvgImageLike = PageElement & { href: { baseVal: string } };
+type NestableSvg = SvgLike & { ownerSVGElement: unknown };
+
+function isImageButton(element: PageElement): element is InputLike {
+  return (
+    isHtml(element, TAG.input) &&
+    (element as InputLike).type === IMAGE_INPUT_TYPE
+  );
+}
+
+function isOutermostSvg(element: PageElement): element is NestableSvg {
+  return (
+    isSvg(element, TAG.svg) && (element as NestableSvg).ownerSVGElement === null
+  );
+}
+
 // The picture an <img> is showing right now, which for srcset and <picture> is
 // the one the browser chose.
-export class ImgFinder implements ImageFinder {
+export class ImgFinder implements ImageFinder, PlacedKind {
+  readonly selector = TAG.img;
+
   find(element: PageElement): ImageSource | undefined {
-    if (!isHtml(element, TAG.img)) {
-      return undefined;
-    }
-    const img = element as PageElement & { currentSrc: string; src: string };
+    return isHtml(element, TAG.img)
+      ? this.shown(element as ImgLike)
+      : undefined;
+  }
+
+  private shown(img: ImgLike): ImageSource | undefined {
     return urlSource(img.currentSrc || img.src);
   }
 }
 
-export class InputImageFinder implements ImageFinder {
+export class InputImageFinder implements ImageFinder, PlacedKind {
+  readonly selector = `${TAG.input}[type=${IMAGE_INPUT_TYPE}]`;
+
   find(element: PageElement): ImageSource | undefined {
-    const input = element as PageElement & { type?: string; src?: string };
-    if (!isHtml(element, TAG.input) || input.type !== IMAGE_INPUT_TYPE) {
-      return undefined;
-    }
+    return isImageButton(element) ? this.shown(element) : undefined;
+  }
+
+  private shown(input: InputLike): ImageSource | undefined {
     return urlSource(input.src ?? "");
   }
 }
 
-export class VideoPosterFinder implements ImageFinder {
+export class VideoPosterFinder implements ImageFinder, PlacedKind {
+  readonly selector = TAG.video;
+
   find(element: PageElement): ImageSource | undefined {
     if (!isHtml(element, TAG.video)) {
       return undefined;
@@ -56,7 +82,9 @@ export class VideoPosterFinder implements ImageFinder {
 }
 
 // Whatever a script drew, read out of the canvas itself.
-export class CanvasFinder implements ImageFinder {
+export class CanvasFinder implements ImageFinder, PlacedKind {
+  readonly selector = TAG.canvas;
+
   find(element: PageElement): ImageSource | undefined {
     if (!isHtml(element, TAG.canvas)) {
       return undefined;
@@ -73,26 +101,26 @@ export class SvgImageFinder implements ImageFinder {
   constructor(private readonly baseUrl: () => string) {}
 
   find(element: PageElement): ImageSource | undefined {
-    if (!isSvg(element, TAG.svgImage)) {
-      return undefined;
-    }
-    const href = (element as PageElement & { href: { baseVal: string } }).href
-      .baseVal;
-    if (href === "") {
-      return undefined;
-    }
-    return { kind: URL_SOURCE, url: new URL(href, this.baseUrl()).href };
+    return isSvg(element, TAG.svgImage)
+      ? this.linked((element as SvgImageLike).href.baseVal)
+      : undefined;
+  }
+
+  private linked(href: string): ImageSource | undefined {
+    return href === ""
+      ? undefined
+      : { kind: URL_SOURCE, url: new URL(href, this.baseUrl()).href };
   }
 }
 
 // An SVG drawn in the page, saved whole. The outermost one, since an <svg> can
 // nest inside another.
-export class InlineSvgFinder implements ImageFinder {
+export class InlineSvgFinder implements ImageFinder, PlacedKind {
+  readonly selector = TAG.svg;
+
   find(element: PageElement): ImageSource | undefined {
-    const svg = element as SvgLike & { ownerSVGElement: unknown };
-    if (!isSvg(element, TAG.svg) || svg.ownerSVGElement !== null) {
-      return undefined;
-    }
-    return { kind: SVG_SOURCE, svg };
+    return isOutermostSvg(element)
+      ? { kind: SVG_SOURCE, svg: element }
+      : undefined;
   }
 }

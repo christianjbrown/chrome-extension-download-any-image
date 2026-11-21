@@ -1,6 +1,11 @@
+import { firstDefined } from "../shared/defined";
 import { functionsIn, splitTopLevel, type CssFunction } from "./css-text";
 import type { CssImageFunction } from "./css-reading";
 import type { CssImages } from "./locating";
+
+// An empty address is no picture.
+const nonEmpty = (url: string | undefined): string | undefined =>
+  url === "" ? undefined : url;
 
 // Layers are listed top first, so the first picture wins, and gradients, which
 // are drawn rather than downloaded, are passed over. Each image function it is
@@ -13,22 +18,18 @@ export class CssImageUrls implements CssImages {
   }
 
   first(value: string): string | undefined {
-    for (const layer of splitTopLevel(value)) {
-      const url = this.layerUrl(functionsIn(layer));
-      if (url !== undefined && url !== "") {
-        return url;
-      }
-    }
-    return undefined;
+    return firstDefined(splitTopLevel(value), (layer) =>
+      nonEmpty(this.layerUrl(functionsIn(layer))),
+    );
   }
 
+  // The picture of the first function in the layer that names one.
   private layerUrl(functions: CssFunction[]): string | undefined {
-    for (const { name, args } of functions) {
-      const reader = this.byName.get(name);
-      if (reader !== undefined) {
-        return reader.picture(args);
-      }
-    }
-    return undefined;
+    const known = functions.find(({ name }) => this.byName.has(name));
+    return known === undefined ? undefined : this.pictureOf(known);
+  }
+
+  private pictureOf({ name, args }: CssFunction): string | undefined {
+    return this.byName.get(name)?.picture(args);
   }
 }

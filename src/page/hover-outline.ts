@@ -1,12 +1,17 @@
 import type { Locator } from "./locating";
 import type { HoverFollow, HoverStop, Outline } from "./outlining";
 
+interface Point {
+  x: number;
+  y: number;
+}
+
 export type FrameScheduler = (callback: () => void) => void;
 
 // Outlines whatever a click would pick, at most once a frame however fast the
 // pointer moves.
 export class HoverOutline implements HoverFollow, HoverStop {
-  private point: { x: number; y: number } | undefined;
+  private point: Point | undefined;
   private scheduled = false;
   private stopped = false;
 
@@ -18,7 +23,7 @@ export class HoverOutline implements HoverFollow, HoverStop {
 
   follow(x: number, y: number): void {
     this.point = { x, y };
-    if (this.scheduled || this.stopped) {
+    if (this.waiting()) {
       return;
     }
     this.scheduled = true;
@@ -32,12 +37,25 @@ export class HoverOutline implements HoverFollow, HoverStop {
     this.outline.hide();
   }
 
+  // A frame is already on its way, or there will be no more.
+  private waiting(): boolean {
+    return this.scheduled || this.stopped;
+  }
+
   private draw(): void {
     this.scheduled = false;
-    if (this.stopped || this.point === undefined) {
-      return;
+    const point = this.livePoint();
+    if (point !== undefined) {
+      this.outlineAt(point);
     }
-    const found = this.locator.locate(this.point.x, this.point.y);
+  }
+
+  private livePoint(): Point | undefined {
+    return this.stopped ? undefined : this.point;
+  }
+
+  private outlineAt(point: Point): void {
+    const found = this.locator.locate(point.x, point.y);
     if (found === undefined) {
       this.outline.hide();
       return;

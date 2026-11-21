@@ -7,12 +7,19 @@ export interface Disarmable {
   disarm(): void;
 }
 
-export interface PickControl extends Disarmable {
+export interface Pickable {
   // The click the session was waiting for landed here.
   pick(x: number, y: number): void;
+}
+
+export interface Stoppable {
   // Stops waiting, and tells the service worker so.
   stop(): void;
 }
+
+// Everything the session offers its parts. Each part's own arm() takes only
+// the piece of it that part uses, or nothing.
+export interface PickControl extends Disarmable, Pickable, Stoppable {}
 
 // One thing the session listens for while it waits. A new thing to listen for
 // is a new part, not a change to the session.
