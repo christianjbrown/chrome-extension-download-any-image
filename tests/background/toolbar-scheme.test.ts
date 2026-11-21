@@ -1,6 +1,7 @@
 import type { SchemeState } from "../../src/background/scheme-ports";
 import { SCHEME_POLICY } from "../../src/background/scheme-state";
 import { ToolbarScheme } from "../../src/background/toolbar-scheme";
+import { SerialQueue } from "../../src/shared/serial-queue";
 
 function fakes(start: SchemeState = { device: "dark", chrome: null }) {
   let state = start;
@@ -15,7 +16,7 @@ function fakes(start: SchemeState = { device: "dark", chrome: null }) {
   return {
     memory,
     icon,
-    scheme: new ToolbarScheme(memory, icon, SCHEME_POLICY),
+    scheme: new ToolbarScheme(memory, icon, SCHEME_POLICY, new SerialQueue()),
   };
 }
 

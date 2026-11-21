@@ -1,6 +1,7 @@
 // The service worker: builds the object graph and connects it to Chrome's events.
 import { CommandRouter } from "../shared/command-router";
 import { TrustedMessages } from "../shared/trusted-messages";
+import { SerialQueue } from "../shared/serial-queue";
 import {
   DisarmedGuard,
   FailedGuard,
@@ -84,6 +85,7 @@ const toolbarScheme = new ToolbarScheme(
   new SchemeStore(chrome.storage.local, UNKNOWN_SCHEME),
   new ToolbarIcon(chrome.action),
   SCHEME_POLICY,
+  new SerialQueue(),
 );
 const clickScheme = new ClickScheme(
   new TabScheme(chrome.scripting),
