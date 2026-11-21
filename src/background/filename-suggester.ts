@@ -1,6 +1,6 @@
-import { UNIQUIFY } from "./download-terms";
+import { NO_OPINION, UNIQUIFY } from "./download-terms";
 import type { FilenameChooser } from "./filename-chooser";
-import type { NameLookup } from "./pending-names";
+import type { NameLookup, NameRequest } from "./pending-names";
 
 export interface DownloadItem {
   byExtensionId?: string | undefined;
@@ -14,9 +14,10 @@ export type Suggest = (suggestion: {
   conflictAction: typeof UNIQUIFY;
 }) => void;
 
-// Chrome asks every listener to name every download. Only the ones this
-// extension started get an answer; for the rest, saying nothing leaves Chrome's
-// own choice alone.
+// Chrome only asks while one of this extension's downloads is waiting for a
+// name (see FilenameListening), but any other download that starts meanwhile
+// is asked about too. Those get an explicit no opinion, which Chrome skips,
+// rather than silence, which Chrome reads as a suggestion of no name at all.
 export class FilenameSuggester {
   constructor(
     private readonly extensionId: string,
@@ -25,20 +26,23 @@ export class FilenameSuggester {
   ) {}
 
   suggest(item: DownloadItem, suggest: Suggest): void {
-    if (item.byExtensionId !== this.extensionId) {
-      return;
+    const named =
+      item.byExtensionId === this.extensionId && this.nameOwn(item, suggest);
+    if (!named) {
+      suggest(NO_OPINION);
     }
-    const request =
-      this.names.take(item.url) ??
-      (item.finalUrl === undefined
-        ? undefined
-        : this.names.take(item.finalUrl));
-    if (request === undefined) {
-      return;
-    }
-    suggest({
-      filename: this.chooser.choose(request.url, request.title, item.mime),
-      conflictAction: UNIQUIFY,
-    });
+  }
+
+  private nameOwn(item: DownloadItem, suggest: Suggest): boolean {
+    const answer = (request: NameRequest) => {
+      suggest({
+        filename: this.chooser.choose(request.url, request.title, item.mime),
+        conflictAction: UNIQUIFY,
+      });
+    };
+    return (
+      this.names.take(item.url, answer) ||
+      (item.finalUrl !== undefined && this.names.take(item.finalUrl, answer))
+    );
   }
 }
