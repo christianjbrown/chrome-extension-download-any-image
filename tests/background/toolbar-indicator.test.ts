@@ -1,5 +1,6 @@
 import { ClosedTabAction } from "../../src/background/closed-tab-action";
 import { ToolbarIndicator } from "../../src/background/toolbar-indicator";
+import { TOOLBAR_LOOKS } from "../../src/background/toolbar-looks";
 
 function action() {
   return {
@@ -32,7 +33,7 @@ describe("ToolbarIndicator", () => {
   ])("shows $title on that tab only", async ({ show, text, color, title }) => {
     const toolbar = action();
 
-    await show(new ToolbarIndicator(toolbar));
+    await show(new ToolbarIndicator(toolbar, TOOLBAR_LOOKS));
 
     expect(toolbar.setBadgeText).toHaveBeenCalledWith({ tabId: 3, text });
     expect(toolbar.setBadgeBackgroundColor).toHaveBeenCalledWith({
@@ -69,7 +70,10 @@ describe("ClosedTabAction", () => {
     toolbar.setTitle.mockRejectedValue(new Error("No tab with id: 3."));
 
     await expect(
-      new ToolbarIndicator(new ClosedTabAction(toolbar)).showIdle(3),
+      new ToolbarIndicator(
+        new ClosedTabAction(toolbar),
+        TOOLBAR_LOOKS,
+      ).showIdle(3),
     ).resolves.toBeUndefined();
   });
 
@@ -78,7 +82,34 @@ describe("ClosedTabAction", () => {
     toolbar.setTitle.mockRejectedValue(new Error("Something else"));
 
     await expect(
-      new ToolbarIndicator(new ClosedTabAction(toolbar)).showIdle(3),
+      new ToolbarIndicator(
+        new ClosedTabAction(toolbar),
+        TOOLBAR_LOOKS,
+      ).showIdle(3),
     ).rejects.toThrow("Something else");
+  });
+});
+
+describe("ToolbarIndicator with looks of its own", () => {
+  it("paints the look the table gives for each state", async () => {
+    const toolbar = action();
+    const look = (title: string) => () => ({ badge: "b", colour: "c", title });
+    const indicator = new ToolbarIndicator(toolbar, {
+      idle: look("idle"),
+      armed: look("armed"),
+      error: (message) => ({ badge: "b", colour: "c", title: message }),
+    });
+
+    await indicator.showArmed(1);
+    await indicator.showError(1, "why");
+
+    expect(toolbar.setTitle).toHaveBeenNthCalledWith(1, {
+      tabId: 1,
+      title: "armed",
+    });
+    expect(toolbar.setTitle).toHaveBeenNthCalledWith(2, {
+      tabId: 1,
+      title: "why",
+    });
   });
 });

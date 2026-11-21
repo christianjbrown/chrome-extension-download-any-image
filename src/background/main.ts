@@ -33,9 +33,13 @@ import { TimestampedName } from "./timestamped-name";
 import { ToggleController } from "./toggle-controller";
 import { ToolbarIcon } from "./toolbar-icon";
 import { ToolbarIndicator } from "./toolbar-indicator";
+import { TOOLBAR_LOOKS } from "./toolbar-looks";
 import { ToolbarScheme } from "./toolbar-scheme";
 
-const indicator = new ToolbarIndicator(new ClosedTabAction(chrome.action));
+const indicator = new ToolbarIndicator(
+  new ClosedTabAction(chrome.action),
+  TOOLBAR_LOOKS,
+);
 const toolbarScheme = new ToolbarScheme(
   new SchemeStore(chrome.storage.local, UNKNOWN_SCHEME),
   new ToolbarIcon(chrome.action),

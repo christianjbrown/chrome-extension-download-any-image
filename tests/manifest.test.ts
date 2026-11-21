@@ -1,4 +1,4 @@
-import { IDLE_TITLE } from "../src/background/toolbar-indicator";
+import { IDLE_TITLE } from "../src/background/toolbar-looks";
 import manifest from "../static/manifest.json";
 
 describe("manifest", () => {
