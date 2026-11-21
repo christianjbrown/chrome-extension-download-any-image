@@ -1,12 +1,16 @@
 import type { Listenable } from "./dom";
 
-// What the pick session needs: listeners added, and all of them taken away.
-export interface Bindings {
+// Adding a listener that is taken away again when the picker stops.
+export interface Listening {
   listen(
     target: Listenable,
     type: string,
     listener: (event: never) => void,
   ): void;
+}
+
+// Taking every listener and undo away again.
+export interface Clearing {
   clear(): void;
 }
 
@@ -17,7 +21,7 @@ interface UndoTracker {
 
 // Every listener the picker adds, in the capture phase so it hears the click
 // before the page does, and the means to take all of them away again.
-export class EventBindings implements Bindings, UndoTracker {
+export class EventBindings implements Listening, Clearing, UndoTracker {
   private undos: (() => void)[] = [];
 
   listen(

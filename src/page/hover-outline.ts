@@ -3,14 +3,18 @@ import type { Outline } from "./outline-box";
 
 export type FrameScheduler = (callback: () => void) => void;
 
-export interface Hover {
+// Outlining what is under the pointer, and stopping again, split by who asks.
+export interface HoverFollow {
   follow(x: number, y: number): void;
+}
+
+export interface HoverStop {
   stop(): void;
 }
 
 // Outlines whatever a click would pick, at most once a frame however fast the
 // pointer moves.
-export class HoverOutline implements Hover {
+export class HoverOutline implements HoverFollow, HoverStop {
   private point: { x: number; y: number } | undefined;
   private scheduled = false;
   private stopped = false;

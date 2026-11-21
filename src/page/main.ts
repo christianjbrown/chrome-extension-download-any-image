@@ -36,7 +36,16 @@ import {
 import { OutlineBox } from "./outline-box";
 import { PageBlobs, type DataUrlReader } from "./page-blobs";
 import { PICK_GESTURES } from "./pick-gestures";
+import { ImagePick } from "./image-pick";
 import { PickSession } from "./pick-session";
+import {
+  CancelOnKey,
+  ClickPick,
+  PointerOutline,
+  PressShield,
+  StopOnNavigate,
+  StopOnPageHide,
+} from "./session-parts";
 import { MediaHits, PointHits, StackHits } from "./point-hits";
 
 type Listener = (
@@ -96,44 +105,56 @@ const locator = new ImageLocator(
   finders,
 );
 const bindings = new EventBindings();
-const session = new PickSession({
-  bindings,
-  window: window as unknown as Listenable,
-  navigation: (window as { navigation?: Listenable }).navigation,
-  hover: new HoverOutline(
-    locator,
-    new OutlineBox(
-      () => document.createElement(OVERLAY_TAG),
-      (element) => {
-        document.documentElement.append(element as unknown as Node);
-      },
-    ),
-    (callback) => requestAnimationFrame(callback),
-  ),
-  gestures: PICK_GESTURES,
+const pageWindow = window as unknown as Listenable;
+const hover = new HoverOutline(
   locator,
-  readers: new ImageReaders({
-    [URL_SOURCE]: new UrlReaders([
-      new PassThroughReader(),
-      new BlobUrlReader(
-        new PageBlobs(
-          (url) => fetch(url),
-          () => new FileReader() as unknown as DataUrlReader,
-        ),
-      ),
-    ]),
-    [CANVAS_SOURCE]: new CanvasReader(),
-    [SVG_SOURCE]: new SvgReader(
-      {
-        serialize: (svg) =>
-          new XMLSerializer().serializeToString(svg as unknown as Node),
-      },
-      look,
+  new OutlineBox(
+    () => document.createElement(OVERLAY_TAG),
+    (element) => {
+      document.documentElement.append(element as unknown as Node);
+    },
+  ),
+  (callback) => requestAnimationFrame(callback),
+);
+const session = new PickSession(
+  [
+    new PressShield(bindings, pageWindow, PICK_GESTURES),
+    new ClickPick(bindings, pageWindow),
+    new PointerOutline(bindings, pageWindow, hover),
+    new CancelOnKey(bindings, pageWindow, PICK_GESTURES),
+    new StopOnPageHide(bindings, pageWindow),
+    new StopOnNavigate(
+      bindings,
+      (window as { navigation?: Listenable }).navigation,
     ),
-  }),
-  reporter: new BackgroundClient(chrome.runtime),
-  title: () => document.title,
-});
+  ],
+  bindings,
+  hover,
+  new ImagePick(
+    locator,
+    new ImageReaders({
+      [URL_SOURCE]: new UrlReaders([
+        new PassThroughReader(),
+        new BlobUrlReader(
+          new PageBlobs(
+            (url) => fetch(url),
+            () => new FileReader() as unknown as DataUrlReader,
+          ),
+        ),
+      ]),
+      [CANVAS_SOURCE]: new CanvasReader(),
+      [SVG_SOURCE]: new SvgReader(
+        {
+          serialize: (svg) =>
+            new XMLSerializer().serializeToString(svg as unknown as Node),
+        },
+        look,
+      ),
+    }),
+    new BackgroundClient(chrome.runtime),
+    () => document.title,
+  ),
+);
 const router = new CommandRouter<PageMessage>(
   PAGE,
   {
