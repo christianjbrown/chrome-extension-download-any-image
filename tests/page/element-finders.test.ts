@@ -31,6 +31,7 @@ describe("ImgFinder", () => {
 
   it.each([
     element("img", { currentSrc: "", src: "" }),
+    element("img", { currentSrc: 7, src: null }),
     element("div"),
     svgElement("img"),
   ])(
@@ -53,6 +54,8 @@ describe("InputImageFinder", () => {
   it.each([
     element("input", { type: "text", src: "" }),
     element("input", { type: "image" }),
+    element("input", { type: "image", src: 7 }),
+    element("input", { type: ["image"], src: "https://x/b.png" }),
     element("button"),
   ])("finds nothing in another input", (candidate) => {
     expect(new InputImageFinder().find(candidate)).toBeUndefined();
@@ -83,9 +86,16 @@ describe("CanvasFinder", () => {
     expect(new CanvasFinder().find(canvas)).toEqual({ kind: "canvas", canvas });
   });
 
-  it("finds nothing in anything else", () => {
-    expect(new CanvasFinder().find(element("div"))).toBeUndefined();
-  });
+  it.each([
+    element("div"),
+    element("canvas"),
+    element("canvas", { toDataURL: "" }),
+  ])(
+    "finds nothing in anything else, or a canvas it cannot read",
+    (candidate) => {
+      expect(new CanvasFinder().find(candidate)).toBeUndefined();
+    },
+  );
 });
 
 describe("SvgImageFinder", () => {
@@ -99,6 +109,8 @@ describe("SvgImageFinder", () => {
 
   it.each([
     svgElement("image", { href: { baseVal: "" } }),
+    svgElement("image", { href: "pics/a.png" }),
+    svgElement("image"),
     element("image", { href: { baseVal: "a.png" } }),
     svgElement("rect"),
   ])("finds nothing without an href or outside SVG", (candidate) => {
@@ -107,18 +119,29 @@ describe("SvgImageFinder", () => {
 });
 
 describe("InlineSvgFinder", () => {
+  // What an svg is copied and restyled through.
+  const copyable = {
+    cloneNode: vi.fn(),
+    hasAttribute: vi.fn(),
+    setAttribute: vi.fn(),
+    style: { setProperty: vi.fn() },
+  };
+
   it("takes the outermost svg", () => {
-    const svg = svgElement("svg", { ownerSVGElement: null });
+    const svg = svgElement("svg", { ownerSVGElement: null, ...copyable });
 
     expect(new InlineSvgFinder().find(svg)).toEqual({ kind: "svg", svg });
   });
 
   it.each([
-    svgElement("svg", { ownerSVGElement: {} }),
-    element("svg", { ownerSVGElement: null }),
-    svgElement("path", { ownerSVGElement: {} }),
+    svgElement("svg", { ownerSVGElement: {}, ...copyable }),
+    element("svg", { ownerSVGElement: null, ...copyable }),
+    svgElement("path", { ownerSVGElement: {}, ...copyable }),
+    svgElement("svg", { ownerSVGElement: null }),
+    svgElement("svg", { ownerSVGElement: null, ...copyable, style: {} }),
+    svgElement("svg", { ...copyable }),
   ])(
-    "passes over a nested svg, an HTML impostor and the shapes",
+    "passes over a nested svg, an HTML impostor, the shapes and an svg it cannot copy",
     (candidate) => {
       expect(new InlineSvgFinder().find(candidate)).toBeUndefined();
     },

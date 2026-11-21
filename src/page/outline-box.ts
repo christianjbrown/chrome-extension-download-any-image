@@ -47,11 +47,11 @@ export class OutlineBox implements Outline {
   }
 
   private added(): OverlayElement {
-    const element = this.host.create();
-    LOOK.forEach(([name, value]) => {
-      element.style.setProperty(name, value);
+    const element = this.host.add((made) => {
+      LOOK.forEach(([name, value]) => {
+        made.style.setProperty(name, value);
+      });
     });
-    this.host.attach(element);
     this.element = element;
     return element;
   }

@@ -53,6 +53,12 @@ function installPage(stack: unknown[] = []) {
         ? 'url("https://x.com/bg.png")'
         : "",
   }));
+  // The page's elements are fakes, so the one test of an element is whether
+  // it has a name.
+  vi.stubGlobal("Element", {
+    [Symbol.hasInstance]: (value: unknown) =>
+      typeof value === "object" && value !== null && "localName" in value,
+  });
   vi.stubGlobal("requestAnimationFrame", (callback: () => void) => {
     callback();
   });
@@ -166,13 +172,19 @@ describe("page script", () => {
   });
 
   it("serialises an inline svg", async () => {
-    const copy = {
+    const copy = svgElement("svg", {
       hasAttribute: () => true,
       setAttribute: vi.fn(),
       style: { setProperty: vi.fn() },
-    };
+    });
     const { window, sendMessage } = installPage([
-      svgElement("svg", { ownerSVGElement: null, cloneNode: () => copy }),
+      svgElement("svg", {
+        ownerSVGElement: null,
+        cloneNode: () => copy,
+        hasAttribute: () => true,
+        setAttribute: vi.fn(),
+        style: { setProperty: vi.fn() },
+      }),
     ]);
     vi.stubGlobal(
       "XMLSerializer",

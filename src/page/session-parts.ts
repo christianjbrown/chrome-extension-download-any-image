@@ -1,3 +1,10 @@
+import {
+  isKeyEvent,
+  isPointerEvent,
+  onlyWhen,
+  type KeyFields,
+  type PointerFields,
+} from "./checks";
 import type { Listenable } from "./dom";
 import type { HoverFollow } from "./outlining";
 import type {
@@ -11,23 +18,14 @@ import type {
 } from "./pick-control";
 
 // What a listener can do to stop the page from seeing an event.
-interface Swallowable {
-  preventDefault(): void;
-  stopPropagation(): void;
-  stopImmediatePropagation(): void;
-}
+type Swallowable = Pick<
+  Event,
+  "preventDefault" | "stopPropagation" | "stopImmediatePropagation"
+>;
 
-interface PointerLike extends Swallowable {
-  clientX: number;
-  clientY: number;
-  button: number;
-  // False for a click the page's own script dispatched.
-  isTrusted: boolean;
-}
-
-interface KeyLike extends Swallowable {
-  key: string;
-}
+// An event's isTrusted is false for one the page's own script dispatched.
+type PointerLike = Event & PointerFields;
+type KeyLike = Event & KeyFields;
 
 // The press that leads up to a click, which the page must not see either: a
 // mousedown alone can start a drag, move focus or follow a link on some sites.
@@ -54,11 +52,19 @@ export class PressShield implements SessionPart {
 
   arm(): void {
     for (const type of PRESSES) {
-      this.listening.listen(this.target, type, (event: PointerLike) => {
-        if (this.button.picksWith(event.button)) {
-          swallow(event);
-        }
-      });
+      this.listening.listen(
+        this.target,
+        type,
+        onlyWhen(isPointerEvent, (event: PointerLike) => {
+          this.shield(event);
+        }),
+      );
+    }
+  }
+
+  private shield(event: PointerLike): void {
+    if (this.button.picksWith(event.button)) {
+      swallow(event);
     }
   }
 }
@@ -73,13 +79,21 @@ export class ClickPick implements SessionPart {
   ) {}
 
   arm(control: Pickable): void {
-    this.listening.listen(this.target, CLICK, (event: PointerLike) => {
-      if (!event.isTrusted) {
-        return;
-      }
-      swallow(event);
-      control.pick(event.clientX, event.clientY);
-    });
+    this.listening.listen(
+      this.target,
+      CLICK,
+      onlyWhen(isPointerEvent, (event: PointerLike) => {
+        this.clicked(event, control);
+      }),
+    );
+  }
+
+  private clicked(event: PointerLike, control: Pickable): void {
+    if (!event.isTrusted) {
+      return;
+    }
+    swallow(event);
+    control.pick(event.clientX, event.clientY);
   }
 }
 
@@ -92,9 +106,13 @@ export class PointerOutline implements SessionPart {
   ) {}
 
   arm(): void {
-    this.listening.listen(this.target, POINTER_MOVE, (event: PointerLike) => {
-      this.hover.follow(event.clientX, event.clientY);
-    });
+    this.listening.listen(
+      this.target,
+      POINTER_MOVE,
+      onlyWhen(isPointerEvent, (event: PointerLike) => {
+        this.hover.follow(event.clientX, event.clientY);
+      }),
+    );
   }
 }
 
@@ -107,12 +125,20 @@ export class CancelOnKey implements SessionPart {
   ) {}
 
   arm(control: Stoppable): void {
-    this.listening.listen(this.target, KEY_DOWN, (event: KeyLike) => {
-      if (this.key.cancelsWith(event.key)) {
-        swallow(event);
-        control.stop();
-      }
-    });
+    this.listening.listen(
+      this.target,
+      KEY_DOWN,
+      onlyWhen(isKeyEvent, (event: KeyLike) => {
+        this.pressed(event, control);
+      }),
+    );
+  }
+
+  private pressed(event: KeyLike, control: Stoppable): void {
+    if (this.key.cancelsWith(event.key)) {
+      swallow(event);
+      control.stop();
+    }
   }
 }
 

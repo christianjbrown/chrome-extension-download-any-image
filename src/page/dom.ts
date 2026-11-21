@@ -57,15 +57,17 @@ export const TAG = {
 // The type that makes an <input> a picture button.
 export const IMAGE_INPUT_TYPE = "image";
 
+// Something events are heard on, such as the window. A listener is handed
+// any event, and checks its shape before it reads more than an event has.
 export interface Listenable {
   addEventListener(
     type: string,
-    listener: (event: never) => void,
+    listener: (event: Event) => void,
     options?: { capture: boolean },
   ): void;
   removeEventListener(
     type: string,
-    listener: (event: never) => void,
+    listener: (event: Event) => void,
     options?: { capture: boolean },
   ): void;
 }

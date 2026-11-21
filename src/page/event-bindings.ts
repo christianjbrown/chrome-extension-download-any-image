@@ -14,7 +14,7 @@ export class EventBindings implements Listening, Clearing, UndoTracker {
   listen(
     target: Listenable,
     type: string,
-    listener: (event: never) => void,
+    listener: (event: Event) => void,
   ): void {
     const options = { capture: true };
     target.addEventListener(type, listener, options);

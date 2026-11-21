@@ -24,4 +24,15 @@ describe("FrameSlot", () => {
     expect(first.disarm).toHaveBeenCalledOnce();
     expect(store.key).toBe(first);
   });
+
+  it.each([{ disarm: "no" }, "session", null])(
+    "leaves alone a slot the page filled with %o",
+    (held) => {
+      const slot = new FrameSlot({ key: held }, "key");
+
+      expect(() => {
+        slot.clear();
+      }).not.toThrow();
+    },
+  );
 });

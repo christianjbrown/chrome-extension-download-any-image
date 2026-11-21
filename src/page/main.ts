@@ -23,12 +23,13 @@ import {
 } from "./css-image-functions";
 import { CssImageUrls } from "./css-image-urls";
 import { DpcmUnit, DpiUnit, DppxUnit, XUnit } from "./css-resolutions";
+import { instanceOf } from "./checks";
 import {
   DocumentBackdrop,
   DocumentOverlay,
+  ElementCheck,
+  ElementStyles,
   XmlSvgSerializer,
-  type MarkupWriter,
-  type OverlayDocument,
 } from "./document-adapters";
 import type { Listenable, StyleLook } from "./dom";
 import {
@@ -54,9 +55,8 @@ import {
 } from "./image-readers";
 import type { ImageFinder } from "./locating";
 import { OutlineBox } from "./outline-box";
-import { PageBlobs, type DataUrlReader } from "./page-blobs";
+import { PageBlobs } from "./page-blobs";
 import { DisarmCommand, FrameSlot } from "./page-commands";
-import type { Disarmable } from "./pick-control";
 import { PICK_GESTURES } from "./pick-gestures";
 import { PickSession } from "./pick-session";
 import { MediaHits, PointHits, StackHits } from "./point-hits";
@@ -69,23 +69,17 @@ import {
   StopOnPageHide,
 } from "./session-parts";
 
-type Listener = (
-  message: unknown,
-  sender: unknown,
-  reply: (reply: Reply<unknown>) => void,
-) => boolean;
-
 // Where a frame keeps its armed session, so a second injection can find it.
 const KEY = "__downloadAnyImage";
-const slot = new FrameSlot(
-  globalThis as unknown as Record<string, Disarmable | undefined>,
-  KEY,
-);
+const slot = new FrameSlot(globalThis, KEY);
 slot.clear();
 
 // Browser functions are wrapped so they are never called with the wrong `this`.
-const look: StyleLook = (element, pseudo) =>
-  getComputedStyle(element as unknown as Element, pseudo);
+const elements = new ElementCheck(instanceOf(Element));
+const styles = new ElementStyles(elements, (element, pseudo) =>
+  getComputedStyle(element, pseudo),
+);
+const look: StyleLook = (element, pseudo) => styles.look(element, pseudo);
 // The units an image-set() option's density can be written in.
 const units = [new XUnit(), new DppxUnit(), new DpiUnit(), new DpcmUnit()];
 const images = new CssImageUrls([
@@ -141,10 +135,10 @@ const locator = new ImageLocator(
   finders,
 );
 const bindings = new EventBindings();
-const pageWindow = window as unknown as Listenable;
+const pageWindow: Listenable = window;
 const hover = new HoverOutline(
   locator,
-  new OutlineBox(new DocumentOverlay(document as unknown as OverlayDocument)),
+  new OutlineBox(new DocumentOverlay<HTMLDivElement>(document)),
   (callback) => requestAnimationFrame(callback),
 );
 const session = new PickSession(
@@ -154,10 +148,7 @@ const session = new PickSession(
     new PointerOutline(bindings, pageWindow, hover),
     new CancelOnKey(bindings, pageWindow, PICK_GESTURES),
     new StopOnPageHide(bindings, pageWindow),
-    new StopOnNavigate(
-      bindings,
-      (window as { navigation?: Listenable }).navigation,
-    ),
+    new StopOnNavigate(bindings, window.navigation),
   ],
   bindings,
   hover,
@@ -169,15 +160,13 @@ const session = new PickSession(
         new BlobUrlReader(
           new PageBlobs(
             (url) => fetch(url),
-            () => new FileReader() as unknown as DataUrlReader,
+            () => new FileReader(),
           ),
         ),
       ]),
       [CANVAS_SOURCE]: new CanvasReader(),
       [SVG_SOURCE]: new SvgReader(
-        new XmlSvgSerializer(
-          () => new XMLSerializer() as unknown as MarkupWriter,
-        ),
+        new XmlSvgSerializer(() => new XMLSerializer(), elements),
         look,
       ),
     }),
@@ -197,8 +186,11 @@ const router = new CommandRouter<PageMessage>(
     [DISARM]: new DisarmCommand(session),
   } satisfies CommandSet<PageMessage>),
 );
-const listener: Listener = (message, sender, reply) =>
-  router.route(message, sender as { id?: string }, reply);
+const listener = (
+  message: unknown,
+  sender: chrome.runtime.MessageSender,
+  reply: (reply: Reply<unknown>) => void,
+): boolean => router.route(message, sender, reply);
 
 chrome.runtime.onMessage.addListener(listener);
 bindings.track(() => {

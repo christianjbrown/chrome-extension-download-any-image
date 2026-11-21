@@ -38,7 +38,7 @@ export interface Listening {
   listen(
     target: Listenable,
     type: string,
-    listener: (event: never) => void,
+    listener: (event: Event) => void,
   ): void;
 }
 

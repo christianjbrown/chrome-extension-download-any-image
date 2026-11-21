@@ -1,4 +1,5 @@
 import { DISARM, type PageMessage } from "../shared/messages";
+import { fieldAt, hasMethods } from "./checks";
 import type { Command } from "../shared/routing";
 import type { Disarmable } from "./pick-control";
 
@@ -15,19 +16,33 @@ export class DisarmCommand implements Command<PageMessage, typeof DISARM> {
   }
 }
 
+// What a session kept in the slot has to be able to do.
+const SESSION_METHODS = ["disarm"];
+
+// Whatever a frame's slot holds is the page's to change too, so it is checked
+// before it is used.
+function isDisarmable(value: unknown): value is Disarmable {
+  return hasMethods(value, SESSION_METHODS);
+}
+
 // Where a frame keeps its armed session, so a second injection can find it.
 export class FrameSlot {
   constructor(
-    private readonly store: Record<string, Disarmable | undefined>,
+    private readonly store: object,
     private readonly key: string,
   ) {}
 
   // A second injection into a frame that is still armed replaces the first.
   clear(): void {
-    this.store[this.key]?.disarm();
+    this.held()?.disarm();
   }
 
   keep(session: Disarmable): void {
-    this.store[this.key] = session;
+    Reflect.set(this.store, this.key, session);
+  }
+
+  private held(): Disarmable | undefined {
+    const held = fieldAt(this.store, this.key);
+    return isDisarmable(held) ? held : undefined;
   }
 }

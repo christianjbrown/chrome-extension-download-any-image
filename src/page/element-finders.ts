@@ -1,3 +1,4 @@
+import { fieldAt, hasMethods, textAt } from "./checks";
 import {
   IMAGE_INPUT_TYPE,
   SVG_NAMESPACE,
@@ -14,6 +15,22 @@ import {
 } from "./image-source";
 import type { ImageFinder, PlacedKind } from "./locating";
 
+// The fields read off each kind of element, by the names the browser gives
+// them.
+const TYPE = "type";
+const SRC = "src";
+const CURRENT_SRC = "currentSrc";
+const POSTER = "poster";
+const HREF = "href";
+const BASE_VAL = "baseVal";
+const OWNER_SVG = "ownerSVGElement";
+const STYLE = "style";
+
+// The methods a canvas and an inline SVG are read and copied through.
+const CANVAS_METHODS = ["toDataURL"];
+const SVG_METHODS = ["cloneNode", "hasAttribute", "setAttribute"];
+const STYLE_METHODS = ["setProperty"];
+
 function urlSource(url: string): ImageSource | undefined {
   return url === "" ? undefined : { kind: URL_SOURCE, url };
 }
@@ -26,22 +43,34 @@ function isSvg(element: PageElement, name: string): boolean {
   return element.localName === name && element.namespaceURI === SVG_NAMESPACE;
 }
 
-type ImgLike = PageElement & { currentSrc: string; src: string };
-type InputLike = PageElement & { type?: string; src?: string };
-type SvgImageLike = PageElement & { href: { baseVal: string } };
-type NestableSvg = SvgLike & { ownerSVGElement: unknown };
-
-function isImageButton(element: PageElement): element is InputLike {
+function isImageButton(element: PageElement): boolean {
   return (
-    isHtml(element, TAG.input) &&
-    (element as InputLike).type === IMAGE_INPUT_TYPE
+    isHtml(element, TAG.input) && textAt(element, TYPE) === IMAGE_INPUT_TYPE
   );
 }
 
-function isOutermostSvg(element: PageElement): element is NestableSvg {
+function isCanvas(element: PageElement): element is PageElement & CanvasLike {
+  return isHtml(element, TAG.canvas) && hasMethods(element, CANVAS_METHODS);
+}
+
+// An element with everything an SVG is copied and restyled through.
+function isCopyableSvg(element: PageElement): element is SvgLike {
   return (
-    isSvg(element, TAG.svg) && (element as NestableSvg).ownerSVGElement === null
+    hasMethods(element, SVG_METHODS) &&
+    hasMethods(fieldAt(element, STYLE), STYLE_METHODS)
   );
+}
+
+function isTopmost(element: PageElement): boolean {
+  return fieldAt(element, OWNER_SVG) === null;
+}
+
+function isOutermostSvg(element: PageElement): element is SvgLike {
+  return isSvg(element, TAG.svg) && isTopmostCopyable(element);
+}
+
+function isTopmostCopyable(element: PageElement): element is SvgLike {
+  return isTopmost(element) && isCopyableSvg(element);
 }
 
 // The picture an <img> is showing right now, which for srcset and <picture> is
@@ -50,13 +79,11 @@ export class ImgFinder implements ImageFinder, PlacedKind {
   readonly selector = TAG.img;
 
   find(element: PageElement): ImageSource | undefined {
-    return isHtml(element, TAG.img)
-      ? this.shown(element as ImgLike)
-      : undefined;
+    return isHtml(element, TAG.img) ? this.shown(element) : undefined;
   }
 
-  private shown(img: ImgLike): ImageSource | undefined {
-    return urlSource(img.currentSrc || img.src);
+  private shown(img: PageElement): ImageSource | undefined {
+    return urlSource(textAt(img, CURRENT_SRC) || textAt(img, SRC));
   }
 }
 
@@ -67,8 +94,8 @@ export class InputImageFinder implements ImageFinder, PlacedKind {
     return isImageButton(element) ? this.shown(element) : undefined;
   }
 
-  private shown(input: InputLike): ImageSource | undefined {
-    return urlSource(input.src ?? "");
+  private shown(input: PageElement): ImageSource | undefined {
+    return urlSource(textAt(input, SRC));
   }
 }
 
@@ -79,7 +106,7 @@ export class VideoPosterFinder implements ImageFinder, PlacedKind {
     if (!isHtml(element, TAG.video)) {
       return undefined;
     }
-    return urlSource((element as PageElement & { poster: string }).poster);
+    return urlSource(textAt(element, POSTER));
   }
 }
 
@@ -88,13 +115,9 @@ export class CanvasFinder implements ImageFinder, PlacedKind {
   readonly selector = TAG.canvas;
 
   find(element: PageElement): ImageSource | undefined {
-    if (!isHtml(element, TAG.canvas)) {
-      return undefined;
-    }
-    return {
-      kind: CANVAS_SOURCE,
-      canvas: element as PageElement & CanvasLike,
-    };
+    return isCanvas(element)
+      ? { kind: CANVAS_SOURCE, canvas: element }
+      : undefined;
   }
 }
 
@@ -104,7 +127,7 @@ export class SvgImageFinder implements ImageFinder {
 
   find(element: PageElement): ImageSource | undefined {
     return isSvg(element, TAG.svgImage)
-      ? this.linked((element as SvgImageLike).href.baseVal)
+      ? this.linked(textAt(element, HREF, BASE_VAL))
       : undefined;
   }
 

@@ -1,6 +1,9 @@
 import { PageBlobs, type DataUrlReader } from "../../src/page/page-blobs";
 
-function fileReader(outcome: "load" | "error") {
+function fileReader(
+  outcome: "load" | "error",
+  result: unknown = "data:image/png;base64,AAAA",
+) {
   const reader: DataUrlReader & { read: unknown } = {
     result: null,
     onload: null,
@@ -9,10 +12,10 @@ function fileReader(outcome: "load" | "error") {
     readAsDataURL(blob) {
       reader.read = blob;
       if (outcome === "load") {
-        (reader as { result: unknown }).result = "data:image/png;base64,AAAA";
-        reader.onload?.();
+        (reader as { result: unknown }).result = result;
+        reader.onload?.({} as never);
       } else {
-        reader.onerror?.();
+        reader.onerror?.({} as never);
       }
     },
   };
@@ -42,6 +45,14 @@ describe("PageBlobs", () => {
 
     expect(url).toBe("data:image/png;base64,AAAA");
     expect(reader.read).toBe(blob);
+  });
+
+  it("says so when what the browser read is not text", async () => {
+    await expect(
+      new PageBlobs(vi.fn(), () => fileReader("load", null)).toDataUrl({
+        size: 4,
+      }),
+    ).rejects.toThrow("The image could not be read");
   });
 
   it("says so when the browser cannot read the blob", async () => {
