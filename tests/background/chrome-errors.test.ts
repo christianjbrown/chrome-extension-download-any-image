@@ -1,7 +1,18 @@
+import { ChromeErrorExplainer } from "../../src/background/chrome-errors";
 import {
-  CHROME_TRANSLATIONS,
-  ChromeErrorExplainer,
-} from "../../src/background/chrome-errors";
+  ActiveTabRefusal,
+  FileUrlRefusal,
+  OwnPageRefusal,
+  WebStoreRefusal,
+} from "../../src/background/chrome-refusals";
+
+// The refusals the service worker is wired with.
+const REFUSALS = [
+  new OwnPageRefusal(),
+  new WebStoreRefusal(),
+  new FileUrlRefusal(),
+  new ActiveTabRefusal(),
+];
 
 describe("ChromeErrorExplainer", () => {
   it.each([
@@ -27,14 +38,17 @@ describe("ChromeErrorExplainer", () => {
     ],
     ["Something else", "Something else"],
   ])("explains %s", (message, explained) => {
-    expect(
-      new ChromeErrorExplainer(CHROME_TRANSLATIONS).explain(new Error(message)),
-    ).toBe(explained);
+    expect(new ChromeErrorExplainer(REFUSALS).explain(new Error(message))).toBe(
+      explained,
+    );
   });
 
-  it("explains only by the translations it is given", () => {
+  it("explains only by the refusals it is given", () => {
     const explainer = new ChromeErrorExplainer([
-      { pattern: /^Nope/, message: "Try again" },
+      {
+        matches: (message: string) => message.startsWith("Nope"),
+        explanation: "Try again",
+      },
     ]);
 
     expect(explainer.explain(new Error("Nope, not today"))).toBe("Try again");

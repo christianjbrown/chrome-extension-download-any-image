@@ -1,10 +1,21 @@
 import { BACKGROUND_CONFIG } from "../../src/background/config";
-import {
-  IMAGE_TYPES,
-  MimeExtensions,
-} from "../../src/background/file-extensions";
+import { MimeExtensions } from "../../src/background/file-extensions";
 import { ImageFilenameChooser } from "../../src/background/filename-chooser";
 import { KebabText, SafeStemText } from "../../src/background/filename-text";
+import {
+  AvifType,
+  BmpType,
+  GifType,
+  HeicType,
+  HeifType,
+  IconType,
+  JpegType,
+  JxlType,
+  PngType,
+  SvgType,
+  TiffType,
+  WebpType,
+} from "../../src/background/image-types";
 import { MeaningfulNames } from "../../src/background/meaningful-names";
 import { UrlOriginalNames } from "../../src/background/original-name";
 import { SystemClock } from "../../src/background/system-clock";
@@ -105,6 +116,22 @@ describe("MeaningfulNames", () => {
     expect(filter.keeps(stem)).toBe(kept);
   });
 });
+
+// The image types the service worker is wired with.
+const IMAGE_TYPES = [
+  new JpegType(),
+  new PngType(),
+  new GifType(),
+  new WebpType(),
+  new AvifType(),
+  new SvgType(),
+  new BmpType(),
+  new IconType(),
+  new TiffType(),
+  new HeicType(),
+  new HeifType(),
+  new JxlType(),
+];
 
 describe("MimeExtensions", () => {
   const extensions = new MimeExtensions(IMAGE_TYPES);

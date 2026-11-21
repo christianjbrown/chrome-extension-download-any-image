@@ -5,18 +5,18 @@ import {
   ERROR,
   IDLE,
   type ButtonState,
-  type ToolbarLooks,
-} from "./toolbar-looks";
+  type LookSet,
+} from "./button-looks";
 
 // The message that goes with a state that has none.
 const NO_MESSAGE = "";
 
 // Each tab has its own picker, so each tab's button has its own look, taken
-// from the table it is given.
+// from the set of looks it is given.
 export class ToolbarIndicator implements PickIndicator {
   constructor(
     private readonly action: ToolbarAction,
-    private readonly looks: ToolbarLooks,
+    private readonly looks: LookSet,
   ) {}
 
   showIdle(tabId: number): Promise<void> {
@@ -36,7 +36,7 @@ export class ToolbarIndicator implements PickIndicator {
     state: ButtonState,
     message: string,
   ): Promise<void> {
-    const look = this.looks[state](message);
+    const look = this.looks[state].look(message);
     await Promise.all([
       this.action.setBadgeText({ tabId, text: look.badge }),
       this.action.setBadgeBackgroundColor({ tabId, color: look.colour }),

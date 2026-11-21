@@ -1,14 +1,18 @@
 import { isMessageFor } from "./messages";
-import type { Message, MessageGate, MessageGuards, Sender } from "./routing";
+import type { Message, MessageGate, MessageGuard, Sender } from "./routing";
 
 // Only the extension's own contexts are answered, only with a message for this
-// context, and only when its fields are what its type needs.
+// context, and only when the guard for its type says its fields are right.
 export class TrustedMessages<M extends Message> implements MessageGate<M> {
+  private readonly byType: ReadonlyMap<string, MessageGuard<M>>;
+
   constructor(
     private readonly target: M["target"],
-    private readonly guards: MessageGuards<M>,
+    guards: readonly MessageGuard<M>[],
     private readonly extensionId: string,
-  ) {}
+  ) {
+    this.byType = new Map(guards.map((guard) => [guard.type, guard]));
+  }
 
   admits(message: unknown, sender: Sender | undefined): message is M {
     if (
@@ -20,8 +24,7 @@ export class TrustedMessages<M extends Message> implements MessageGate<M> {
     const type = message.type;
     return (
       typeof type === "string" &&
-      Object.hasOwn(this.guards, type) &&
-      this.guards[type as M["type"]](message)
+      this.byType.get(type)?.admits(message) === true
     );
   }
 }

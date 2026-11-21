@@ -30,3 +30,11 @@ export interface Clock {
 export interface FileExtensions {
   for(mime: string | undefined, fromUrl: string | undefined): string;
 }
+
+// One kind of image: the types a server or page calls it, the extension it is
+// written with, and any others it is known by.
+export interface ImageType {
+  readonly mimes: readonly string[];
+  readonly extension: string;
+  readonly otherExtensions: readonly string[];
+}

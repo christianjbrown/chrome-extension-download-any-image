@@ -1,7 +1,12 @@
 // The service worker: builds the object graph and connects it to Chrome's events.
 import { CommandRouter } from "../shared/command-router";
 import { TrustedMessages } from "../shared/trusted-messages";
-import { backgroundGuards } from "../shared/message-guards";
+import {
+  DisarmedGuard,
+  FailedGuard,
+  SaveGuard,
+  SchemeGuard,
+} from "../shared/message-guards";
 import {
   BACKGROUND,
   DISARMED,
@@ -10,26 +15,47 @@ import {
   SCHEME,
   type BackgroundMessage,
 } from "../shared/messages";
-import type { CommandSet } from "../shared/routing";
+import type { CommandSet, GuardSet } from "../shared/routing";
 import {
   DisarmedCommand,
   FailedCommand,
   SaveCommand,
   SchemeCommand,
 } from "./background-commands";
-import { CHROME_TRANSLATIONS, ChromeErrorExplainer } from "./chrome-errors";
+import { ARMED, ERROR, IDLE, type LookSet } from "./button-looks";
+import { ChromeErrorExplainer } from "./chrome-errors";
+import {
+  ActiveTabRefusal,
+  FileUrlRefusal,
+  OwnPageRefusal,
+  WebStoreRefusal,
+} from "./chrome-refusals";
 import { ClickScheme } from "./click-scheme";
 import { ClosedTabAction } from "./closed-tab-action";
 import { BACKGROUND_CONFIG } from "./config";
 import { CrosshairCursor } from "./cursor-style";
 import { DownloadWatcher } from "./download-completion";
 import { OFFSCREEN_DOCUMENT_FILE, PAGE_SCRIPT_FILE } from "./entry-files";
-import { IMAGE_TYPES, MimeExtensions } from "./file-extensions";
+import { MimeExtensions } from "./file-extensions";
 import { ImageFilenameChooser } from "./filename-chooser";
 import { FilenameListening } from "./filename-listening";
 import { FilenameSuggester, type Suggest } from "./filename-suggester";
 import { KebabText, SafeStemText } from "./filename-text";
 import { ImageSaver } from "./image-saver";
+import {
+  AvifType,
+  BmpType,
+  GifType,
+  HeicType,
+  HeifType,
+  IconType,
+  JpegType,
+  JxlType,
+  PngType,
+  SvgType,
+  TiffType,
+  WebpType,
+} from "./image-types";
 import { MeaningfulNames } from "./meaningful-names";
 import { NavigationReset } from "./navigation-reset";
 import { UrlOriginalNames } from "./original-name";
@@ -46,13 +72,14 @@ import { TimestampedName } from "./timestamped-name";
 import { ToggleController } from "./toggle-controller";
 import { ToolbarIcon } from "./toolbar-icon";
 import { ToolbarIndicator } from "./toolbar-indicator";
-import { TOOLBAR_LOOKS } from "./toolbar-looks";
+import { ArmedLook, ErrorLook, IdleLook } from "./toolbar-looks";
 import { ToolbarScheme } from "./toolbar-scheme";
 
-const indicator = new ToolbarIndicator(
-  new ClosedTabAction(chrome.action),
-  TOOLBAR_LOOKS,
-);
+const indicator = new ToolbarIndicator(new ClosedTabAction(chrome.action), {
+  [IDLE]: new IdleLook(),
+  [ARMED]: new ArmedLook(),
+  [ERROR]: new ErrorLook(),
+} satisfies LookSet);
 const toolbarScheme = new ToolbarScheme(
   new SchemeStore(chrome.storage.local, UNKNOWN_SCHEME),
   new ToolbarIcon(chrome.action),
@@ -67,7 +94,12 @@ const schemeDocument = new SchemeDocument(
   chrome.runtime,
   OFFSCREEN_DOCUMENT_FILE,
 );
-const errors = new ChromeErrorExplainer(CHROME_TRANSLATIONS);
+const errors = new ChromeErrorExplainer([
+  new OwnPageRefusal(),
+  new WebStoreRefusal(),
+  new FileUrlRefusal(),
+  new ActiveTabRefusal(),
+]);
 const picker = new TabPicker(
   new PageScript(chrome.scripting, chrome.tabs, PAGE_SCRIPT_FILE),
   new CrosshairCursor(chrome.scripting),
@@ -107,13 +139,31 @@ const suggester = new FilenameSuggester(
       new SystemClock(),
       new KebabText(BACKGROUND_CONFIG.maxTitleLength),
     ),
-    new MimeExtensions(IMAGE_TYPES),
+    new MimeExtensions([
+      new JpegType(),
+      new PngType(),
+      new GifType(),
+      new WebpType(),
+      new AvifType(),
+      new SvgType(),
+      new BmpType(),
+      new IconType(),
+      new TiffType(),
+      new HeicType(),
+      new HeifType(),
+      new JxlType(),
+    ]),
   ),
 );
 const router = new CommandRouter<BackgroundMessage>(
-  new TrustedMessages(
+  new TrustedMessages<BackgroundMessage>(
     BACKGROUND,
-    backgroundGuards(BACKGROUND_CONFIG.maxMessageText),
+    Object.values({
+      [SAVE]: new SaveGuard(BACKGROUND_CONFIG.maxMessageText),
+      [DISARMED]: new DisarmedGuard(),
+      [FAILED]: new FailedGuard(BACKGROUND_CONFIG.maxMessageText),
+      [SCHEME]: new SchemeGuard(),
+    } satisfies GuardSet<BackgroundMessage>),
     chrome.runtime.id,
   ),
   Object.values({

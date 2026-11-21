@@ -3,12 +3,19 @@
 // listener included, so a disarmed frame is no longer there to answer.
 import { CommandRouter } from "../shared/command-router";
 import { TrustedMessages } from "../shared/trusted-messages";
-import { pageGuards } from "../shared/message-guards";
+import { DisarmGuard } from "../shared/message-guards";
 import { DISARM, PAGE, type PageMessage, type Reply } from "../shared/messages";
-import type { CommandSet } from "../shared/routing";
+import type { CommandSet, GuardSet } from "../shared/routing";
 import { BackgroundClient } from "./background-client";
 import { AFTER, BEFORE, CssImageFinder, type Pseudo } from "./css-finder";
+import {
+  IMAGE_SET,
+  ImageSetFunction,
+  UrlFunction,
+  WEBKIT_IMAGE_SET,
+} from "./css-image-functions";
 import { CssImageUrls } from "./css-image-urls";
+import { DpcmUnit, DpiUnit, DppxUnit, XUnit } from "./css-resolutions";
 import {
   DocumentBackdrop,
   DocumentOverlay,
@@ -77,7 +84,13 @@ slot.clear();
 // Browser functions are wrapped so they are never called with the wrong `this`.
 const look: StyleLook = (element, pseudo) =>
   getComputedStyle(element as unknown as Element, pseudo);
-const images = new CssImageUrls();
+// The units an image-set() option's density can be written in.
+const units = [new XUnit(), new DppxUnit(), new DpiUnit(), new DpcmUnit()];
+const images = new CssImageUrls([
+  new UrlFunction(),
+  new ImageSetFunction(IMAGE_SET, units),
+  new ImageSetFunction(WEBKIT_IMAGE_SET, units),
+]);
 const css = (property: string, pseudo?: Pseudo): ImageFinder =>
   new CssImageFinder(look, images, property, pseudo);
 const IMAGE_PROPERTIES = [
@@ -155,7 +168,13 @@ const session = new PickSession(
   ),
 );
 const router = new CommandRouter<PageMessage>(
-  new TrustedMessages(PAGE, pageGuards, chrome.runtime.id),
+  new TrustedMessages<PageMessage>(
+    PAGE,
+    Object.values({
+      [DISARM]: new DisarmGuard(),
+    } satisfies GuardSet<PageMessage>),
+    chrome.runtime.id,
+  ),
   Object.values({
     [DISARM]: new DisarmCommand(session),
   } satisfies CommandSet<PageMessage>),
