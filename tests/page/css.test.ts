@@ -1,4 +1,10 @@
 import { CssImageFinder } from "../../src/page/css-finder";
+import {
+  IMAGE_SET,
+  ImageSetFunction,
+  UrlFunction,
+  WEBKIT_IMAGE_SET,
+} from "../../src/page/css-image-functions";
 import { CssImageUrls } from "../../src/page/css-image-urls";
 import {
   functionsIn,
@@ -53,8 +59,26 @@ describe("css text", () => {
   });
 });
 
+// The functions the page script is wired with.
+function cssImageUrls(): CssImageUrls {
+  return new CssImageUrls([
+    new UrlFunction(),
+    new ImageSetFunction(IMAGE_SET),
+    new ImageSetFunction(WEBKIT_IMAGE_SET),
+  ]);
+}
+
 describe("CssImageUrls", () => {
-  const urls = new CssImageUrls();
+  const urls = cssImageUrls();
+
+  it("asks the function a layer uses for its picture", () => {
+    const own = { name: "own", picture: vi.fn(() => "https://x/own.png") };
+
+    expect(new CssImageUrls([own]).first("grad(red), own(abc)")).toBe(
+      "https://x/own.png",
+    );
+    expect(own.picture).toHaveBeenCalledWith("abc");
+  });
 
   it.each([
     ['url("https://x/a.png")', "https://x/a.png"],
@@ -102,7 +126,7 @@ describe("CssImageUrls", () => {
 });
 
 describe("CssImageFinder", () => {
-  const urls = new CssImageUrls();
+  const urls = cssImageUrls();
 
   it("reads an element's own background", () => {
     const look = styles({

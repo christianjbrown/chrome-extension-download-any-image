@@ -8,6 +8,12 @@ import { DISARM, PAGE, type PageMessage, type Reply } from "../shared/messages";
 import type { CommandSet } from "../shared/routing";
 import { BackgroundClient } from "./background-client";
 import { AFTER, BEFORE, CssImageFinder, type Pseudo } from "./css-finder";
+import {
+  IMAGE_SET,
+  ImageSetFunction,
+  UrlFunction,
+  WEBKIT_IMAGE_SET,
+} from "./css-image-functions";
 import { CssImageUrls } from "./css-image-urls";
 import {
   DocumentBackdrop,
@@ -77,7 +83,11 @@ slot.clear();
 // Browser functions are wrapped so they are never called with the wrong `this`.
 const look: StyleLook = (element, pseudo) =>
   getComputedStyle(element as unknown as Element, pseudo);
-const images = new CssImageUrls();
+const images = new CssImageUrls([
+  new UrlFunction(),
+  new ImageSetFunction(IMAGE_SET),
+  new ImageSetFunction(WEBKIT_IMAGE_SET),
+]);
 const css = (property: string, pseudo?: Pseudo): ImageFinder =>
   new CssImageFinder(look, images, property, pseudo);
 const IMAGE_PROPERTIES = [
