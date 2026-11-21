@@ -2,7 +2,15 @@
 import { CommandRouter } from "../shared/command-router";
 import { TrustedMessages } from "../shared/trusted-messages";
 import { backgroundGuards } from "../shared/message-guards";
-import { BACKGROUND, type BackgroundMessage } from "../shared/messages";
+import {
+  BACKGROUND,
+  DISARMED,
+  FAILED,
+  SAVE,
+  SCHEME,
+  type BackgroundMessage,
+} from "../shared/messages";
+import type { CommandSet } from "../shared/routing";
 import {
   DisarmedCommand,
   FailedCommand,
@@ -108,12 +116,12 @@ const router = new CommandRouter<BackgroundMessage>(
     backgroundGuards(BACKGROUND_CONFIG.maxMessageText),
     chrome.runtime.id,
   ),
-  [
-    new SaveCommand(reports),
-    new DisarmedCommand(reports),
-    new FailedCommand(reports),
-    new SchemeCommand(toolbarScheme),
-  ],
+  Object.values({
+    [SAVE]: new SaveCommand(reports),
+    [DISARMED]: new DisarmedCommand(reports),
+    [FAILED]: new FailedCommand(reports),
+    [SCHEME]: new SchemeCommand(toolbarScheme),
+  } satisfies CommandSet<BackgroundMessage>),
 );
 const navigation = new NavigationReset(indicator);
 

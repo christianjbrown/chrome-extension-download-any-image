@@ -19,6 +19,13 @@ export interface Command<M extends Message, T extends M["type"] = M["type"]> {
   handle(message: Extract<M, { type: T }>, sender: Sender): Promise<unknown>;
 }
 
+// Exactly one command for every type of message, each under its own type. An
+// entry point builds its commands as one of these, so the compiler refuses a
+// type with no command, a command twice, or one under the wrong type.
+export type CommandSet<M extends Message> = {
+  [T in M["type"]]: Command<M, T>;
+};
+
 // Whether a message that names a type also carries the fields that type needs.
 export type MessageGuards<M extends { type: string }> = {
   [T in M["type"]]: (message: unknown) => message is Extract<M, { type: T }>;
