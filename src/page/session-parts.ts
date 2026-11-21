@@ -2,10 +2,12 @@ import type { Listenable } from "./dom";
 import type { HoverFollow } from "./outlining";
 import type {
   CancelKey,
+  Disarmable,
   Listening,
+  Pickable,
   PickButton,
-  PickControl,
   SessionPart,
+  Stoppable,
 } from "./pick-control";
 
 // What a listener can do to stop the page from seeing an event.
@@ -70,7 +72,7 @@ export class ClickPick implements SessionPart {
     private readonly target: Listenable,
   ) {}
 
-  arm(control: PickControl): void {
+  arm(control: Pickable): void {
     this.listening.listen(this.target, CLICK, (event: PointerLike) => {
       if (!event.isTrusted) {
         return;
@@ -104,7 +106,7 @@ export class CancelOnKey implements SessionPart {
     private readonly key: CancelKey,
   ) {}
 
-  arm(control: PickControl): void {
+  arm(control: Stoppable): void {
     this.listening.listen(this.target, KEY_DOWN, (event: KeyLike) => {
       if (this.key.cancelsWith(event.key)) {
         swallow(event);
@@ -122,7 +124,7 @@ export class StopOnPageHide implements SessionPart {
     private readonly target: Listenable,
   ) {}
 
-  arm(control: PickControl): void {
+  arm(control: Disarmable): void {
     this.listening.listen(this.target, PAGE_HIDE, () => {
       control.disarm();
     });
@@ -137,7 +139,7 @@ export class StopOnNavigate implements SessionPart {
     private readonly navigation: Listenable | undefined,
   ) {}
 
-  arm(control: PickControl): void {
+  arm(control: Stoppable): void {
     if (this.navigation === undefined) {
       return;
     }
