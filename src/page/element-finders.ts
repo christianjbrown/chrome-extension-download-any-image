@@ -1,8 +1,6 @@
 import { fieldAt, hasMethods, textAt } from "./checks";
 import {
-  IMAGE_INPUT_TYPE,
   SVG_NAMESPACE,
-  TAG,
   type CanvasLike,
   type PageElement,
   type SvgLike,
@@ -12,6 +10,18 @@ import type { ImageSource } from "./image-source";
 import { SVG_SOURCE } from "./svg-source";
 import { URL_SOURCE } from "./url-source";
 import type { ImageFinder, PlacedKind } from "./locating";
+
+// The local name of each element that can show a picture of its own, beside
+// the finder that reads it.
+const IMG = "img";
+const INPUT = "input";
+const VIDEO = "video";
+const CANVAS = "canvas";
+const SVG = "svg";
+const SVG_IMAGE = "image";
+
+// The type that makes an <input> a picture button.
+const IMAGE_INPUT_TYPE = "image";
 
 // The fields read off each kind of element, by the names the browser gives
 // them.
@@ -42,13 +52,11 @@ function isSvg(element: PageElement, name: string): boolean {
 }
 
 function isImageButton(element: PageElement): boolean {
-  return (
-    isHtml(element, TAG.input) && textAt(element, TYPE) === IMAGE_INPUT_TYPE
-  );
+  return isHtml(element, INPUT) && textAt(element, TYPE) === IMAGE_INPUT_TYPE;
 }
 
 function isCanvas(element: PageElement): element is PageElement & CanvasLike {
-  return isHtml(element, TAG.canvas) && hasMethods(element, CANVAS_METHODS);
+  return isHtml(element, CANVAS) && hasMethods(element, CANVAS_METHODS);
 }
 
 // An element with everything an SVG is copied and restyled through.
@@ -64,7 +72,7 @@ function isTopmost(element: PageElement): boolean {
 }
 
 function isOutermostSvg(element: PageElement): element is SvgLike {
-  return isSvg(element, TAG.svg) && isTopmostCopyable(element);
+  return isSvg(element, SVG) && isTopmostCopyable(element);
 }
 
 function isTopmostCopyable(element: PageElement): element is SvgLike {
@@ -74,10 +82,10 @@ function isTopmostCopyable(element: PageElement): element is SvgLike {
 // The picture an <img> is showing right now, which for srcset and <picture> is
 // the one the browser chose.
 export class ImgFinder implements ImageFinder, PlacedKind {
-  readonly selector = TAG.img;
+  readonly selector = IMG;
 
   find(element: PageElement): ImageSource | undefined {
-    return isHtml(element, TAG.img) ? this.shown(element) : undefined;
+    return isHtml(element, IMG) ? this.shown(element) : undefined;
   }
 
   private shown(img: PageElement): ImageSource | undefined {
@@ -86,7 +94,7 @@ export class ImgFinder implements ImageFinder, PlacedKind {
 }
 
 export class InputImageFinder implements ImageFinder, PlacedKind {
-  readonly selector = `${TAG.input}[type=${IMAGE_INPUT_TYPE}]`;
+  readonly selector = `${INPUT}[type=${IMAGE_INPUT_TYPE}]`;
 
   find(element: PageElement): ImageSource | undefined {
     return isImageButton(element) ? this.shown(element) : undefined;
@@ -98,10 +106,10 @@ export class InputImageFinder implements ImageFinder, PlacedKind {
 }
 
 export class VideoPosterFinder implements ImageFinder, PlacedKind {
-  readonly selector = TAG.video;
+  readonly selector = VIDEO;
 
   find(element: PageElement): ImageSource | undefined {
-    if (!isHtml(element, TAG.video)) {
+    if (!isHtml(element, VIDEO)) {
       return undefined;
     }
     return urlSource(textAt(element, POSTER));
@@ -110,7 +118,7 @@ export class VideoPosterFinder implements ImageFinder, PlacedKind {
 
 // Whatever a script drew, read out of the canvas itself.
 export class CanvasFinder implements ImageFinder, PlacedKind {
-  readonly selector = TAG.canvas;
+  readonly selector = CANVAS;
 
   find(element: PageElement): ImageSource | undefined {
     return isCanvas(element)
@@ -124,7 +132,7 @@ export class SvgImageFinder implements ImageFinder {
   constructor(private readonly baseUrl: () => string) {}
 
   find(element: PageElement): ImageSource | undefined {
-    return isSvg(element, TAG.svgImage)
+    return isSvg(element, SVG_IMAGE)
       ? this.linked(textAt(element, HREF, BASE_VAL))
       : undefined;
   }
@@ -139,7 +147,7 @@ export class SvgImageFinder implements ImageFinder {
 // An SVG drawn in the page, saved whole. The outermost one, since an <svg> can
 // nest inside another.
 export class InlineSvgFinder implements ImageFinder, PlacedKind {
-  readonly selector = TAG.svg;
+  readonly selector = SVG;
 
   find(element: PageElement): ImageSource | undefined {
     return isOutermostSvg(element)

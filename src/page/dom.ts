@@ -44,19 +44,6 @@ export interface SvgLike extends PageElement {
   readonly style: { setProperty(name: string, value: string): void };
 }
 
-// The elements that can show a picture of their own, by local name.
-export const TAG = {
-  img: "img",
-  input: "input",
-  video: "video",
-  canvas: "canvas",
-  svg: "svg",
-  svgImage: "image",
-} as const;
-
-// The type that makes an <input> a picture button.
-export const IMAGE_INPUT_TYPE = "image";
-
 // Something events are heard on, such as the window. A listener is handed
 // any event, and checks its shape before it reads more than an event has.
 export interface Listenable {
