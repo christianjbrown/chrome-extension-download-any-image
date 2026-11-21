@@ -18,7 +18,7 @@ describe("OutlineBox", () => {
     const made = overlay();
     const create = vi.fn(() => made);
     const attach = vi.fn();
-    const box = new OutlineBox(create, attach);
+    const box = new OutlineBox({ create, attach });
 
     box.show({ left: 1, top: 2, width: 3, height: 4 });
     box.show({ left: 5, top: 6, width: 7, height: 8 });

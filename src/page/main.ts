@@ -22,6 +22,13 @@ import {
   SvgImageFinder,
   VideoPosterFinder,
 } from "./element-finders";
+import {
+  DocumentBackdrop,
+  DocumentOverlay,
+  XmlSvgSerializer,
+  type MarkupWriter,
+  type OverlayDocument,
+} from "./document-adapters";
 import { EventBindings } from "./event-bindings";
 import { HoverOutline } from "./hover-outline";
 import { ImageLocator, type ImageFinder } from "./image-locator";
@@ -35,6 +42,7 @@ import {
 } from "./image-readers";
 import { OutlineBox } from "./outline-box";
 import { PageBlobs, type DataUrlReader } from "./page-blobs";
+import { FrameSlot, PageCommands, type Disarmable } from "./page-commands";
 import { PICK_GESTURES } from "./pick-gestures";
 import { ImagePick } from "./image-pick";
 import { PickSession } from "./pick-session";
@@ -56,13 +64,11 @@ type Listener = (
 
 // Where a frame keeps its armed session, so a second injection can find it.
 const KEY = "__downloadAnyImage";
-const OVERLAY_TAG = "div";
-const globals = globalThis as unknown as Record<
-  string,
-  PickSession | undefined
->;
-// A second injection into a frame that is still armed replaces the first.
-globals[KEY]?.disarm();
+const slot = new FrameSlot(
+  globalThis as unknown as Record<string, Disarmable | undefined>,
+  KEY,
+);
+slot.clear();
 
 // Browser functions are wrapped so they are never called with the wrong `this`.
 const look: StyleLook = (element, pseudo) =>
@@ -94,12 +100,7 @@ const finders: ImageFinder[] = [
 ];
 const locator = new ImageLocator(
   new PointHits([
-    new StackHits(
-      document,
-      (element) =>
-        element === (document.documentElement as unknown) ||
-        element === (document.body as unknown),
-    ),
+    new StackHits(document, new DocumentBackdrop(document)),
     new MediaHits(document),
   ]),
   finders,
@@ -108,12 +109,7 @@ const bindings = new EventBindings();
 const pageWindow = window as unknown as Listenable;
 const hover = new HoverOutline(
   locator,
-  new OutlineBox(
-    () => document.createElement(OVERLAY_TAG),
-    (element) => {
-      document.documentElement.append(element as unknown as Node);
-    },
-  ),
+  new OutlineBox(new DocumentOverlay(document as unknown as OverlayDocument)),
   (callback) => requestAnimationFrame(callback),
 );
 const session = new PickSession(
@@ -144,10 +140,9 @@ const session = new PickSession(
       ]),
       [CANVAS_SOURCE]: new CanvasReader(),
       [SVG_SOURCE]: new SvgReader(
-        {
-          serialize: (svg) =>
-            new XMLSerializer().serializeToString(svg as unknown as Node),
-        },
+        new XmlSvgSerializer(
+          () => new XMLSerializer() as unknown as MarkupWriter,
+        ),
         look,
       ),
     }),
@@ -157,12 +152,7 @@ const session = new PickSession(
 );
 const router = new CommandRouter<PageMessage>(
   PAGE,
-  {
-    disarm: () => {
-      session.disarm();
-      return Promise.resolve(true);
-    },
-  },
+  new PageCommands(session),
   pageGuards,
   chrome.runtime.id,
 );
@@ -174,4 +164,4 @@ bindings.track(() => {
   chrome.runtime.onMessage.removeListener(listener);
 });
 session.arm();
-globals[KEY] = session;
+slot.keep(session);

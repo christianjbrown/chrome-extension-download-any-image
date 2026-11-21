@@ -6,6 +6,12 @@ export interface OverlayElement {
   remove(): void;
 }
 
+// Where the frame is made and put.
+export interface OverlayHost {
+  create(): OverlayElement;
+  attach(element: OverlayElement): void;
+}
+
 export interface Outline {
   show(box: Box): void;
   hide(): void;
@@ -41,10 +47,7 @@ const pixels = (length: number): string => `${String(length)}px`;
 export class OutlineBox implements Outline {
   private element: OverlayElement | undefined;
 
-  constructor(
-    private readonly create: () => OverlayElement,
-    private readonly attach: (element: OverlayElement) => void,
-  ) {}
+  constructor(private readonly host: OverlayHost) {}
 
   show(box: Box): void {
     const element = this.element ?? this.added();
@@ -59,11 +62,11 @@ export class OutlineBox implements Outline {
   }
 
   private added(): OverlayElement {
-    const element = this.create();
+    const element = this.host.create();
     LOOK.forEach(([name, value]) => {
       element.style.setProperty(name, value);
     });
-    this.attach(element);
+    this.host.attach(element);
     this.element = element;
     return element;
   }

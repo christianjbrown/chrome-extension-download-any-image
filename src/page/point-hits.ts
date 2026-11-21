@@ -10,6 +10,11 @@ export interface HitSource {
   at(x: number, y: number): PageElement[];
 }
 
+// The page's own backdrop, which a click on plain text should not pick.
+export interface Backdrop {
+  isBackdrop(element: PageElement): boolean;
+}
+
 // Everything the browser says is under the point, overlays and ancestors
 // included, with the insides of open shadow roots ahead of their hosts. The
 // page's own backdrop is left out, so a click on plain text does not pick the
@@ -17,13 +22,13 @@ export interface HitSource {
 export class StackHits implements HitSource {
   constructor(
     private readonly root: PointQueryable,
-    private readonly isBackdrop: (element: PageElement) => boolean,
+    private readonly backdrop: Backdrop,
   ) {}
 
   at(x: number, y: number): PageElement[] {
     const found: PageElement[] = [];
     this.collect(this.root.elementsFromPoint(x, y), { x, y }, found);
-    return found.filter((element) => !this.isBackdrop(element));
+    return found.filter((element) => !this.backdrop.isBackdrop(element));
   }
 
   private collect(

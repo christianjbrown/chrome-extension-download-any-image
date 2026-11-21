@@ -14,7 +14,7 @@ describe("StackHits", () => {
     const body = element("body");
     const hits = new StackHits(
       { elementsFromPoint: () => [top, host, body] },
-      (candidate) => candidate === body,
+      { isBackdrop: (candidate) => candidate === body },
     );
 
     expect(hits.at(1, 2)).toEqual([top, inner, host]);
